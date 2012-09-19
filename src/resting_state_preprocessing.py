@@ -29,13 +29,13 @@ def create_resting_state_preprocessing_WF(name="preprocess"):
     
     wf.connect(slice_time_realign, "out_file", mean_resting, "in_file")
     
-    register_funct_to_struct = pe.Node(fs.BBRegister(), name="register_func_to_struct")
-    register_funct_to_struct.inputs.out_fsl_file = True
+    register_func_to_struct = pe.Node(fs.BBRegister(), name="register_func_to_struct")
+    register_func_to_struct.inputs.out_fsl_file = True
     
-    wf.connect(mean_resting, "out_file", register_funct_to_struct, "source_file")
-    wf.connect(recon_all, "subject_id", register_funct_to_struct, "subject_id")
-    wf.connect(recon_all, "subjects_dir", register_funct_to_struct, "subjects_dir")
-    
+    wf.connect(mean_resting, "out_file", register_func_to_struct, "source_file")
+    wf.connect(recon_all, "subject_id", register_func_to_struct, "subject_id")
+    wf.connect(recon_all, "subjects_dir", register_func_to_struct, "subjects_dir")
+
     
     return wf
 
