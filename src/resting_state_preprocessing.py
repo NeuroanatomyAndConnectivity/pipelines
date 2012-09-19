@@ -2,6 +2,7 @@ import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.nipy as nipy
+import nipype.interfaces.freesurfer as fs
 
 def create_resting_state_preprocessing_WF(name="preprocess"):
     wf = pe.Workflow(name=name)
@@ -19,6 +20,9 @@ def create_resting_state_preprocessing_WF(name="preprocess"):
     slice_time_realign.inputs.time_interp = True
     
     wf.connect(skip, "roi_file", slice_time_realign, "in_file")
+    
+    recon_all = pe.Node(fs.ReconAll(), name="recon_all")
+    wf.connect(inputspec, "structural", recon_all, "T1_files")
     
     return wf
 
