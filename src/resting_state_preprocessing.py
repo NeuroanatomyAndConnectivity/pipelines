@@ -177,5 +177,9 @@ if __name__ == '__main__':
     wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
     wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
     wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
-     
+    
+    ds = pe.Node(nio.DataSink(), name="datasink")
+    ds.inputs.base_directory = "/Users/filo/results/rs_preprocessing/volumes"
+    wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
+               
     wf.run(plugin="Linear", plugin_args={'n_procs':4})
