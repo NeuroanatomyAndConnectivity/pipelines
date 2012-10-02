@@ -33,12 +33,11 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
         anat_affine = nb.load(ribbon).get_affine()
         func = nb.load(epi_file).get_data()
         func_affine = nb.load(epi_file).get_affine()
-        fig = plt.figure(1, figsize=(8, 6), edgecolor='k', facecolor='k')
+        fig = plt.figure(figsize=(8, 6), edgecolor='k', facecolor='k')
         slicer = viz.plot_anat(np.asarray(func), np.asarray(func_affine), black_bg=True,
-                                dim=.2,
                                 cmap=plt.cm.spectral,
                                 cut_coords=(-6,3,12),
-                                figure=1,
+                                figure=fig,
                                 axes=[0, .50, 1, .33]
                                 )
         slicer.contour_map(np.asarray(anat), np.asarray(anat_affine), levels=[.51], colors=['r',])
@@ -53,10 +52,9 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
         func = nb.load(res.outputs.transformed_file).get_data()
         func_affine = nb.load(res.outputs.transformed_file).get_affine()
         slicer = viz.plot_anat(np.asarray(func), np.asarray(func_affine), black_bg=True,
-                                dim=.2,
                                 cmap=plt.cm.spectral,
                                 cut_coords=(-6,3,12),
-                                figure=1,
+                                figure=fig,
                                 axes=[0, 0, 1, .33]
                                 )
         slicer.contour_map(np.asarray(anat), np.asarray(anat_affine), levels=[.51], colors=['r',])
@@ -79,7 +77,7 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     
     wf.connect(inputspec, "tsnr_file", plot_tsnr, "in_file")
     
-    write_report = pe.Node(ReportSink(), name="write_report")
+    write_report = pe.Node(ReportSink(orderfields=["motion parameters", "tSNR", "coregistration"]), name="write_report")
     write_report.inputs.base_directory = report_dir
     
     def prepend_title(s_id):
@@ -93,12 +91,27 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     
 if __name__ == '__main__':
     
-    #subjects = os.listdir("/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/")
-    subjects = ["02231.e3"]
+    subjects = os.listdir("/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/")
+    subjects.sort()
+    def chunks(l, n):
+        l2 = []
+        for i in xrange(0, len(l), n):
+            l2.append(l[i:i+n])
+        return l2
+    
+    short_seq_subjects = ['19198.3c', '17815.6e', '12988.0e', '19032.10', 
+                          '20289.d4', '17765.54', '13261.8d', '19279.fe', 
+                          '03224.69', '17845.a2', '17819.fa', '15189.fb', 
+                          '11400.94']
+    subjects = [subject for subject in subjects if subject not in short_seq_subjects]
+
+    #subjects = chunks(subjects,len(subjects)/4+1)[2]
+    #subjects = ["14102.d1"]
+    
     
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = "/Users/filo/workdir/rs_preprocessing"
-    wf.config['execution']['crashdump_dir'] = "/Users/filo/workdir/rs_preprocessing/crash_files"
+    wf.base_dir = "/Users/filo/workdir/rs_preprocessing/"
+    wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ("subject_id", subjects)
@@ -130,9 +143,12 @@ if __name__ == '__main__':
     wf.connect(datagrabber, "resting_dicoms", get_meta, "dicom_files")
     
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
+    zscore = preproc.get_node('z_score')
+    preproc.remove_nodes([zscore])
+    
     #workaround for realignment crashing in multiproc environment
-    mod_realign = preproc.get_node("mod_realign")
-    mod_realign.run_without_submitting = True
+    #mod_realign = preproc.get_node("mod_realign")
+    #mod_realign.run_without_submitting = True
     
     # inputs
     preproc.inputs.inputspec.motion_correct_node = 'nipy'
@@ -162,7 +178,8 @@ if __name__ == '__main__':
     wf.connect(subject_id_infosource, "subject_id", preproc, 'inputspec.fssubject_id')
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
     
-    report_wf = create_preproc_report_wf("/Users/filo/results/rs_preprocessing/reports")
+    results_dir = '/Users/filo/results'
+    report_wf = create_preproc_report_wf(results_dir + "/reports")
     report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
@@ -179,7 +196,7 @@ if __name__ == '__main__':
     wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = "/Users/filo/results/rs_preprocessing/volumes"
+    ds.inputs.base_directory = results_dir + "/volumes"
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
                
-    wf.run(plugin="Linear", plugin_args={'n_procs':4})
+    wf.run(plugin="IPython", plugin_args={'n_procs':4})
