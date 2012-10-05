@@ -8,6 +8,11 @@ import os
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
+subjects = os.listdir("/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/")
+short_seq_subjects = ['17815.6e', '12988.0e', '19032.10', '17765.54',
+                      '17819.fa', '15189.fb', '11400.94']
+subjects = [subject for subject in subjects if subject not in short_seq_subjects]
+
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
     
@@ -90,24 +95,7 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     return wf
     
 if __name__ == '__main__':
-    
-    subjects = os.listdir("/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/")
-    subjects.sort()
-    def chunks(l, n):
-        l2 = []
-        for i in xrange(0, len(l), n):
-            l2.append(l[i:i+n])
-        return l2
-    
-    short_seq_subjects = ['19198.3c', '17815.6e', '12988.0e', '19032.10', 
-                          '20289.d4', '17765.54', '13261.8d', '19279.fe', 
-                          '03224.69', '17845.a2', '17819.fa', '15189.fb', 
-                          '11400.94']
-    subjects = [subject for subject in subjects if subject not in short_seq_subjects]
-
-    #subjects = chunks(subjects,len(subjects)/4+1)[2]
     #subjects = ["14102.d1"]
-    
     
     wf = pe.Workflow(name="main_workflow")
     wf.base_dir = "/Users/filo/workdir/rs_preprocessing/"
@@ -198,5 +186,8 @@ if __name__ == '__main__':
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = results_dir + "/volumes"
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
+    wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
+    wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
+    wf.write_graph()
                
     wf.run(plugin="IPython", plugin_args={'n_procs':4})
