@@ -18,9 +18,11 @@ def create_normalization_wf(transformations=["mni2func"]):
     anat2mni = create_nonlinear_register("anat2mni")
     
     skull_mgz2nii = pe.Node(fs.MRIConvert(out_type="nii"), name="skull_mgs2nii")
-    wf.connect(inputspec, "T1", skull_mgz2nii, "in_file")
-    brain_mgz2nii = pe.Node(fs.MRIConvert(out_type="nii"), name="brain_mgs2nii")
+    skull_mgz2nii.inputs.slice_reverse=True #othervise the volumes were upside-down!
+    skull_mgz2nii.inputs.out_orientation='RAS' #improved FSL interoperability
+    brain_mgz2nii = skull_mgz2nii.clone(name="brain_mgs2nii")
     wf.connect(inputspec, "skullstripped_T1", brain_mgz2nii, "in_file")
+    wf.connect(inputspec, "T1", skull_mgz2nii, "in_file")
     
     anat2mni.inputs.inputspec.reference_skull = fsl.Info.standard_image("MNI152_T1_2mm.nii.gz")
     anat2mni.inputs.inputspec.reference_brain = fsl.Info.standard_image("MNI152_T1_2mm_brain.nii.gz")
@@ -31,7 +33,7 @@ def create_normalization_wf(transformations=["mni2func"]):
     if 'mni2func' in transformations:
         invert_warp = pe.Node(fsl.InvWarp(), name="invert_warp")
         wf.connect(anat2mni, "outputspec.nonlinear_xfm", invert_warp, "warp_file")
-        wf.connect(brain_mgz2nii, "out_file", invert_warp, "ref_file")
+        wf.connect(skull_mgz2nii, "out_file", invert_warp, "ref_file")
     
     if 'func2mni' in transformations:
         mni_warp = pe.Node(interface=fsl.ApplyWarp(),
@@ -45,7 +47,7 @@ def create_normalization_wf(transformations=["mni2func"]):
 
 if __name__ == '__main__':
     
-    subjects = ["14102.d1"]
+    #subjects = ["14102.d1"]
     
     
     wf = pe.Workflow(name="main_workflow")
@@ -72,5 +74,12 @@ if __name__ == '__main__':
     wf.connect(datagrabber, "func2anat_transform", normalize, "inputspec.func2anat_transform")
     wf.connect(fs_datagrabber, "orig", normalize, "inputspec.T1")
     wf.connect(fs_datagrabber, "brain", normalize, "inputspec.skullstripped_T1")
+    
+    ds = pe.Node(nio.DataSink(), name="datasink")
+    results_dir = '/Users/filo/results'
+    ds.inputs.base_directory = results_dir + "/volumes"
+    wf.connect(normalize, 'anat2mni.outputspec.output_brain', ds, "normalized_T1")
+    wf.connect(normalize, 'anat2mni.outputspec.nonlinear_xfm', ds, "anat2mni_transform")
+    wf.connect(normalize, 'invert_warp.inverted_warp_file', ds, "mni2anat_transform")
 
-    wf.run(plugin="Linear", plugin_args={'n_procs':4})
+    wf.run(plugin="MultiProc", plugin_args={'n_procs':6})
