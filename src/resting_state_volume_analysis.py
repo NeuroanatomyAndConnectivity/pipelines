@@ -50,7 +50,7 @@ def create_normalization_wf(transformations=["mni2func"]):
 
 if __name__ == '__main__':
     
-    subjects = ["14102.d1"]
+    #subjects = ["12184.55", "19417.87"]
     
     
     wf = pe.Workflow(name="main_workflow")
@@ -107,6 +107,7 @@ if __name__ == '__main__':
     wf.connect(roi_infosource, ("roi", format_filename), sphere, "out_file")
     
     mask2func = pe.Node(fsl.ApplyWarp(), name="mask2func")
+    mask2func.inputs.datatype = "float"
     wf.connect(normalize, 'invert_warp.inverted_warp_file', mask2func, "field_file")
     wf.connect(datagrabber, "preprocessed_epi", mask2func, "ref_file")
     wf.connect(sphere, "out_file", mask2func, "in_file")
@@ -155,4 +156,4 @@ if __name__ == '__main__':
     wf.connect(normalize, 'anat2mni.outputspec.nonlinear_xfm', ds, "anat2mni_transform")
     wf.connect(normalize, 'invert_warp.inverted_warp_file', ds, "mni2anat_transform")
 
-    wf.run(plugin="Linear", plugin_args={'n_procs':6})
+    wf.run(plugin="MultiProc", plugin_args={'n_procs':6})
