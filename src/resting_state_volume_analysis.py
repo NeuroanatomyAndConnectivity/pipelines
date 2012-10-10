@@ -17,10 +17,12 @@ def create_normalization_wf(transformations=["mni2func"]):
                         name="inputspec")
     
     anat2mni = create_nonlinear_register("anat2mni")
+    linear_reg = anat2mni.get_node("linear_reg_0")
+    linear_reg.inputs.searchr_x = [-180,180]
+    linear_reg.inputs.searchr_y = [-180,180]
+    linear_reg.inputs.searchr_z = [-180,180]
     
     skull_mgz2nii = pe.Node(fs.MRIConvert(out_type="nii"), name="skull_mgs2nii")
-    #skull_mgz2nii.inputs.slice_reverse=True #othervise the volumes were upside-down!
-    skull_mgz2nii.inputs.out_orientation='RAS' #improved FSL interoperability
     brain_mgz2nii = skull_mgz2nii.clone(name="brain_mgs2nii")
     wf.connect(inputspec, "skullstripped_T1", brain_mgz2nii, "in_file")
     wf.connect(inputspec, "T1", skull_mgz2nii, "in_file")
@@ -48,11 +50,11 @@ def create_normalization_wf(transformations=["mni2func"]):
 
 if __name__ == '__main__':
     
-    #subjects = ["14102.d1"]
+    subjects = ["14102.d1"]
     
     
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = "/Users/filo/workdir/rs_analysis/"
+    wf.base_dir = "/Users/filo/workdir/rs_analysis_test/"
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
@@ -104,29 +106,17 @@ if __name__ == '__main__':
     wf.connect(point, "out_file", sphere, "in_file")
     wf.connect(roi_infosource, ("roi", format_filename), sphere, "out_file")
     
-    mask2anat = pe.Node(fsl.ApplyWarp(), name="mask2anat")
-    wf.connect(normalize, 'invert_warp.inverted_warp_file', mask2anat, "field_file")
-    wf.connect(normalize, 'skull_mgs2nii.out_file', mask2anat, "ref_file")
-    wf.connect(sphere, "out_file", mask2anat, "in_file")
+    mask2func = pe.Node(fsl.ApplyWarp(), name="mask2func")
+    wf.connect(normalize, 'invert_warp.inverted_warp_file', mask2func, "field_file")
+    wf.connect(datagrabber, "preprocessed_epi", mask2func, "ref_file")
+    wf.connect(sphere, "out_file", mask2func, "in_file")
+    wf.connect(inv_func2anat, 'out_file', mask2func, "postmat")
     
-    threshold1 = pe.Node(fs.Binarize(min=0.5, out_type='nii'), name="threshold1")
-    wf.connect(mask2anat, "out_file", threshold1, "in_file")
-    
-    fix_orient = pe.Node(fsl.SwapDimensions(), name="fix_orient")
-    fix_orient.inputs.new_dims = ("x","-z","y")
-    wf.connect(threshold1, "binary_file", fix_orient, "in_file")
-    
-    mask2func = pe.Node(fsl.ApplyXfm(), name="mask2func")
-    mask2func.inputs.apply_xfm = True
-    wf.connect(fix_orient, "out_file", mask2func, "in_file")
-    wf.connect(datagrabber, "preprocessed_epi", mask2func, "reference")
-    wf.connect(inv_func2anat, 'out_file', mask2func, "in_matrix_file")
-    
-    threshold2 = pe.Node(fs.Binarize(min=0.5, out_type='nii'), name="threshold2")
-    wf.connect(mask2func, "out_file", threshold2, "in_file")
+    threshold = pe.Node(fs.Binarize(min=0.5, out_type='nii'), name="threshold")
+    wf.connect(mask2func, "out_file", threshold, "in_file")
     
     restrict_to_brain = pe.Node(fsl.ApplyMask(), name="restrict_to_brain")
-    wf.connect(threshold2, "binary_file", restrict_to_brain, "in_file")
+    wf.connect(threshold, "binary_file", restrict_to_brain, "in_file")
     wf.connect(datagrabber, "epi_mask", restrict_to_brain, "mask_file")
     
     extract_timeseries = pe.Node(afni.Maskave(), name="extract_timeseries")
@@ -145,16 +135,6 @@ if __name__ == '__main__':
     z_trans.inputs.outputtype = 'NIFTI_GZ'
     wf.connect(correlation_map, "out_file", z_trans, "in_file_a")
     
-    corr2anat = pe.Node(fsl.ApplyXfm(), name="corr2anat")
-    corr2anat.inputs.apply_xfm = True
-    wf.connect(z_trans, "out_file", corr2anat, "in_file")
-    wf.connect(datagrabber, "func2anat_transform", corr2anat, "in_matrix_file")
-    wf.connect(normalize, 'skull_mgs2nii.out_file', corr2anat, "reference")
-    
-    fix_corr_orient = pe.Node(fsl.SwapDimensions(), name="fix_corr_orient")
-    fix_corr_orient.inputs.new_dims = ("x","z","-y")
-    wf.connect(corr2anat, "out_file", fix_corr_orient, "in_file")
-    
     def format_filename(roi_str):
         import string
         valid_chars = "-_.%s%s" % (string.ascii_letters, string.digits)
@@ -163,11 +143,9 @@ if __name__ == '__main__':
     corr2std = pe.Node(fsl.ApplyWarp(), name="corr2std")
     corr2std.inputs.ref_file = fsl.Info.standard_image("MNI152_T1_2mm.nii.gz")
     wf.connect(normalize, 'anat2mni.outputspec.nonlinear_xfm', corr2std, "field_file")
-    wf.connect(fix_corr_orient, "out_file", corr2std, "in_file")
+    wf.connect(z_trans, "out_file", corr2std, "in_file")
+    wf.connect(datagrabber, "func2anat_transform", corr2std, "premat")
     wf.connect(roi_infosource, ("roi", format_filename), corr2std, "out_file")
-    
-    #wf.connect(datagrabber, 'preprocessed_epi', mask2func, "ref_file")
-    #wf.connect(inv_func2anat, 'out_file', mask2func, "postmat")
     
     ds = pe.Node(nio.DataSink(), name="datasink")
     results_dir = '/Users/filo/results'
@@ -177,4 +155,4 @@ if __name__ == '__main__':
     wf.connect(normalize, 'anat2mni.outputspec.nonlinear_xfm', ds, "anat2mni_transform")
     wf.connect(normalize, 'invert_warp.inverted_warp_file', ds, "mni2anat_transform")
 
-    wf.run(plugin="MultiProc", plugin_args={'n_procs':6})
+    wf.run(plugin="Linear", plugin_args={'n_procs':6})
