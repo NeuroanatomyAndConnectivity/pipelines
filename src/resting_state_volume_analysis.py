@@ -7,7 +7,8 @@ import nipype.interfaces.afni as afni
 
 from CPAC.registration.registration import create_nonlinear_register
 
-from resting_state_preprocessing import subjects
+import os
+from variables import resultsdir, freesurferdir, subjects, workingdir
 
 def create_normalization_wf(transformations=["mni2func"]):
     wf = pe.Workflow(name="normalization")
@@ -54,14 +55,14 @@ if __name__ == '__main__':
     
     
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = "/Users/filo/workdir/rs_analysis_test/"
+    wf.base_dir = os.path.join(workingdir, "rs_analysis_test")
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ("subject_id", subjects)
     
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['epi_mask','preprocessed_epi','func2anat_transform']), name="datagrabber")
-    datagrabber.inputs.base_directory = '/Users/filo/results/volumes/'
+    datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes')
     datagrabber.inputs.template = '%s/_subject_id_%s/%s*/*.%s'
     datagrabber.inputs.template_args['preprocessed_epi'] = [['preprocessed_resting', 'subject_id', '_fwhm_5/', 'nii.gz']]
     datagrabber.inputs.template_args['func2anat_transform'] = [['func2anat_transform','subject_id', '', 'mat']]
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
     
     fs_datagrabber = pe.Node(nio.FreeSurferSource(), name="fs_datagrabber")
-    fs_datagrabber.inputs.subjects_dir = '/scr/namibia1/baird/MPI_Project/freesurfer/'
+    fs_datagrabber.inputs.subjects_dir = freesurferdir
     wf.connect(subject_id_infosource, "subject_id", fs_datagrabber, "subject_id")
     
     normalize = create_normalization_wf()
@@ -149,11 +150,10 @@ if __name__ == '__main__':
     wf.connect(roi_infosource, ("roi", format_filename), corr2std, "out_file")
     
     ds = pe.Node(nio.DataSink(), name="datasink")
-    results_dir = '/Users/filo/results'
-    ds.inputs.base_directory = results_dir + "/volumes"
+    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
     wf.connect(corr2std, 'out_file', ds, "normalized_z_scored_corr_map")
     wf.connect(normalize, 'anat2mni.outputspec.output_brain', ds, "normalized_T1")
     wf.connect(normalize, 'anat2mni.outputspec.nonlinear_xfm', ds, "anat2mni_transform")
     wf.connect(normalize, 'invert_warp.inverted_warp_file', ds, "mni2anat_transform")
 
-    wf.run(plugin="MultiProc", plugin_args={'n_procs':6})
+    wf.run(plugin="Linear", plugin_args={'n_procs':2})

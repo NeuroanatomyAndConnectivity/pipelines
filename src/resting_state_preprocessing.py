@@ -1,87 +1,19 @@
+import os
+os.environ.pop("DISPLAY")
+import matplotlib
+matplotlib.use('Agg')
+
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 
 from bips.workflows.scripts.u0a14c5b5899911e1bca80023dfa375f2.base import create_rest_prep
-import os
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-subjects = os.listdir("/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/")
-
-subjects = ['11065.70',
-'07070.79',
-'13061.30',
-'18066.85',
-'10576.44',
-'11944.79',
-'11111.28',
-'13536.51',
-'14102.d1',
-'12522.80',
-'06222.f4',
-'13649.8d',
-'13565.7c',
-'14018.65',
-'14388.48',
-'14110.f4',
-'15006.be',
-'03796.a8',
-'10080.62',
-'10581.e8',
-'06275.e0',
-'15475.c7',
-'09561.e0',
-'10960.82',
-'14390.d3',
-'17421.31',
-'15466.cb',
-'14702.ea',
-'15403.c5',
-'14081.cb',
-'15890.ea',
-'13989.a7',
-'02231.e3',
-'16101.0d',
-'16939.4f',
-'12184.55',
-'07296.ec',
-'16758.c3',
-'12961.f8',
-'12315.9a',
-'15070.25',
-'15640.65',
-'18015.4c',
-'14446.fb',
-'14075.bd',
-'16090.c9',
-'19417.87',
-'18761.dc',
-'18758.73',
-'17845.a2',
-'18579.10',
-'13085.b0',
-'18094.87',
-'16056.3d',
-'10363.85',
-'12339.39',
-'09169.c5',
-'14074.a7',
-'13261.8d',
-'11109.5c',
-'19091.a3',
-'16105.7a',
-'11960.6a',
-'13630.5d',
-'09440.22',
-'10439.86',
-'11059.75',
-'07346.36']
-
-#short_seq_subjects = ['17815.6e', '12988.0e', '19032.10', '17765.54',
-#                      '17819.fa', '15189.fb', '11400.94']
-#subjects = [subject for subject in subjects if subject not in short_seq_subjects]
+from variables import subjects, workingdir, resultsdir, freesurferdir
+import os
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -168,7 +100,7 @@ if __name__ == '__main__':
     #subjects = ["14102.d1"]
     
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = "/Users/filo/workdir/rs_preprocessing/"
+    wf.base_dir = os.path.join(workingdir,"rs_preprocessing")
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
@@ -229,15 +161,14 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.highpass_freq = 100
     preproc.inputs.inputspec.lowpass_freq = 10
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
-    preproc.inputs.inputspec.fssubject_dir = '/scr/namibia1/baird/MPI_Project/freesurfer/'
+    preproc.inputs.inputspec.fssubject_dir = freesurferdir
     
     wf.connect(get_meta, "tr", preproc, "inputspec.tr")
     wf.connect(get_meta, "sliceorder", preproc, "inputspec.sliceorder")
     wf.connect(subject_id_infosource, "subject_id", preproc, 'inputspec.fssubject_id')
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
     
-    results_dir = '/Users/filo/results'
-    report_wf = create_preproc_report_wf(results_dir + "/reports")
+    report_wf = create_preproc_report_wf(resultsdir + "/reports")
     report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
@@ -254,10 +185,10 @@ if __name__ == '__main__':
     wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = results_dir + "/volumes"
+    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
     wf.write_graph()
                
-    wf.run(plugin="IPython", plugin_args={'n_procs':4})
+    wf.run(plugin="MultiProc", plugin_args={'n_procs':2})
