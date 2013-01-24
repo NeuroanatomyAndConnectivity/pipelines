@@ -1,11 +1,9 @@
-from __future__ import division
 import surfer
 from surfer import Brain
-import os
 import numpy as np
 import nibabel as nb
 import nipype.interfaces.freesurfer as fs
-import matplotlib
+from variables import freesurferdir
 
 def annotation():
 	brain.add_annotation('aparc.a2009s', alpha = .2)
@@ -14,10 +12,6 @@ def roi():
 def save(filename):
 	brain.save_montage('/tmp/fsaverage_h_montage'+filename+'.png',['med', 'lat', 'ros', 'vent'],orientation = 'h') #to save png
 
-def get_cluster(hemi,corr,cluster):
-	clustermap = nb.load('/SCR/data/11072.b1/results/'+hemi+corr[:4]+'_'+cluster+'.nii').get_data()
-	add_cluster(clustermap, hemi)
-
 def add_cluster(clustermap, hemi):
 	hemisphere = hemi[-2:]
 	brain = Brain(subject_id, hemisphere, surface, config_opts=dict(background="lightslategray", cortex="high_contrast"))
@@ -25,12 +19,12 @@ def add_cluster(clustermap, hemi):
 	brain.data["colorbar"].number_of_colors = int(clustermap.max())
 
 if __name__ == '__main__' :
-	fs.FSCommand.set_default_subjects_dir('/SCR/data')
+	fs.FSCommand.set_default_subjects_dir(freesurferdir)
 	#pysurfer visualization
 	subject_id = 'fsaverage4'
 	hemi = 'lh'
 	surface = 'inflated'
 	brain = Brain(subject_id, hemi, surface, config_opts=dict(background="lightslategray", cortex="high_contrast"))
 
-	print('FORMAT: get_cluster(hemi,similarity,cluster)\nCLUSTER TYPES: spectral, kmeans, hiercluster, dbscan')
+	print('FORMAT: add_cluster(niftifile,hemisphere))
 
