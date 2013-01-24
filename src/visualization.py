@@ -19,12 +19,12 @@ def add_cluster(clustermap, hemi):
 	brain.data["colorbar"].number_of_colors = int(clustermap.max())
 
 if __name__ == '__main__' :
-	fs.FSCommand.set_default_subjects_dir(freesurferdir)
+	fs.FSCommand.set_default_subjects_dir('SCR/data/Final_High')#(freesurferdir)
 	#pysurfer visualization
 	subject_id = 'fsaverage4'
 	hemi = 'lh'
 	surface = 'inflated'
 	brain = Brain(subject_id, hemi, surface, config_opts=dict(background="lightslategray", cortex="high_contrast"))
 
-	print('FORMAT: add_cluster(niftifile,hemisphere))
+	print('FORMAT: add_cluster(niftifile,hemisphere)')
 

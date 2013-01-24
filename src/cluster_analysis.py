@@ -10,8 +10,9 @@ import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.freesurfer as fs
-from nipype.interfaces import afni as afni
+
 from cluster import Cluster
+from similarity import Similarity
 
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, lhvertices, rhvertices
 
@@ -34,7 +35,7 @@ def pfc_mask(hemi, sxfmout, subject_id, session):
         mask[vertex][:] = 1
     maskImg = nb.Nifti1Image(mask, affine)
     filedir = workingdir+'/'+subject_id+'/'+session+'/maskImg.nii'
-    savefile = nb.loadsave.save(maskImg, filedir)
+    savefile = nb.save(maskImg, filedir)
     return os.path.abspath(filedir)
 
 if __name__ == '__main__':
@@ -73,29 +74,17 @@ if __name__ == '__main__':
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
 
 ##mask##
-    mask = pe.Node(util.Function(input_names=['hemi','sxfmout','subject_id','session'], output_names=['mask'], function=pfc_mask), name = 'mask')
+    mask = pe.Node(util.Function(input_names=['hemi','sxfmout','subject_id','session'], output_names=['out_file'], function=pfc_mask), name = 'mask')
     wf.connect(hemi_infosource, 'hemi', mask, 'hemi')
     wf.connect(datagrabber, 'sxfmout', mask, 'sxfmout')
     wf.connect(subject_id_infosource, 'subject_id', mask, 'subject_id')
     wf.connect(session_infosource, 'session', mask, 'session')
 
-##corr##
-    def ifnottemp(sim):
-        return sim != 'temp'
-
-    corr = pe.Node(afni.AutoTcorrelate(), name='corr')
-    wf.connect(mask, 'mask', corr, 'mask')
-    wf.connect(datagrabber, 'sxfmout', corr, 'in_file')
-    wf.connect(sim_infosource, ('sim',ifnottemp), corr, 'mask_only_targets')
-
-##eta2##
-    def ifeta2(sim):
-        return sim == 'eta2'
-
-    similarity = pe.Node(afni.AutoTcorrelate(), name = 'similarity')
-    similarity.inputs.polort = -1
-    wf.connect(sim_infosource, ('sim',ifeta2), similarity, 'eta2')
-    wf.connect(corr, 'out_file', similarity, 'in_file')
+##similaritymatrix##
+    simmatrix = pe.Node(util.Function(input_names=['in_file','sim','mask'], output_names=['out_file'], function=Similarity), name='simmatrix')
+    wf.connect(mask, 'out_file', simmatrix, 'mask')
+    wf.connect(datagrabber, 'sxfmout', simmatrix, 'in_file')
+    wf.connect(sim_infosource, 'sim', simmatrix, 'sim')
 
 ##clustering##
     clustering = pe.Node(Cluster(), name = 'clustering')
@@ -103,15 +92,14 @@ if __name__ == '__main__':
     wf.connect(hemi_infosource, 'hemi', clustering, 'hemi')
     wf.connect(cluster_infosource, 'cluster', clustering, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
-    wf.connect(similarity, 'out_file', clustering, 'volume')
+    wf.connect(simmatrix, 'out_file', clustering, 'volume')
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
-    wf.connect(corr, 'out_file', ds, 'corrmatrix')
-    wf.connect(similarity,'out_file', ds, 'similarity')
+    wf.connect(simmatrix,'out_file', ds, 'similarity')
     wf.connect(clustering, 'clustered_volume', ds, 'clustered')
     wf.write_graph()
                
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="Linear") #, plugin_args={"n_procs":16})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="Linear") #, plugin_args={"n_procs":16})
