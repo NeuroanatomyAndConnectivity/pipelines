@@ -6,7 +6,8 @@ subjects = [
 
 exclude_subjects = ['0021001']
 subjects = list(set(subjects) - set(exclude_subjects))
-analysis_subjects = ['8574662','4176156']
+analysis_subjects = ['3795193', '3201815', '0021024', '3893245', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '8735778', '9630905', '0021018', '3313349', '6471972', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156']
+#'3315657' excluded --didn't run on preprocess
 
 sessions = ['session1','session2']
 analysis_sessions = ['session1','session2']
