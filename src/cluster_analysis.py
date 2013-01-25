@@ -16,7 +16,7 @@ from similarity import Similarity
 
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, lhvertices, rhvertices
 
-os.environ['SUBJECTS_DIR'] = '/scr/schweiz1/data/Final_High/'
+os.environ['SUBJECTS_DIR'] = freesurferdir
 
 def pfc_mask(hemi, sxfmout, subject_id, session):
     import numpy as np
@@ -102,4 +102,4 @@ if __name__ == '__main__':
     wf.write_graph()
                
     #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="Linear") #, plugin_args={"n_procs":16})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
