@@ -17,7 +17,7 @@
 :Input Expectations:
 	* Surface data from preprocessing step
         file system organization: [results folder]/volumes/sxfmout/[session]/[subject_id]/[smoothing]/[hemisphere]/[file]
-    * fsaverage4 directory from freesurfer
+    * fsaverage directory from freesurfer
 
 :variables.py:
     * analysis_subjects is a list of all subject IDs.
@@ -33,14 +33,26 @@
 
 :cluster_analysis.py:
     * From a command window run: 
-        python cluster_analysis.py
+        $ freesurfer        
+        $ FSL
+        $ AFNI
+        $ python cluster_analysis.py
+    * What happens is, the file directory becomes organized by the variables you inputed, 
+      the data is then grabbed to the working directory, 
+      it creates a mask for the prefrontal area (or whatever ROI you supply), 
+      then the similarity matrices are made using similarity.py, 
+      and then they are clustered using clustered.py. 
+      After this, the results are dumped in the results folder.
+    * It's not failproof, so if/when there are problems, please report on github or email me.
 
 :Output Expectations:
     * In a new folder called 'clustered', you will find nifti-1 files with a cluster assignment for every vertex on the brain surface.
 
 :Visualization:
-    * From command window run pysurfer fsaverage4 lh inflated
-    * type: run visualization.py
+    * From command window run 
+        $ pysurfer fsaverage4 lh inflated
+    * type: 
+        >>> run visualization.py
     * Input one of two things:
-        ** add_cluster([location of niftifile],[hemisphere])
-        ** find_cluster([subject_id],[hemisphere],[similarity matrix type],[cluster type],[# of clusters],[session #])
+        >>> add_cluster([location of niftifile],[hemisphere])
+        >>> find_cluster([subject_id],[hemisphere],[similarity matrix type],[cluster type],[# of clusters],[session #])
