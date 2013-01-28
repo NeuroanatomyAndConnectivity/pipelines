@@ -1,5 +1,5 @@
 import os
-os.environ.pop("DISPLAY")
+
 import matplotlib
 matplotlib.use('Agg')
 
@@ -8,7 +8,11 @@ import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 
+display = os.environ["DISPLAY"]
+os.environ.pop("DISPLAY")
 from bips.workflows.scripts.u0a14c5b5899911e1bca80023dfa375f2.base import create_rest_prep
+os.environ["DISPLAY"] = display
+
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
@@ -80,7 +84,7 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     
     plot_tsnr = pe.Node(fsl.Slicer(), name="plot_tsnr")
     plot_tsnr.inputs.all_axial = True
-    plot_tsnr.inputs.image_width = 400
+    plot_tsnr.inputs.image_width = 600
     
     wf.connect(inputspec, "tsnr_file", plot_tsnr, "in_file")
     
@@ -106,12 +110,12 @@ if __name__ == '__main__':
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ("subject_id", subjects)
     
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_dicoms','resting_nifti','t1_nifti']), name="datagrabber")
-    datagrabber.inputs.base_directory = '/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/'
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti']), 
+                          name="datagrabber",
+                          overwrite=True)
+    datagrabber.inputs.base_directory = '/scr/adenauer1/niftis/'#'/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/'
     datagrabber.inputs.template = '%s/%s/%s'
-    datagrabber.inputs.template_args['resting_dicoms'] = [['subject_id', '*resting*', '*']]
     datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'func', '*.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat', '*.nii.gz']]
     datagrabber.inputs.sort_filelist = True
     
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
@@ -119,26 +123,22 @@ if __name__ == '__main__':
     def get_tr_and_sliceorder(dicom_files):
         import numpy as np
         import dcmstack, dicom
-        my_stack = dcmstack.DicomStack()
-        for src_path in dicom_files:
-            src_dcm = dicom.read_file(src_path)
-            my_stack.add_dcm(src_dcm)
-        nii_wrp = my_stack.to_nifti_wrapper()
+        from dcmstack.dcmmeta import NiftiWrapper
+        nii_wrp = NiftiWrapper.from_filename(dicom_files)
         sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
         tr = nii_wrp.meta_ext.get_values('RepetitionTime')
         return tr/1000.,sliceorder
     
     get_meta = pe.Node(util.Function(input_names=['dicom_files'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
     
-    wf.connect(datagrabber, "resting_dicoms", get_meta, "dicom_files")
+    wf.connect(datagrabber, "resting_nifti", get_meta, "dicom_files")
     
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
     preproc.remove_nodes([zscore])
     
-    #workaround for realignment crashing in multiproc environment
-    #mod_realign = preproc.get_node("mod_realign")
-    #mod_realign.run_without_submitting = True
+    mod_realign = preproc.get_node("mod_realign")
+    mod_realign.plugin_args = {"submit_specs":"request_memory=4000\n"}
     
     # inputs
     preproc.inputs.inputspec.motion_correct_node = 'nipy'
@@ -153,6 +153,7 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.regress_before_PCA = False
     preproc.get_node('fwhm_input').iterables = ('fwhm', [0,5])
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
+    preproc.get_node('take_mean_art').get_node('strict_artifact_detect').overwrite=True
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
     preproc.inputs.inputspec.do_slicetime = True
@@ -184,11 +185,11 @@ if __name__ == '__main__':
     wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
     wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
-    ds = pe.Node(nio.DataSink(), name="datasink")
+    ds = pe.Node(nio.DataSink(), name="datasink", overwrite=True)
     ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
     wf.write_graph()
                
-    wf.run(plugin="MultiProc", plugin_args={'n_procs':2})
+    wf.run(plugin="Linear", updatehash=True)

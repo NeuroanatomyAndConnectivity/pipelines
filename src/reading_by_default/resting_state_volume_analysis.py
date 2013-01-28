@@ -10,8 +10,10 @@ from CPAC.registration.registration import create_nonlinear_register
 
 import os
 from variables import resultsdir, freesurferdir, subjects, workingdir, rois
+del os.environ["DISPLAY"]
 from bips.workflows.scripts.ua780b1988e1c11e1baf80019b9f22493.base import get_struct_norm_workflow
 from nipype.interfaces import ants
+from correlation_matrix import write_correlation_matrix
 
 def create_normalization_wf(transformations=["mni2func"]):
     wf = pe.Workflow(name="normalization")
@@ -63,7 +65,7 @@ if __name__ == '__main__':
     subject_id_infosource.iterables = ("subject_id", subjects)
     
     fwhm_infosource = pe.Node(util.IdentityInterface(fields=['fwhm']), name="fwhm_infosource")
-    fwhm_infosource.iterables = ("fwhm", [0, 5])
+    fwhm_infosource.iterables = ("fwhm", [5])
     
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['epi_mask','func2anat_transform']), name="datagrabber")
     datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes')
@@ -89,11 +91,11 @@ if __name__ == '__main__':
     fs_datagrabber.inputs.subjects_dir = freesurferdir
     wf.connect(subject_id_infosource, "subject_id", fs_datagrabber, "subject_id")
     
-    normalize = create_normalization_wf()
-#    wf.connect(datagrabber, "preprocessed_epi", normalize, "inputspec.preprocessed_epi")
-#    wf.connect(datagrabber, "func2anat_transform", normalize, "inputspec.func2anat_transform")
-    wf.connect(fs_datagrabber, "orig", normalize, "inputspec.T1")
-    wf.connect(fs_datagrabber, "brain", normalize, "inputspec.skullstripped_T1")
+#    normalize = create_normalization_wf()
+##    wf.connect(datagrabber, "preprocessed_epi", normalize, "inputspec.preprocessed_epi")
+##    wf.connect(datagrabber, "func2anat_transform", normalize, "inputspec.func2anat_transform")
+#    wf.connect(fs_datagrabber, "orig", normalize, "inputspec.T1")
+#    wf.connect(fs_datagrabber, "brain", normalize, "inputspec.skullstripped_T1")
     
     ants_normalize = get_struct_norm_workflow()
     ants_normalize.inputs.inputspec.template_file = fsl.Info.standard_image("MNI152_T1_2mm_brain.nii.gz")
@@ -198,6 +200,17 @@ if __name__ == '__main__':
     wf.connect(collect_transforms2, "out", corr2std, "transformation_series")
     wf.connect(roi_infosource, ("roi", format_filename), corr2std, "output_image")
     
+#    timeseries2std = pe.Node(ants.WarpTimeSeriesImageMultiTransform(dimension=4), name="timeseries2std")
+#    timeseries2std.inputs.reference_image = '/tmp/MNI152_T1_4mm.nii.gz' #fsl.Info.standard_image("MNI152_T1_2mm.nii.gz")
+#    wf.connect(timeseries_datagrabber, "preprocessed_epi", timeseries2std, "input_image")
+#    wf.connect(collect_transforms2, "out", timeseries2std, "transformation_series")
+    
+#    corr_matrix = pe.Node(util.Function(function=write_correlation_matrix, input_names=['in_file', 'mask_file', 'out_file'],
+#                          output_names=['out_file']), name = 'corr_matrix')
+#    corr_matrix.inputs.out_file = "corr_matrix.int16"
+#    corr_matrix.inputs.mask_file = "/tmp/MNI152_T1_brain_mask_4mm.nii.gz"
+#    wf.connect(timeseries2std, 'output_image', corr_matrix, "in_file")
+    
     mask = pe.Node(fsl.ApplyMask(), name="mask")
     mask.inputs.mask_file = fsl.Info.standard_image("MNI152_T1_2mm_brain_mask.nii.gz")
     mask.inputs.output_type = "NIFTI"
@@ -210,5 +223,6 @@ if __name__ == '__main__':
     wf.connect(ants_normalize, 'outputspec.warped_brain', ds, "normalized_T1")
     wf.connect(ants_normalize, 'outputspec.warp_field', ds, "anat2mni_transform")
     wf.connect(ants_normalize, 'outputspec.inverse_warp', ds, "mni2anat_transform")
-
-    wf.run(plugin="MultiProc", plugin_args={'n_procs':2})
+    
+    wf.write_graph()
+    wf.run(plugin="CondorDAGMan")

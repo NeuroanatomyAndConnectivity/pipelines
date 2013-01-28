@@ -74,6 +74,17 @@ subjects = ['11065.70',
 '10439.86',
 '11059.75',
 '07346.36']
+#subjects = [
+#'13649.8d',
+#'11065.70',
+#'13224.69',
+#'19079.ca',
+#'18015.4c',
+#'10145.c2',
+#'18693.4a',
+#'18066.85',
+#'12827.36',
+#'13061.30']
 
 exclude_subjects = ['02231.e3',
 '03796.a8',
@@ -87,17 +98,56 @@ exclude_subjects = ['02231.e3',
 '18066.85']
 #subjects = ["14074.a7", "11111.28", "15640.65"]
 
+missing_nifti = ['12827.36']
+
 short_seq_subjects = ['17815.6e', '12988.0e', '19032.10', '17765.54',
                       '17819.fa', '15189.fb', '11400.94']
+too_high_motion = ['02917.e7', '18015.4c','20289.d4']
 
-subjects = list(set(subjects) - set(exclude_subjects))
+subjects = list(set(subjects) - set(short_seq_subjects) - set(too_high_motion) - set(exclude_subjects))
+
+subjects += set([
+'13649.8d',
+'11065.70',
+##'13224.69', #missing from the bdb
+'19079.ca',
+#'18015.4c', #movement
+'10145.c2',
+'18693.4a',
+'18066.85',
+#'12827.36', #banding
+'13061.30'
+])
+
+#subjects = ['14388.48']
 
 workingdir = "/scr/adenauer1/workingdir"
 resultsdir = "/scr/namibia1/baird/MPI_Project/results"
 #resultsdir = "/scr/adenauer1/results"
 
-freesurferdir = '/scr/namibia1/baird/MPI_Project/freesurfer/'
+freesurferdir = '/scr/namibia1/baird/MPI_Project/freesurfer/' #'/scr/adenauer1/freesurfer'
 
-rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
+rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0), 
+        (24, 58, 18), (-24, 58, 18), 
+        (6, 58, 18), (-6, 58,18),
+        (10, 46, 18), (10, 46, 0)
+        #(24, 65, 18), (-24, 65, 18), 
+        #(8, 50, -6), (-8, 50, -6)
+        ]
 
-#subjects = ["11111.28"]
+#Huibers 2009
+#rois = [(-6, -27, 21)]
+#Neuron paper
+#rois = [(-6, 52, -2), (-8, -56, -26)]
+
+#mPFC and pCC
+#rois = [(6, 52, -2), (8, -26, -56)]
+#rois = [(8, -56 , 26), (-8, -56, 26) ]
+rois = [(6, 52, -2), (-6, 52, -2)]
+
+#mid december
+#rois = [(-28, -68, 42),(-2, 26, 18)]
+
+#rois = [(24, 58, 18), (-24, 58, 18), (24, 65, 18), (-24, 65, 18)]
+
+#subjects = [subjects[0]]
