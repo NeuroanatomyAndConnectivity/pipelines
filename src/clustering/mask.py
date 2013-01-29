@@ -1,6 +1,8 @@
+import os
 from nipype.interfaces.base import BaseInterface, \
     BaseInterfaceInputSpec, traits, File, TraitedSpec
 from nipype.utils.filemanip import split_filename
+
 import numpy as np
 import nibabel as nb
 from variables import workingdir, lhvertices, rhvertices

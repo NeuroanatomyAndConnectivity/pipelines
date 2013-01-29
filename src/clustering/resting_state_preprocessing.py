@@ -187,7 +187,7 @@ if __name__ == '__main__':
 
 ##SXFM##
     sxfm = pe.Node(fs.SurfaceTransform(), name = 'sxfm')
-    sxfm.inputs.target_subject = 'fsaverage'
+    sxfm.inputs.target_subject = 'fsaverage4'
     sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
     sxfm.inputs.target_type = 'nii'
 	
