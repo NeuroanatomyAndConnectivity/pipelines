@@ -109,7 +109,7 @@ if __name__ == '__main__':
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
-    subject_id_infosource.iterables = ("subject_id", subjects)
+    subject_id_infosource.iterables = ("subject_id", [subjects[0]])
     
     tr_infosource = pe.Node(util.IdentityInterface(fields=['tr']), name="tr_infosource")
     tr_infosource.iterables = ("tr", ["645", "1400", "2500"])
@@ -159,7 +159,8 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
     preproc.get_node('fwhm_input').iterables = ('fwhm', [5])
-    preproc.get_node('create_nuisance_filter').iterables = ('selector', [[False, False, False, False, False, False]]) #,[True, True, True, False, True, False]])
+    #[motion_params, composite_norm, compcorr_components, global_signal, art_outliers, motion derivatives]
+    preproc.get_node('create_nuisance_filter').iterables = ('selector', [[True, True, True, False, True, False]]) #[[False, False, False, False, False, False]]) #,[True, True, True, False, True, False]])
     preproc.get_node('bandpass_filter').iterables = [('highpass_freq', [-1]), ('lowpass_freq', [-1])]
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
     cc_wf = preproc.get_node("CompCor")
@@ -179,7 +180,7 @@ if __name__ == '__main__':
     
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
-    preproc.inputs.inputspec.do_slicetime = True
+    preproc.inputs.inputspec.do_slicetime = False
     preproc.inputs.inputspec.compcor_select = [False, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
@@ -189,21 +190,21 @@ if __name__ == '__main__':
     wf.connect(subject_id_infosource, "subject_id", preproc, 'inputspec.fssubject_id')
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
     
-    report_wf = create_preproc_report_wf(resultsdir + "/reports")
-    report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
+    #report_wf = create_preproc_report_wf(resultsdir + "/reports")
+    #report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
-    def pick_full_brain_ribbon(l):
-        import os
-        for path in l:
-            if os.path.split(path)[1] == "ribbon.mgz":
-                return path
-            
-    wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
-    wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
-    wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
-    wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
-    wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
-    wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
+#     def pick_full_brain_ribbon(l):
+#         import os
+#         for path in l:
+#             if os.path.split(path)[1] == "ribbon.mgz":
+#                 return path
+#             
+#     wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
+#     wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
+#     wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
+#     wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
+#     wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
+#     wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
     ds = pe.Node(nio.DataSink(), name="datasink", overwrite=True)
     ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
@@ -212,4 +213,4 @@ if __name__ == '__main__':
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
     wf.write_graph()
                
-    wf.run(plugin="MultiProc", plugin_args={'submit_specs': 'request_memory = 4000\n'})
+    wf.run(plugin="Linear", plugin_args={'submit_specs': 'request_memory = 4000\n'})
