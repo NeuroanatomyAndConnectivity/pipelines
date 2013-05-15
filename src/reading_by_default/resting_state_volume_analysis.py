@@ -6,14 +6,14 @@ import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.afni as afni
 import nipype.interfaces.c3 as c3
 
-from CPAC.registration.registration import create_nonlinear_register
+#from CPAC.registration.registration import create_nonlinear_register
 
 import os
 from variables import resultsdir, freesurferdir, subjects, workingdir, rois
 del os.environ["DISPLAY"]
 from bips.workflows.scripts.ua780b1988e1c11e1baf80019b9f22493.base import get_struct_norm_workflow
 from nipype.interfaces import ants
-from correlation_matrix import write_correlation_matrix
+#from correlation_matrix import write_correlation_matrix
 
 def create_normalization_wf(transformations=["mni2func"]):
     wf = pe.Workflow(name="normalization")
@@ -58,11 +58,11 @@ if __name__ == '__main__':
     
     
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = os.path.join(workingdir, "rs_analysis_test")
+    wf.base_dir = os.path.join(workingdir, "rs_analysis_test_nipype_dev")
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
-    subject_id_infosource.iterables = ("subject_id", subjects)
+    subject_id_infosource.iterables = ("subject_id", [subjects[0]])
     
     fwhm_infosource = pe.Node(util.IdentityInterface(fields=['fwhm']), name="fwhm_infosource")
     fwhm_infosource.iterables = ("fwhm", [5])
@@ -117,6 +117,7 @@ if __name__ == '__main__':
     point = pe.Node(afni.Calc(), name="point")
     point.inputs.in_file_a = fsl.Info.standard_image("MNI152_T1_2mm.nii.gz")
     point.inputs.out_file = "roi_point.nii"
+    point.inputs.outputtype = "NIFTI"
     def roi2exp(coord):
         return "step(4-(x%+d)*(x%+d)-(y%+d)*(y%+d)-(z%+d)*(z%+d))"%(coord[0], coord[0], coord[1], coord[1], -coord[2], -coord[2])
     wf.connect(roi_infosource, ("roi", roi2exp), point, "expr")
@@ -216,13 +217,13 @@ if __name__ == '__main__':
     mask.inputs.output_type = "NIFTI"
     wf.connect(corr2std, 'output_image', mask, "in_file")
     
-    ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.run_without_submitting = True
-    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
-    wf.connect(mask, 'out_file', ds, "normalized_z_scored_corr_map")
-    wf.connect(ants_normalize, 'outputspec.warped_brain', ds, "normalized_T1")
-    wf.connect(ants_normalize, 'outputspec.warp_field', ds, "anat2mni_transform")
-    wf.connect(ants_normalize, 'outputspec.inverse_warp', ds, "mni2anat_transform")
+#     ds = pe.Node(nio.DataSink(), name="datasink")
+#     ds.run_without_submitting = True
+#     ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
+#     wf.connect(mask, 'out_file', ds, "normalized_z_scored_corr_map")
+#     wf.connect(ants_normalize, 'outputspec.warped_brain', ds, "normalized_T1")
+#     wf.connect(ants_normalize, 'outputspec.warp_field', ds, "anat2mni_transform")
+#     wf.connect(ants_normalize, 'outputspec.inverse_warp', ds, "mni2anat_transform")
     
     wf.write_graph()
-    wf.run(plugin="CondorDAGMan")
+    wf.run(plugin="Linear")
