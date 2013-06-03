@@ -13,7 +13,7 @@ from variables import resultsdir, freesurferdir, subjects, workingdir, rois
 del os.environ["DISPLAY"]
 from bips.workflows.scripts.ua780b1988e1c11e1baf80019b9f22493.base import get_struct_norm_workflow
 from nipype.interfaces import ants
-from correlation_matrix import write_correlation_matrix
+#from correlation_matrix import write_correlation_matrix
 
 def create_normalization_wf(transformations=["mni2func"]):
     wf = pe.Workflow(name="normalization")
@@ -67,6 +67,9 @@ if __name__ == '__main__':
     fwhm_infosource = pe.Node(util.IdentityInterface(fields=['fwhm']), name="fwhm_infosource")
     fwhm_infosource.iterables = ("fwhm", [5])
     
+    bandpass_infosource = pe.Node(util.IdentityInterface(fields=['bandpass']), name="bandpass_infosource")
+    bandpass_infosource.iterables = ("bandpass", ["highpass_freq_0.01_lowpass_freq_0.1"])
+    
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['epi_mask','func2anat_transform']), name="datagrabber")
     datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes')
     datagrabber.inputs.template = '%s/_subject_id_%s/%s*/*.%s'
@@ -75,12 +78,13 @@ if __name__ == '__main__':
     datagrabber.inputs.sort_filelist = True
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
     
-    timeseries_datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id', 'fwhm'], outfields=['preprocessed_epi']), name="timeseries_datagrabber")
+    timeseries_datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id', 'fwhm', 'bandpass'], outfields=['preprocessed_epi']), name="timeseries_datagrabber")
     timeseries_datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes')
-    timeseries_datagrabber.inputs.template = '%s/_subject_id_%s/%s*/*.%s'
-    timeseries_datagrabber.inputs.template_args['preprocessed_epi'] = [['preprocessed_resting', 'subject_id', 'fwhm', 'nii.gz']]
+    timeseries_datagrabber.inputs.template = '%s/_subject_id_%s/%s/_%s/*/*.%s'
+    timeseries_datagrabber.inputs.template_args['preprocessed_epi'] = [['preprocessed_resting', 'subject_id', 'fwhm', 'bandpass', 'nii.gz']]
     timeseries_datagrabber.inputs.sort_filelist = True
     wf.connect(subject_id_infosource, "subject_id", timeseries_datagrabber, "subject_id")
+    wf.connect(bandpass_infosource, "bandpass", timeseries_datagrabber, "bandpass")
     
     def format_fwhm(fwhm):
         return "_fwhm_%d/"%fwhm
@@ -116,6 +120,7 @@ if __name__ == '__main__':
     
     point = pe.Node(afni.Calc(), name="point")
     point.inputs.in_file_a = fsl.Info.standard_image("MNI152_T1_2mm.nii.gz")
+    point.inputs.outputtype = "NIFTI"
     point.inputs.out_file = "roi_point.nii"
     def roi2exp(coord):
         return "step(4-(x%+d)*(x%+d)-(y%+d)*(y%+d)-(z%+d)*(z%+d))"%(coord[0], coord[0], coord[1], coord[1], -coord[2], -coord[2])
@@ -173,7 +178,8 @@ if __name__ == '__main__':
     
     correlation_map = pe.Node(afni.Fim(), name="correlation_map")
     correlation_map.inputs.out = "Correlation"
-    correlation_map.inputs.outputtype = "NIFTI_GZ"
+    correlation_map.inputs.outputtype = "NIFTI"
+    correlation_map.inputs.out_file = "corr_map.nii"
     wf.connect(extract_timeseries, "out_file", correlation_map, "ideal_file")
     wf.connect(timeseries_datagrabber, "preprocessed_epi", correlation_map, "in_file")
     
@@ -225,4 +231,4 @@ if __name__ == '__main__':
     wf.connect(ants_normalize, 'outputspec.inverse_warp', ds, "mni2anat_transform")
     
     wf.write_graph()
-    wf.run(plugin="CondorDAGMan")
+    wf.run(plugin="MultiProc")
