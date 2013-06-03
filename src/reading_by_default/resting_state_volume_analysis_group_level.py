@@ -66,29 +66,29 @@ if __name__ == '__main__':
         wf.connect(mean_conn_map, 'out_file', ds, "mean_conn_maps"+suffix)
         wf.connect(std_conn_maps, 'out_file', ds, "std_conn_maps"+suffix)
     
-    for roi1 in rois:
-        for roi2 in [roi for roi in rois if roi is not roi1]:
-            suffix = "_" + format_roi(roi1) + "_vs_" + format_roi(roi2)
-            
-            diff_i = pe.MapNode(fsl.maths.BinaryMaths(), name="diff_i"+suffix, iterfield=["in_file", "operand_file", "out_file"])
-            diff_i.inputs.out_file = [s+".nii" for s in subjects]
-            diff_i.inputs.operation = "sub"
-            diff_i.inputs.output_type = "NIFTI"
-            ds1 = wf.get_node("func_datasource_"+format_roi(roi1))
-            wf.connect(ds1, "connectivity_maps", diff_i, "in_file")
-            ds2 = wf.get_node("func_datasource_"+format_roi(roi2))
-            wf.connect(ds2, "connectivity_maps", diff_i, "operand_file")
-            wf.connect(diff_i, 'out_file', ds, "diff_files"+suffix)
-            
-            avg_i = pe.MapNode(fsl.maths.MultiImageMaths(), name="avg_i"+suffix, iterfield=["in_file", "operand_files", "out_file"])
-            avg_i.inputs.out_file = [s+".nii" for s in subjects]
-            avg_i.inputs.op_string = "-add %s -div 2"
-            avg_i.inputs.output_type = "NIFTI"
-            ds1 = wf.get_node("func_datasource_"+format_roi(roi1))
-            wf.connect(ds1, "connectivity_maps", avg_i, "in_file")
-            ds2 = wf.get_node("func_datasource_"+format_roi(roi2))
-            wf.connect(ds2, "connectivity_maps", avg_i, "operand_files")
-            wf.connect(avg_i, 'out_file', ds, "avg_files"+suffix)
+#    for roi1 in rois:
+#        for roi2 in [roi for roi in rois if roi is not roi1]:
+#            suffix = "_" + format_roi(roi1) + "_vs_" + format_roi(roi2)
+#            
+#            diff_i = pe.MapNode(fsl.maths.BinaryMaths(), name="diff_i"+suffix, iterfield=["in_file", "operand_file", "out_file"])
+#            diff_i.inputs.out_file = [s+".nii" for s in subjects]
+#            diff_i.inputs.operation = "sub"
+#            diff_i.inputs.output_type = "NIFTI"
+#            ds1 = wf.get_node("func_datasource_"+format_roi(roi1))
+#            wf.connect(ds1, "connectivity_maps", diff_i, "in_file")
+#            ds2 = wf.get_node("func_datasource_"+format_roi(roi2))
+#            wf.connect(ds2, "connectivity_maps", diff_i, "operand_file")
+#            wf.connect(diff_i, 'out_file', ds, "diff_files"+suffix)
+#            
+#            avg_i = pe.MapNode(fsl.maths.MultiImageMaths(), name="avg_i"+suffix, iterfield=["in_file", "operand_files", "out_file"])
+#            avg_i.inputs.out_file = [s+".nii" for s in subjects]
+#            avg_i.inputs.op_string = "-add %s -div 2"
+#            avg_i.inputs.output_type = "NIFTI"
+#            ds1 = wf.get_node("func_datasource_"+format_roi(roi1))
+#            wf.connect(ds1, "connectivity_maps", avg_i, "in_file")
+#            ds2 = wf.get_node("func_datasource_"+format_roi(roi2))
+#            wf.connect(ds2, "connectivity_maps", avg_i, "operand_files")
+#            wf.connect(avg_i, 'out_file', ds, "avg_files"+suffix)
             
 #            diff = pe.Node(fsl.maths.BinaryMaths(), name="diff"+suffix)
 #            diff.inputs.operation = "sub"

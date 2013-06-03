@@ -113,23 +113,27 @@ if __name__ == '__main__':
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti']), 
                           name="datagrabber",
                           overwrite=True)
-    datagrabber.inputs.base_directory = '/scr/namibia1/baird/MPI_Project/Neuroimaging_Data.bcp/'
+    datagrabber.inputs.base_directory = '/scr/namibia1/baird/MPI_Project/Neuroimaging_Data'
     datagrabber.inputs.template = '%s/%s/%s'
     datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'func', '*.nii.gz']]
     datagrabber.inputs.sort_filelist = True
     
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
     
-    def get_tr_and_sliceorder(dicom_files):
+    def get_tr_and_sliceorder(dicom_files, convention="french"):
         import numpy as np
         import dcmstack, dicom
         from dcmstack.dcmmeta import NiftiWrapper
         nii_wrp = NiftiWrapper.from_filename(dicom_files)
-        sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
+        if convention == "french":
+            sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
+        elif convention == "SPM":
+            sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
         tr = nii_wrp.meta_ext.get_values('RepetitionTime')
         return tr/1000.,sliceorder
     
-    get_meta = pe.Node(util.Function(input_names=['dicom_files'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
+    get_meta = pe.Node(util.Function(input_names=['dicom_files', 'convention'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
+    get_meta.inputs.convention = "SPM"
     
     wf.connect(datagrabber, "resting_nifti", get_meta, "dicom_files")
     
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.surface_fwhm = 0.0
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
-    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,5])
+    preproc.get_node('fwhm_input').iterables = ('fwhm', [5])
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
 #preproc.get_node('take_mean_art').get_node('strict_artifact_detect').overwrite=True
     preproc.inputs.inputspec.ad_normthresh = 1
@@ -159,8 +163,10 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.do_slicetime = True
     preproc.inputs.inputspec.compcor_select = [True, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
-    preproc.inputs.inputspec.highpass_freq = 0.01
-    preproc.inputs.inputspec.lowpass_freq = 0.1
+    preproc.get_node('bandpass_filter').iterables = [('highpass_freq', [100]), ('lowpass_freq', [10])]
+#     preproc.inputs.inputspec.highpass_freq = 0.01
+#     preproc.inputs.inputspec.lowpass_freq = 0.1
+    #[motion_params, composite_norm, compcorr_components, global_signal, art_outliers, motion derivatives]
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
     wf.connect(get_meta, "tr", preproc, "inputspec.tr")
@@ -185,7 +191,7 @@ if __name__ == '__main__':
  #   wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
     ds = pe.Node(nio.DataSink(), name="datasink", overwrite=True)
-    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
+    ds.inputs.base_directory = os.path.join(resultsdir, "volumes_bad_sliceorder")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
