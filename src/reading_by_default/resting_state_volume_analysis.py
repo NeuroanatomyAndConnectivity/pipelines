@@ -71,7 +71,7 @@ if __name__ == '__main__':
     bandpass_infosource.iterables = ("bandpass", ["highpass_freq_100_lowpass_freq_10"])#"highpass_freq_0.01_lowpass_freq_0.1", 
     
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['epi_mask','func2anat_transform']), name="datagrabber")
-    datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes_bad_sliceorder')
+    datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes_bad_sliceorder_dcm2nii')
     datagrabber.inputs.template = '%s/_subject_id_%s/%s*/*.%s'
     datagrabber.inputs.template_args['func2anat_transform'] = [['func2anat_transform','subject_id', '', 'mat']]
     datagrabber.inputs.template_args['epi_mask'] = [['epi_mask','subject_id', '', 'nii']]
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
     
     timeseries_datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id', 'fwhm', 'bandpass'], outfields=['preprocessed_epi']), name="timeseries_datagrabber")
-    timeseries_datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes_bad_sliceorder')
+    timeseries_datagrabber.inputs.base_directory = os.path.join(resultsdir,'volumes_bad_sliceorder_dcm2nii')
     timeseries_datagrabber.inputs.template = '%s/_subject_id_%s/%s/_%s/*/*.%s'
     timeseries_datagrabber.inputs.template_args['preprocessed_epi'] = [['preprocessed_resting', 'subject_id', 'fwhm', 'bandpass', 'nii.gz']]
     timeseries_datagrabber.inputs.sort_filelist = True
@@ -224,7 +224,7 @@ if __name__ == '__main__':
     
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.run_without_submitting = True
-    ds.inputs.base_directory = os.path.join(resultsdir, "volumes_bad_sliceorder")
+    ds.inputs.base_directory = os.path.join(resultsdir, "volumes_bad_sliceorder_dcm2nii")
     wf.connect(mask, 'out_file', ds, "normalized_z_scored_corr_map")
     wf.connect(ants_normalize, 'outputspec.warped_brain', ds, "normalized_T1")
     wf.connect(ants_normalize, 'outputspec.warp_field', ds, "anat2mni_transform")

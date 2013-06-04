@@ -110,32 +110,32 @@ if __name__ == '__main__':
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ("subject_id", subjects)
     
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti']), 
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti', 'resting_dicoms']), 
                           name="datagrabber",
                           overwrite=True)
     datagrabber.inputs.base_directory = '/scr/namibia1/baird/MPI_Project/Neuroimaging_Data'
     datagrabber.inputs.template = '%s/%s/%s'
     datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'func', '*.nii.gz']]
+    datagrabber.inputs.template_args['resting_dicoms'] = [['subject_id', '*resting*', '*']]
     datagrabber.inputs.sort_filelist = True
     
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
     
-    def get_tr_and_sliceorder(dicom_files, convention="french"):
+    def get_tr_and_sliceorder(dicom_files):
         import numpy as np
         import dcmstack, dicom
-        from dcmstack.dcmmeta import NiftiWrapper
-        nii_wrp = NiftiWrapper.from_filename(dicom_files)
-        if convention == "french":
-            sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
-        elif convention == "SPM":
-            sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
+        my_stack = dcmstack.DicomStack()
+        for src_path in dicom_files:
+            src_dcm = dicom.read_file(src_path)
+            my_stack.add_dcm(src_dcm)
+        nii_wrp = my_stack.to_nifti_wrapper()
+        sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
         tr = nii_wrp.meta_ext.get_values('RepetitionTime')
         return tr/1000.,sliceorder
     
-    get_meta = pe.Node(util.Function(input_names=['dicom_files', 'convention'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
-    get_meta.inputs.convention = "SPM"
+    get_meta = pe.Node(util.Function(input_names=['dicom_files'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
     
-    wf.connect(datagrabber, "resting_nifti", get_meta, "dicom_files")
+    wf.connect(datagrabber, "resting_dicoms", get_meta, "dicom_files")
     
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
@@ -191,7 +191,7 @@ if __name__ == '__main__':
  #   wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
     ds = pe.Node(nio.DataSink(), name="datasink", overwrite=True)
-    ds.inputs.base_directory = os.path.join(resultsdir, "volumes_bad_sliceorder")
+    ds.inputs.base_directory = os.path.join(resultsdir, "volumes_bad_sliceorder_dcm2nii")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
