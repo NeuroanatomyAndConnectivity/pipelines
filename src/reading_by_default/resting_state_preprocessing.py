@@ -146,6 +146,11 @@ if __name__ == '__main__':
     
     # inputs
     preproc.inputs.inputspec.motion_correct_node = 'nipy'
+    ad = preproc.get_node('artifactdetect')
+    preproc.disconnect(mod_realign,'parameter_source',
+        ad,'parameter_source')
+    ad.inputs.parameter_source = "NiPy"
+    
     preproc.inputs.inputspec.realign_parameters = {"loops":[5],
                                                    "speedup":[5]}
     preproc.inputs.inputspec.do_whitening = False
@@ -197,4 +202,4 @@ if __name__ == '__main__':
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
     wf.write_graph()
                
-    wf.run(plugin="MultiProc")
+    wf.run(plugin="Linear")
