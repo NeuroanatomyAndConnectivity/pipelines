@@ -173,17 +173,17 @@ rois.append((8,-56,26))
 
 # #Irene (tentative): (from Precuneus paper, with seeds moved more lateral to account for 3mm sphere Radius)
 # #motorPrecun 
-# rois.append((-3,-47,58))
+rois.append((-3,-47,58))
 # #centralPrecun 
-# rois.append((-3,-64,45))
+rois.append((-3,-64,45))
 # #visualPrecun 
-# rois.append((-3, -78, 43))
+rois.append((-3, -78, 43))
 # #anteriorPCC 
-# rois.append((-3, -36, 35))
+rois.append((-3, -36, 35))
 
 #subjects = ["13061.30", "19079.ca"]
 
-subjects = [
+bens_subjects = set([
 '06222.f4',
  '06275.e0',
  '07070.79',
@@ -241,4 +241,24 @@ subjects = [
  '18761.dc',
  '19091.a3',
  '19417.87'
- ]
+ ])
+
+irenes_subjects = set(['10576.44', 
+                       '13565.7c', 
+                       '12184.55', 
+                       '12522.80', 
+                       '14102.d1', 
+                       '11960.6a', 
+                       '16090.c9', 
+                       '12315.9a', 
+                       '09440.22', 
+                       '14390.d3', 
+                       '14388.48', 
+                       '07296.ec', 
+                       '13536.51', 
+                       '10960.82', 
+                       '14075.bd',
+                       '09561.e0'])
+
+subjects = irenes_subjects
+
