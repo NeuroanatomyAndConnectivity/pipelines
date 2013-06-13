@@ -202,4 +202,4 @@ if __name__ == '__main__':
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
     wf.write_graph()
                
-    wf.run(plugin="Linear")
+    wf.run(plugin="MultiProc")

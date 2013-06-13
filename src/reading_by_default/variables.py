@@ -153,15 +153,15 @@ rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0),
 rois = []
 #Ben:
 #medial 
-rois.append((6,58,0))
+#rois.append((6,58,0))
 #lateral 
-rois.append((24,58,18))
+#rois.append((24,58,18))
 # 
 # #Reading:
 # #lMPFC 
-rois.append((-6,52,-2))
+#rois.append((-6,52,-2))
 # #rMPFC 
-rois.append((6,52,-2))
+#rois.append((6,52,-2))
 # #lPCC 
 rois.append((-8,-56,26))
 # #rPCC 
@@ -173,13 +173,13 @@ rois.append((8,-56,26))
 
 # #Irene (tentative): (from Precuneus paper, with seeds moved more lateral to account for 3mm sphere Radius)
 # #motorPrecun 
-rois.append((-3,-47,58))
+#rois.append((-3,-47,58))
 # #centralPrecun 
-rois.append((-3,-64,45))
+#rois.append((-3,-64,45))
 # #visualPrecun 
-rois.append((-3, -78, 43))
+#rois.append((-3, -78, 43))
 # #anteriorPCC 
-rois.append((-3, -36, 35))
+#rois.append((-3, -36, 35))
 
 #subjects = ["13061.30", "19079.ca"]
 
@@ -260,5 +260,50 @@ irenes_subjects = set(['10576.44',
                        '14075.bd',
                        '09561.e0'])
 
-subjects = irenes_subjects
+florence_subjects = set(['06222.f4',
+                         '07296.ec',
+                         '07346.36',
+                         '09169.c5',
+                         '09440.22',
+                         '09561.e0',
+                         '10080.62',
+                         '10439.86',
+                         '10576.44',
+                         '10581.e8',
+                         '11111.28',
+                         '11944.79',
+                         '12184.55',
+                         '12315.9a',
+                         '12522.80',
+                         '13261.8d',
+                         '13565.7c',
+                         '13989.a7',
+                         '14075.bd',
+                         '14081.cb',
+                         '14102.d1',
+                         '14388.48',
+                         '14390.d3',
+                         '14702.ea',
+                         '15070.25',
+                         '15403.c5',
+                         '15466.cb',
+                         '15640.65',
+                         '15890.ea',
+                         '16090.c9',
+                         '16758.c3',
+                         '16939.4f',
+                         '17421.31',
+                         '18758.73',
+                         '18761.dc',
+                         '19091.a3',
+                         '19417.87',
+                         '13649.8d',
+                         '18693.4a',
+                         '18066.85',
+                         '17845.a2',
+                         '11065.70',
+                         '19079.ca',
+                         '10145.c2',
+                         '13061.30'])
+subjects = list(florence_subjects)
 
