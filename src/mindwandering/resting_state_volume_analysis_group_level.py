@@ -10,12 +10,12 @@ regressors_file = dropbox_root + "/papers/neural_correlates_of_mind_wandering/re
 from variables import workingdir, resultsdir, subjects
 
 derivatives = {"reho": "reho_z/_subject_id_%s/*.nii.gz",
-                "alff": "alff_z/_subject_id_%s/*.nii.gz",
-                "falff": "falff_z/_subject_id_%s/*.nii.gz",
-                "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
-                "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
-                "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
-                "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
+               "alff": "alff_z/_subject_id_%s/*.nii.gz",
+               "falff": "falff_z/_subject_id_%s/*.nii.gz",
+               "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
+               "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
+               "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
+               "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
                }
 
 for i, RSNid in enumerate([5, 15, 9, 6, 8, 1, 2, 7, 12, 11]):
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     models = ["past", "future", "positive", "negative", "friends", "specific_vague", "words", "images", "firstSum", "secondSum"]
     #models = ["firstSum"]
     model_nodes = {}       
-    confounds = ["age", "sex", "MeanFD"]
+    confounds = []
     
     regressors_df = pd.read_csv(regressors_file).sort(columns="queried_ursi")
     subjects_int = [int(s) for s in subjects]
@@ -138,8 +138,6 @@ if __name__ == '__main__':
     age_model_node = pe.Node(fsl.MultipleRegressDesign(), name="age_model_node")
     regressors = {}
     regressors["age"] = list(regressors_df["age"])
-    regressors["sex"] = list(regressors_df["sex"])
-    regressors["MeanFD"] = list(regressors_df["MeanFD"])
     contrasts = [("pos_age", 'T', ["age"], [1]),
                  ("neg_age", 'T', ["age"], [-1])]
     age_model_node.inputs.regressors = regressors
