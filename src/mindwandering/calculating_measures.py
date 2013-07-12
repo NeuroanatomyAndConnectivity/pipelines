@@ -3,141 +3,12 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.afni as afni
-import nipype.interfaces.nipy as nipy
 from CPAC.reho import create_reho
 from CPAC.alff import create_alff
 from CPAC.timeseries.timeseries_analysis import get_spatial_map_timeseries
-import os
 from CPAC.sca.sca import create_temporal_reg
 
-
-subjects = [
-"0102157", 
-        "0103645", 
-        "0105488", 
-        "0106780", 
-        "0108355", 
-        "0109727", 
-        "0111282", 
-        "0112249", 
-        "0112828", 
-        "0113013", 
-        "0114232", 
-        "0115321", 
-        "0115454", 
-        "0115564", 
-        "0115824", 
-        "0116039", 
-        "0116065", 
-        "0116834", 
-        "0116842", 
-        "0117168", 
-        "0118051", 
-        "0119866", 
-        "0120557", 
-        "0122169", 
-        "0122512", 
-        "0122816", 
-        "0122844", 
-        "0123173", 
-        "0123429", 
-        "0123971", 
-        "0125762", 
-        "0126919", 
-        "0131127", 
-        "0131832", 
-        "0132717", 
-        "0132995", 
-        "0134795", 
-        "0135671", 
-        "0136303", 
-        "0136416", 
-        "0137073", 
-        "0137496", 
-        "0137679", 
-        "0139300", 
-        "0139480", 
-        "0141795", 
-        "0144667", 
-        "0144702", 
-        "0146714", 
-        "0146865", 
-        "0147122", 
-        "0150525", 
-        "0150589", 
-        "0152968", 
-        "0153114", 
-        "0154423", 
-        "0155419", 
-        "0155458", 
-        "0156263", 
-        "0158411", 
-        "0158560", 
-        "0158744", 
-        "0159429", 
-        "0161200", 
-        "0162251", 
-        "0162704", 
-        "0162902", 
-        "0164900", 
-        "0166987", 
-        "0167827", 
-        "0168239", 
-        "0168357", 
-        "0168413", 
-        "0168489", 
-        "0169007", 
-        "0173085", 
-        "0173286", 
-        "0173496", 
-        "0174363", 
-        "0174886", 
-        "0177330", 
-        "0177857", 
-        "0178174", 
-        "0178453", 
-        "0179005", 
-        "0179873", 
-        "0180308", 
-        "0182376", 
-        "0183457", 
-        "0183726", 
-        "0185428", 
-        "0185676", 
-        "0185781", 
-        "0186277", 
-        "0187635", 
-        "0188199", 
-        "0188219", 
-        "0188854", 
-        "0189478", 
-        "0190501", 
-        "0194023", 
-        "0194956", 
-        "0195031", 
-        "0195236", 
-        "0196651", 
-        "0197836", 
-        "0198051", 
-        "0198130", 
-        "0198357", 
-        "0199340", 
-        "0199620"
-]
-
-rois = []
-
-# #lMPFC 
-rois.append((-6,52,-2))
-# #rMPFC 
-rois.append((6,52,-2))
-# #lPCC 
-rois.append((-8,-56,26))
-# #rPCC 
-rois.append((8,-56,26))
-
-workingdir = "/scr/kalifornien1/mindwandering/workingdir"
-resultsdir = "/scr/kalifornien1/mindwandering/results"
+from variables import workingdir, resultsdir, subjects, rois
 
 if __name__ == '__main__':
     
@@ -227,6 +98,7 @@ if __name__ == '__main__':
     dual_regression_stage1.inputs.inputspec.demean = True
     wf.connect(epi_mask, "out_file", dual_regression_stage1, "inputspec.subject_mask")
     wf.connect(datasource, "EPI_full_spectrum", dual_regression_stage1, "inputspec.subject_rest")
+    wf.connect(dual_regression_stage1, "outputspec.subject_timeseries", ds, "dual_regression_timeseries")
     
     dual_regression_stage2 = create_temporal_reg()
     dual_regression_stage2.inputs.inputspec.demean = True
@@ -236,6 +108,6 @@ if __name__ == '__main__':
     wf.connect(dual_regression_stage1, "outputspec.subject_timeseries", dual_regression_stage2, "inputspec.subject_timeseries")
     wf.connect(dual_regression_stage2, 'outputspec.temp_reg_map_z_stack', ds, "dual_regression_z")
 
-    wf.run(plugin="Linear")
+    wf.run(plugin="MultiProc")
 
 

@@ -5,146 +5,30 @@ import nipype.interfaces.fsl as fsl
 import os
 import pandas as pd
 dropbox_root = "/scr/adenauer1/PowerFolder/Dropbox"
-
-workingdir = "/scr/adenauer1//mindwandering_workign_dir"
-datadir = dropbox_root + "/papers/neural_correlates_of_mind_wandering/neuro_data"
 regressors_file = dropbox_root + "/papers/neural_correlates_of_mind_wandering/regressors.csv"
 
-derivatives = ["alff", "falff", "PCC_map", "aMPFC_map", "reho"]
+from variables import workingdir, resultsdir, subjects
 
-fwhm = 6
+derivatives = {"reho": "reho_z/_subject_id_%s/*.nii.gz",
+                "alff": "alff_z/_subject_id_%s/*.nii.gz",
+                "falff": "falff_z/_subject_id_%s/*.nii.gz",
+                "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
+                "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
+                "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
+                "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
+               }
 
-subjects = sorted([102157,
- 103645,
- 105488,
- 106780,
- 108355,
- 109727,
- 111282,
- 112249,
- 112828,
- 113013,
- 114232,
- 115321,
- 115454,
- 115564,
- 115824,
- 116039,
- 116065,
- 116834,
- 116842,
- 117168,
- 118051,
- 119866,
- 120557,
- 122169,
- 122512,
- 122816,
- 122844,
- 123173,
- 123429,
- 123971,
- 125762,
- 126919,
- 131127,
- 131832,
- 132717,
- #132850, missing data
- 132995,
- 134795,
- 135671,
- 136303,
- 136416,
- 137073,
- 137496,
- 137679,
- 139212,
- 139300,
- 139480,
- 141795,
- 142673,
- 144667,
- 144702,
- 146714,
- 146865,
- 147122,
- 150404,
- 150525,
- 150589,
- 152968,
- 153114,
- 154423,
- 155419,
- 155458,
- 156263,
- 156678,
- 158411,
- 158560,
- 158744,
- 159429,
- 161200,
- 162251,
- 162704,
- 162902,
- 163228,
- 163508,
- 164900,
- 166094,
- 166987,
- 167827,
- 168239,
- 168357,
- 168413,
- 168489,
- 169007,
- 173085,
- 173286,
- 173358,
- 173496,
- 174363,
- 174886,
- 177330,
- 177857,
- 178174,
- 178453,
- 179005,
- 179873,
- 180308,
- 182376,
- 182604,
- 183457,
- 183726,
- 185428,
- 185676,
- 185781,
- 186067,
- 186277,
- 187635,
- 188199,
- 188219,
- 188854,
- 189478,
- 190501,
- 194023,
- 194956,
- 195031,
- 195236,
- 196651,
- 197836,
- 198051,
- 198130,
- 198357,
- 199340,
- 199620])
+for i, RSNid in enumerate([5, 15, 9, 6, 8, 1, 2, 7, 12, 11]):
+    derivatives["RSN%d"%(i+1)] = "dual_regression_z/_subject_id_%s" + "/temp_reg_map_z_%04d.nii.gz"%RSNid
 
 if __name__ == '__main__':
-    wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = os.path.join(workingdir, "rs_analysis_group")
+    wf = pe.Workflow(name="group_analysis")
+    wf.base_dir = workingdir
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     mask_datasource = pe.Node(nio.DataGrabber(infields=['subject_ids'], outfields = ['mask_files']), name="mask_datasource")
-    mask_datasource.inputs.base_directory = datadir
-    mask_datasource.inputs.template = 'functional_mask/%07d.nii.gz'
+    mask_datasource.inputs.base_directory = resultsdir
+    mask_datasource.inputs.template = 'functional_mask/_subject_id_%s/*.nii'
     mask_datasource.inputs.template_args['mask_files'] = [['subject_ids']]
     mask_datasource.inputs.sort_filelist = True
     mask_datasource.inputs.subject_ids = subjects
@@ -172,18 +56,18 @@ if __name__ == '__main__':
     wf.connect(mask_datasource, "mask_files", calculate_group_mask_node, "list_of_subject_masks")
     
     restrict_to_grey = pe.Node(fsl.maths.ApplyMask(), name="restrict_to_grey")
-    restrict_to_grey.inputs.mask_file = "/scr/adenauer1/3mm_grey.nii.gz"
+    restrict_to_grey.inputs.mask_file = "/scr/adenauer1/MNI152_T1_graymatter100.nii.gz"
     wf.connect(calculate_group_mask_node, "group_mask", restrict_to_grey, "in_file")
     
-    merge_masks = pe.Node(fsl.Merge(dimension="t"), name="merge_masks")
-    wf.connect(mask_datasource, "mask_files", merge_masks, "in_files")
-    
-    smooth_masks = pe.Node(fsl.maths.IsotropicSmooth(fwhm=fwhm), name="smooth_masks")
-    wf.connect(merge_masks, "merged_file", smooth_masks, "in_file")
-    
-    mask_smooth_masks = pe.Node(fsl.maths.ApplyMask(), name="mask_smooth_masks")
-    wf.connect(smooth_masks, "out_file", mask_smooth_masks, "in_file")
-    wf.connect(merge_masks, "merged_file", mask_smooth_masks, "mask_file")
+#     merge_masks = pe.Node(fsl.Merge(dimension="t"), name="merge_masks")
+#     wf.connect(mask_datasource, "mask_files", merge_masks, "in_files")
+#     
+#     smooth_masks = pe.Node(fsl.maths.IsotropicSmooth(fwhm=fwhm), name="smooth_masks")
+#     wf.connect(merge_masks, "merged_file", smooth_masks, "in_file")
+#     
+#     mask_smooth_masks = pe.Node(fsl.maths.ApplyMask(), name="mask_smooth_masks")
+#     wf.connect(smooth_masks, "out_file", mask_smooth_masks, "in_file")
+#     wf.connect(merge_masks, "merged_file", mask_smooth_masks, "mask_file")
     
 #     def create_design(regressors_file, regressors, confounds=[], subject_ids=None):
 #         
@@ -205,11 +89,13 @@ if __name__ == '__main__':
 #             print ["0"]*len(confounds)
             
     models = ["past", "future", "positive", "negative", "friends", "specific_vague", "words", "images", "firstSum", "secondSum"]
+    #models = ["firstSum"]
     model_nodes = {}       
     confounds = ["age", "sex", "MeanFD"]
     
     regressors_df = pd.read_csv(regressors_file).sort(columns="queried_ursi")
-    regressors_df = regressors_df[regressors_df.queried_ursi.isin(subjects)]
+    subjects_int = [int(s) for s in subjects]
+    regressors_df = regressors_df[regressors_df.queried_ursi.isin(subjects_int)]
     for model in models:
         model_node = pe.Node(fsl.MultipleRegressDesign(), name="%s_model"%model)
         regressors = {}
@@ -250,7 +136,10 @@ if __name__ == '__main__':
     model_nodes["second_part"] = second_part_model_node
     
     age_model_node = pe.Node(fsl.MultipleRegressDesign(), name="age_model_node")
+    regressors = {}
     regressors["age"] = list(regressors_df["age"])
+    regressors["sex"] = list(regressors_df["sex"])
+    regressors["MeanFD"] = list(regressors_df["MeanFD"])
     contrasts = [("pos_age", 'T', ["age"], [1]),
                  ("neg_age", 'T', ["age"], [-1])]
     age_model_node.inputs.regressors = regressors
@@ -258,32 +147,23 @@ if __name__ == '__main__':
     model_nodes["age"] = age_model_node
     
     
-    for derivative in derivatives:
+    for derivative, template in derivatives.iteritems():
         derivative_datasource = pe.Node(nio.DataGrabber(infields=['subject_ids'], outfields = ['derivative_files']), name="%s_datasource"%derivative)
-        derivative_datasource.inputs.base_directory = datadir
-        derivative_datasource.inputs.template = derivative + '/%07d.nii.gz'
-        derivative_datasource.inputs.template_args['mask_files'] = [['subject_ids']]
+        derivative_datasource.inputs.base_directory = resultsdir
+        derivative_datasource.inputs.template = template
         derivative_datasource.inputs.sort_filelist = True
         derivative_datasource.inputs.subject_ids = subjects
         
         merge = pe.Node(fsl.Merge(dimension="t"), name="%s_merge"%derivative)
         wf.connect(derivative_datasource, "derivative_files", merge, "in_files")
         
-        smooth = pe.Node(fsl.maths.IsotropicSmooth(fwhm=fwhm), name="%s_smooth"%derivative)
-        wf.connect(merge, "merged_file", smooth, "in_file")
-        
-        correct_for_border_effects = pe.Node(fsl.maths.BinaryMaths(operation="div"), 
-                                             name="%s_correct_for_border_effects"%derivative)
-        wf.connect(smooth, "out_file", correct_for_border_effects, "in_file")
-        wf.connect(mask_smooth_masks, "out_file", correct_for_border_effects, "operand_file")
-        
         avg = pe.Node(fsl.maths.MeanImage(dimension="T"), name="%s_avg"%derivative)
         avg.inputs.out_file = "%s_avg.nii.gz"%derivative
-        wf.connect(correct_for_border_effects, "out_file", avg, "in_file")
+        wf.connect(merge, "merged_file", avg, "in_file")
         
         stddev = pe.Node(fsl.ImageMaths(op_string="-Tstd"), name="%s_stddev"%derivative)
         stddev.inputs.out_file = "%s_stddev.nii.gz"%derivative
-        wf.connect(correct_for_border_effects, "out_file", stddev, "in_file")
+        wf.connect(merge, "merged_file", stddev, "in_file")
         
         for model in model_nodes.keys():
             estimate = pe.Node(fsl.Randomise(), name="%s_%s_estimate"%(model,derivative))
@@ -292,15 +172,18 @@ if __name__ == '__main__':
             estimate.inputs.vox_p_values = True
             estimate.inputs.demean = True
             estimate.inputs.base_name = "%s_%s"%(model,derivative)
-            wf.connect(correct_for_border_effects, "out_file", estimate, "in_file")
+            wf.connect(merge, "merged_file", estimate, "in_file")
             wf.connect(restrict_to_grey, "out_file", estimate, "mask")
             wf.connect(model_nodes[model], "design_mat", estimate, "design_mat")
             wf.connect(model_nodes[model], "design_con", estimate, "tcon")
             wf.connect(model_nodes[model], "design_fts", estimate, "fcon")
-              
-            fdr = pe.MapNode(fsl.FDR(), name="%s_%s_fdr"%(model,derivative), iterfield=["p_val_image"])
-            fdr.inputs.one_minus_p = True
-            wf.connect(estimate, "t_p_files", fdr, "p_val_image")
     
     wf.write_graph(graph2use='exec')
-    wf.run(plugin="Linear")
+    wf.run(plugin="CondorDAGMan")
+    
+    
+# for file in glob("/scr/kalifornien1/mindwandering/workingdir/group_analysis/*estimate/*tfce_corrp_tstat*.nii.gz"):
+#     max = nb.load(file).get_data().max()
+#     if max > 0.95:
+#         print file.split("/")[-1] + " max p:" + str(max)
+
