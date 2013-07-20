@@ -10,14 +10,14 @@ regressors_file = dropbox_root + "/papers/neural_correlates_of_mind_wandering/re
 from variables import workingdir, resultsdir, subjects
 
 derivatives = {
-#                "reho": "reho_z/_subject_id_%s/*.nii.gz",
-#                "alff": "alff_z/_subject_id_%s/*.nii.gz",
-#                "falff": "falff_z/_subject_id_%s/*.nii.gz",
+                "reho": "reho_z/_subject_id_%s/*.nii.gz",
+                "alff": "alff_z/_subject_id_%s/*.nii.gz",
+                "falff": "falff_z/_subject_id_%s/*.nii.gz",
 #                "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
 #                "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
-               "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
+#             "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
 #                "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
-#                "centrality": "degree_centrality/_subject_id_%s/*.nii",
+                "centrality": "degree_centrality/_subject_id_%s/*.nii",
                }
 
 # for i, RSNid in enumerate([5, 15, 9, 6, 8, 1, 2, 7, 12, 11]):
@@ -98,27 +98,41 @@ if __name__ == '__main__':
     regressors_df = pd.read_csv(regressors_file).sort(columns="queried_ursi")
     subjects_int = [int(s) for s in subjects]
     regressors_df = regressors_df[regressors_df.queried_ursi.isin(subjects_int)]
+    regressors_df["male"] = (regressors_df["sex"] == 1)*1
+    regressors_df["female"] = (regressors_df["sex"] == 2)*1
+    for reg in ["past", "future", "positive", "negative", "friends", "specific_vague", "words", "images", "firstSum", "secondSum", "age"]:
+        regressors_df["male_"+reg] = (regressors_df["sex"] == 1)*regressors_df[reg]
+        regressors_df["female_"+reg] = (regressors_df["sex"] == 2)*regressors_df[reg]
     
     """ First part """
     variables = ["past", "future", "positive", "negative", "friends"]
-    contrasts = [(("pos_past_no_counfounds_full_model", 'T', ["past"], [1]), ["past", "future", "positive", "negative", "friends"]),
-                 (("neg_past_no_counfounds_full_model", 'T', ["past"], [-1]), ["past", "future", "positive", "negative", "friends"]),
-                 (("pos_past_age_sex_counfounds_full_model", 'T', ["past"], [1]), ["age", "sex", "past", "future", "positive", "negative", "friends"]),
-                 (("neg_past_age_sex_counfounds_full_model", 'T', ["past"], [-1]), ["age", "sex", "past", "future", "positive", "negative", "friends"]),
-                 (("pos_past", 'T', ["past"], [1]), ["past"]),
-                 (("neg_past", 'T', ["past"], [-1]), ["past"]),
-#                  ("pos_future", 'T', ["future"], [1]),
-#                  ("neg_future", 'T', ["future"], [-1]),
-#                  ("past_vs_future", 'T', ["past", "future"], [1, -1]),
-#                  ("future_vs_past", 'T', ["future", "past"], [1, -1]),
-#                  ("pos_positive", 'T', ["positive"], [1]),
-#                  ("pos_negative", 'T', ["negative"], [1]),
-#                  ("neg_positive", 'T', ["positive"], [-1]),
-#                  ("neg_negative", 'T', ["negative"], [-1]),
-#                  ("positive_vs_negative", 'T', ["positive", "negative"], [1, -1]),
-#                  ("negative_vs_positive", 'T', ["negative", "positive"], [1, -1]),
-#                  ("pos_friends", 'T', ["friends"], [1]),
-#                  ("neg_friends", 'T', ["friends"], [-1]),
+    contrasts = [
+#                  (("pos_past_no_counfounds_full_model", 'T', ["past"], [1]), ["past", "future", "positive", "negative", "friends"]),
+#                  (("neg_past_no_counfounds_full_model", 'T', ["past"], [-1]), ["past", "future", "positive", "negative", "friends"]),
+# #                  (("pos_past_age_sex_counfounds_full_model", 'T', ["past"], [1]), ["age", "sex", "past", "future", "positive", "negative", "friends"]),
+# #                  (("neg_past_age_sex_counfounds_full_model", 'T', ["past"], [-1]), ["age", "sex", "past", "future", "positive", "negative", "friends"]),
+# #                  (("pos_past", 'T', ["past"], [1]), ["past"]),
+# #                  (("neg_past", 'T', ["past"], [-1]), ["past"]),
+#                 (("pos_future_no_counfounds_full_model", 'T', ["future"], [1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("neg_future_no_counfounds_full_model", 'T', ["future"], [-1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("past_vs_future_no_counfounds_full_model", 'T', ["past", "future"], [1, -1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("future_vs_past_no_counfounds_full_model", 'T', ["future", "past"], [1, -1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("pos_positive_no_counfounds_full_model", 'T', ["positive"], [1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("pos_negative_no_counfounds_full_model", 'T', ["negative"], [1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("neg_positive_no_counfounds_full_model", 'T', ["positive"], [-1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("neg_negative_no_counfounds_full_model", 'T', ["negative"], [-1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("positive_vs_negative_no_counfounds_full_model", 'T', ["positive", "negative"], [1, -1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("negative_vs_positive_no_counfounds_full_model", 'T', ["negative", "positive"], [1, -1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("pos_friends_no_counfounds_full_model", 'T', ["friends"], [1]),["past", "future", "positive", "negative", "friends"]),
+#                 (("neg_friends_no_counfounds_full_model", 'T', ["friends"], [-1]),["past", "future", "positive", "negative", "friends"]),
+                (("pos_age_DOSS", 'T', ["age"], [1]), ["age", "male", "female"]),
+                (("neg_age_DOSS", 'T', ["age"], [-1]), ["age", "male", "female"]),
+                (("pos_sex_DOSS", 'T', ["male", "female"], [0.5, 0.5]), ["age", "male", "female"]),
+                (("neg_sex_DOSS", 'T', ["male", "female"], [-0.5, -0.5]), ["age", "male", "female"]),
+                (("pos_age_DODS", 'T', ["male_age", "female_age"], [0.5, 0.5]), ["male_age", "female_age", "male", "female"]),
+                (("neg_age_DODS", 'T', ["male_age", "female_age"], [-0.5, -0.5]), ["male_age", "female_age", "male", "female"]),
+                (("pos_sex_DODS", 'T', ["male", "female"], [0.5, -0.5]), ["male_age", "female_age", "male", "female"]),
+                (("neg_sex_DODS", 'T', ["male", "female"], [-0.5, 0.5]), ["male_age", "female_age", "male", "female"]),
                  ]
     for contrast in contrasts:
         model_node = pe.Node(fsl.MultipleRegressDesign(), name="%s_model"%contrast[0][0])
