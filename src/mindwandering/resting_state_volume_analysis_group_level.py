@@ -9,17 +9,19 @@ regressors_file = dropbox_root + "/papers/neural_correlates_of_mind_wandering/re
 
 from variables import workingdir, resultsdir, subjects
 
-derivatives = {"reho": "reho_z/_subject_id_%s/*.nii.gz",
-               "alff": "alff_z/_subject_id_%s/*.nii.gz",
-               "falff": "falff_z/_subject_id_%s/*.nii.gz",
-               "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
-               "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
+derivatives = {
+#                "reho": "reho_z/_subject_id_%s/*.nii.gz",
+#                "alff": "alff_z/_subject_id_%s/*.nii.gz",
+#                "falff": "falff_z/_subject_id_%s/*.nii.gz",
+#                "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
+#                "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
                "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
-               "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
+#                "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
+#                "centrality": "degree_centrality/_subject_id_%s/*.nii",
                }
 
-for i, RSNid in enumerate([5, 15, 9, 6, 8, 1, 2, 7, 12, 11]):
-    derivatives["RSN%d"%(i+1)] = "dual_regression_z/_subject_id_%s" + "/temp_reg_map_z_%04d.nii.gz"%RSNid
+# for i, RSNid in enumerate([5, 15, 9, 6, 8, 1, 2, 7, 12, 11]):
+#     derivatives["RSN%d"%(i+1)] = "dual_regression_z/_subject_id_%s" + "/temp_reg_map_z_%04d.nii.gz"%RSNid
 
 if __name__ == '__main__':
     wf = pe.Workflow(name="group_analysis")
@@ -91,58 +93,85 @@ if __name__ == '__main__':
     models = ["past", "future", "positive", "negative", "friends", "specific_vague", "words", "images", "firstSum", "secondSum"]
     #models = ["firstSum"]
     model_nodes = {}       
-    confounds = []
+    confounds = ["age","sex"]
     
     regressors_df = pd.read_csv(regressors_file).sort(columns="queried_ursi")
     subjects_int = [int(s) for s in subjects]
     regressors_df = regressors_df[regressors_df.queried_ursi.isin(subjects_int)]
-    for model in models:
-        model_node = pe.Node(fsl.MultipleRegressDesign(), name="%s_model"%model)
+    
+    """ First part """
+    variables = ["past", "future", "positive", "negative", "friends"]
+    contrasts = [(("pos_past_no_counfounds_full_model", 'T', ["past"], [1]), ["past", "future", "positive", "negative", "friends"]),
+                 (("neg_past_no_counfounds_full_model", 'T', ["past"], [-1]), ["past", "future", "positive", "negative", "friends"]),
+                 (("pos_past_age_sex_counfounds_full_model", 'T', ["past"], [1]), ["age", "sex", "past", "future", "positive", "negative", "friends"]),
+                 (("neg_past_age_sex_counfounds_full_model", 'T', ["past"], [-1]), ["age", "sex", "past", "future", "positive", "negative", "friends"]),
+                 (("pos_past", 'T', ["past"], [1]), ["past"]),
+                 (("neg_past", 'T', ["past"], [-1]), ["past"]),
+#                  ("pos_future", 'T', ["future"], [1]),
+#                  ("neg_future", 'T', ["future"], [-1]),
+#                  ("past_vs_future", 'T', ["past", "future"], [1, -1]),
+#                  ("future_vs_past", 'T', ["future", "past"], [1, -1]),
+#                  ("pos_positive", 'T', ["positive"], [1]),
+#                  ("pos_negative", 'T', ["negative"], [1]),
+#                  ("neg_positive", 'T', ["positive"], [-1]),
+#                  ("neg_negative", 'T', ["negative"], [-1]),
+#                  ("positive_vs_negative", 'T', ["positive", "negative"], [1, -1]),
+#                  ("negative_vs_positive", 'T', ["negative", "positive"], [1, -1]),
+#                  ("pos_friends", 'T', ["friends"], [1]),
+#                  ("neg_friends", 'T', ["friends"], [-1]),
+                 ]
+    for contrast in contrasts:
+        model_node = pe.Node(fsl.MultipleRegressDesign(), name="%s_model"%contrast[0][0])
         regressors = {}
-        for reg in confounds + [model]:
+        for reg in contrast[1]:
             regressors[reg] = list(regressors_df[reg])
-        contrasts = [("pos_"+model, 'T', [model], [1]),
-                     ("neg_"+model, 'T', [model], [-1])]
         model_node.inputs.regressors = regressors
-        model_node.inputs.contrasts = contrasts
-        model_nodes[model] = model_node
+        model_node.inputs.contrasts = [contrast[0]]
+        model_nodes[contrast[0][0]] = model_node
         
-    first_part_model_node = pe.Node(fsl.MultipleRegressDesign(), name="first_part_model")
-    regressors = {}
-    for reg in confounds + ["past", "future", "positive", "negative", "friends"]:
-        regressors[reg] = list(regressors_df[reg])
-    past = ("past", 'T', ["past"], [1])
-    future = ("future", 'T', ["future"], [1])
-    positive = ("positive", 'T', ["positive"], [1])
-    negative = ("negative", 'T', ["negative"], [1])
-    friends = ("friends", 'T', ["friends"], [1])
-    contrasts = [past, future, positive, negative, friends,
-                ("first_part", 'F', [past, future, positive, negative, friends])]
-    first_part_model_node.inputs.regressors = regressors
-    first_part_model_node.inputs.contrasts = contrasts
-    model_nodes["first_part"] = first_part_model_node
-    
-    second_part_model_node = pe.Node(fsl.MultipleRegressDesign(), name="second_part_model")
-    regressors = {}
-    for reg in confounds + [ "specific_vague", "words", "images"]:
-        regressors[reg] = list(regressors_df[reg])
-    specific_vague = ("specific_vague", 'T', ["specific_vague"], [1])
-    words = ("words", 'T', ["words"], [1])
-    images = ("images", 'T', ["images"], [1])
-    contrasts = [specific_vague, words, images,
-                ("second_part", 'F', [specific_vague, words, images])]
-    second_part_model_node.inputs.regressors = regressors
-    second_part_model_node.inputs.contrasts = contrasts
-    model_nodes["second_part"] = second_part_model_node
-    
-    age_model_node = pe.Node(fsl.MultipleRegressDesign(), name="age_model_node")
-    regressors = {}
-    regressors["age"] = list(regressors_df["age"])
-    contrasts = [("pos_age", 'T', ["age"], [1]),
-                 ("neg_age", 'T', ["age"], [-1])]
-    age_model_node.inputs.regressors = regressors
-    age_model_node.inputs.contrasts = contrasts
-    model_nodes["age"] = age_model_node
+#     first_part_model_node = pe.Node(fsl.MultipleRegressDesign(), name="first_part_model")
+#     regressors = {}
+#     for reg in confounds + ["past", "future", "positive", "negative", "friends"]:
+#         regressors[reg] = list(regressors_df[reg])
+#     past = ("past", 'T', ["past"], [1])
+#     future = ("future", 'T', ["future"], [1])
+#     past_vs_future = ("past_vs_future", 'T', ["past", "future"], [1, -1])
+#     future_vs_past = ("future_vs_past", 'T', ["future", "past"], [1, -1])
+#     positive = ("positive", 'T', ["positive"], [1])
+#     negative = ("negative", 'T', ["negative"], [1])
+#     positive_vs_negative = ("positive_vs_negative", 'T', ["positive", "negative"], [1, -1])
+#     negative_vs_positive = ("negative_vs_positive", 'T', ["negative", "positive"], [1, -1])
+#     friends = ("friends", 'T', ["friends"], [1])
+#     contrasts = [past, future, positive, negative, friends, past_vs_future, future_vs_past, positive_vs_negative, negative_vs_positive,
+#                 ("first_part", 'F', [past, future, positive, negative, friends])]
+#     first_part_model_node.inputs.regressors = regressors
+#     first_part_model_node.inputs.contrasts = contrasts
+#     model_nodes["first_part"] = first_part_model_node
+#     
+#     second_part_model_node = pe.Node(fsl.MultipleRegressDesign(), name="second_part_model")
+#     regressors = {}
+#     for reg in confounds + [ "specific_vague", "words", "images"]:
+#         regressors[reg] = list(regressors_df[reg])
+#     specific_vague = ("specific_vague", 'T', ["specific_vague"], [1])
+#     words = ("words", 'T', ["words"], [1])
+#     images = ("images", 'T', ["images"], [1])
+#     contrasts = [specific_vague, words, images,
+#                 ("second_part", 'F', [specific_vague, words, images])]
+#     second_part_model_node.inputs.regressors = regressors
+#     second_part_model_node.inputs.contrasts = contrasts
+#     model_nodes["second_part"] = second_part_model_node
+#     
+#     age_model_node = pe.Node(fsl.MultipleRegressDesign(), name="age_model_node")
+#     regressors = {}
+#     regressors["age"] = list(regressors_df["age"])
+#     regressors["sex"] = list(regressors_df["sex"])
+#     contrasts = [("pos_age", 'T', ["age"], [1]),
+#                  ("neg_age", 'T', ["age"], [-1]),
+#                  ("pos_sex", 'T', ["sex"], [1]),
+#                  ("neg_sex", 'T', ["sex"], [-1])]
+#     age_model_node.inputs.regressors = regressors
+#     age_model_node.inputs.contrasts = contrasts
+#     model_nodes["age"] = age_model_node
     
     
     for derivative, template in derivatives.iteritems():
@@ -171,12 +200,13 @@ if __name__ == '__main__':
             estimate.inputs.demean = True
             estimate.inputs.base_name = "%s_%s"%(model,derivative)
             wf.connect(merge, "merged_file", estimate, "in_file")
-            wf.connect(restrict_to_grey, "out_file", estimate, "mask")
+            if derivative != "centrality":
+                wf.connect(restrict_to_grey, "out_file", estimate, "mask")
             wf.connect(model_nodes[model], "design_mat", estimate, "design_mat")
             wf.connect(model_nodes[model], "design_con", estimate, "tcon")
             wf.connect(model_nodes[model], "design_fts", estimate, "fcon")
     
-    wf.write_graph(graph2use='exec')
+    #wf.write_graph(graph2use='exec')
     wf.run(plugin="CondorDAGMan")
     
     
