@@ -9,6 +9,8 @@ from CPAC.timeseries.timeseries_analysis import get_spatial_map_timeseries
 from CPAC.sca.sca import create_temporal_reg
 
 from variables import workingdir, resultsdir, subjects, rois
+from nipype.algorithms.degree_centrality import DegreeCentrality
+from CPAC.network_centrality.z_score import get_zscore
 
 if __name__ == '__main__':
     
@@ -39,7 +41,8 @@ if __name__ == '__main__':
     
     reho = create_reho()
     reho.inputs.inputspec.cluster_size = 27
-    wf.connect(epi_mask, "out_file", reho, "inputspec.rest_mask")
+    reho.inputs.inputspec.rest_mask = "/scr/kalifornien1/mindwandering/workingdir/group_analysis/restrict_to_grey/group_mask_masked.nii.gz"
+    #wf.connect(epi_mask, "out_file", reho, "inputspec.rest_mask")
     #reho.inputs.inputspec.rest_mask = "/SCR/MNI152_T1_2mm_ones.nii.gz"
     wf.connect(datasource, "EPI_bandpassed", reho, "inputspec.rest_res_filt")
     wf.connect(reho, 'outputspec.z_score', ds, "reho_z")
@@ -47,7 +50,8 @@ if __name__ == '__main__':
     alff = create_alff()
     alff.inputs.hp_input.hp = 0.01
     alff.inputs.lp_input.lp = 0.1
-    wf.connect(epi_mask, "out_file", alff, "inputspec.rest_mask")
+    alff.inputs.inputspec.rest_mask = "/scr/kalifornien1/mindwandering/workingdir/group_analysis/restrict_to_grey/group_mask_masked.nii.gz"
+    #wf.connect(epi_mask, "out_file", alff, "inputspec.rest_mask")
     #reho.inputs.inputspec.rest_mask = "/SCR/MNI152_T1_2mm_ones.nii.gz"
     wf.connect(datasource, "EPI_full_spectrum", alff, "inputspec.rest_res")
     wf.connect(alff, 'outputspec.alff_Z_img', ds, "alff_z")
@@ -96,18 +100,42 @@ if __name__ == '__main__':
     dual_regression_stage1 = get_spatial_map_timeseries()
     dual_regression_stage1.inputs.inputspec.spatial_map = "/scr/adenauer1/PowerFolder/Dropbox/papers/neural_correlates_of_mind_wandering/rsn20.nii.gz"
     dual_regression_stage1.inputs.inputspec.demean = True
-    wf.connect(epi_mask, "out_file", dual_regression_stage1, "inputspec.subject_mask")
-    wf.connect(datasource, "EPI_full_spectrum", dual_regression_stage1, "inputspec.subject_rest")
+    dual_regression_stage1.inputs.inputspec.subject_mask = "/scr/kalifornien1/mindwandering/workingdir/group_analysis/restrict_to_grey/group_mask_masked.nii.gz"
+    #wf.connect(epi_mask, "out_file", dual_regression_stage1, "inputspec.subject_mask")
+    wf.connect(datasource, "EPI_bandpassed", dual_regression_stage1, "inputspec.subject_rest")
     wf.connect(dual_regression_stage1, "outputspec.subject_timeseries", ds, "dual_regression_timeseries")
-    
+     
     dual_regression_stage2 = create_temporal_reg()
     dual_regression_stage2.inputs.inputspec.demean = True
     dual_regression_stage2.inputs.inputspec.normalize = True
-    wf.connect(epi_mask, "out_file", dual_regression_stage2, "inputspec.subject_mask")
-    wf.connect(datasource, "EPI_full_spectrum", dual_regression_stage2, "inputspec.subject_rest")
+    dual_regression_stage2.inputs.inputspec.subject_mask = "/scr/kalifornien1/mindwandering/workingdir/group_analysis/restrict_to_grey/group_mask_masked.nii.gz"
+    #wf.connect(epi_mask, "out_file", dual_regression_stage2, "inputspec.subject_mask")
+    wf.connect(datasource, "EPI_bandpassed", dual_regression_stage2, "inputspec.subject_rest")
     wf.connect(dual_regression_stage1, "outputspec.subject_timeseries", dual_regression_stage2, "inputspec.subject_timeseries")
     wf.connect(dual_regression_stage2, 'outputspec.temp_reg_map_z_stack', ds, "dual_regression_z")
 
-    wf.run(plugin="MultiProc")
+    downsample_mask = pe.Node(fsl.FLIRT(), name="downsample_mask")
+    downsample_mask.inputs.apply_isoxfm = 3
+    downsample_mask.inputs.reference = "/scr/adenauer1/3mm_brain.nii.gz"
+    downsample_mask.inputs.in_file = "/scr/kalifornien1/mindwandering/workingdir/group_analysis/restrict_to_grey/group_mask_masked.nii.gz"
+    downsample_mask.inputs.interp = "nearestneighbour"
+    
+    downsample_epi = pe.Node(fsl.FLIRT(), name="downsample_epi")
+    downsample_epi.inputs.apply_isoxfm = 3
+    downsample_epi.inputs.reference = "/scr/adenauer1/3mm_brain.nii.gz"
+    wf.connect(datasource, "EPI_bandpassed", downsample_epi, "in_file")
+    
+    centrality = pe.Node(DegreeCentrality(), name="degree_centrality")
+    centrality.plugin_args={'submit_specs': 'request_memory = 20000'}
+    centrality.inputs.sparsity_thr = 0.05
+    wf.connect(downsample_epi, "out_file", centrality, "epi_file")
+    wf.connect(downsample_mask, "out_file", centrality, "mask_file")
+     
+    z_score_centrality = get_zscore("z_score_centrality")
+    wf.connect(centrality, 'dc_map', z_score_centrality, "inputspec.input_file")
+    wf.connect(downsample_mask, "out_file", z_score_centrality, "inputspec.mask_file")
+    wf.connect(z_score_centrality, 'outputspec.z_score_img', ds, "degree_centrality")
+
+    wf.run(plugin="CondorDAGMan")
 
 
