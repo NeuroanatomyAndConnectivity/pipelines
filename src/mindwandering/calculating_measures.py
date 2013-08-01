@@ -136,6 +136,6 @@ if __name__ == '__main__':
     wf.connect(downsample_mask, "out_file", z_score_centrality, "inputspec.mask_file")
     wf.connect(z_score_centrality, 'outputspec.z_score_img', ds, "degree_centrality")
 
-    wf.run(plugin="CondorDAGMan")
+    wf.run(plugin="Linear")
 
 

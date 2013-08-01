@@ -17,11 +17,11 @@
     "save_script_only": false, 
     "sink_dir": "/scr/kalifornien1/mindwandering/results", 
     "subjects": [
-        "0150404", 
-        "0139212", 
-        "0186067", 
-        "0163508", 
-        "0163228"
+        "0182604", 
+        "0173358", 
+        "0166094", 
+        "0156678", 
+        "0142673"
     ], 
     "surf_dir": "/scr/kalifornien1/data/nki_enhanced/freesurfer", 
     "test_mode": false, 
