@@ -74,5 +74,5 @@ if __name__ == '__main__':
     wf.connect(clustering, 'clustered_volume', ds, 'clustered')
     wf.write_graph()
                
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

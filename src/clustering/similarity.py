@@ -29,4 +29,12 @@ def Similarity(in_file,sim,mask):
         sim_res = similarity.run()
         output = sim_res.outputs.out_file
 
+#from nipype.interfaces.afni import AutoTcorrelate
+#corr = AutoTcorrelate()
+#corr.inputs.mask = "/SCR/data/11072.b1/results/rhprefrontalMaskfs4.nii"
+#corr.inputs.in_file = "/SCR/data/11072.b1/results/rhsxfmoutfs4.nii"
+#corr.inputs.eta2 = True
+#res = corr.run()
+
+print res.outputs
     return output
