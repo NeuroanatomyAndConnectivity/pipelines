@@ -18,7 +18,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres, slicetime_file
+from variablesmark import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
 os.environ['SUBJECTS_DIR'] = '/scr/schweiz1/data/Final_High/'
 
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.fssubject_dir = '/scr/schweiz1/data/Final_High/'
     preproc.inputs.inputspec.tr = 1400/1000
     preproc.inputs.inputspec.motion_correct_node = 'afni'
-    preproc.inputs.inputspec.sliceorder = slicetime_file
+    #preproc.inputs.inputspec.sliceorder = slicetime_file
     #preproc.inputs.inputspec.sliceorder = list(np.linspace(0,1.4,64))
     def get_fsid(subject_id):
         return  subject_id+'/FREESURFER'
