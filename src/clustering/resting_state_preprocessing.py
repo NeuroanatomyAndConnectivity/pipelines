@@ -12,13 +12,13 @@ display = None
 if "DISPLAY" in os.environ:
     display = os.environ["DISPLAY"]
     os.environ.pop("DISPLAY")
-from bips.workflows.scripts.u0a14c5b5899911e1bca80023dfa375f2.base import create_rest_prep
+from bips.workflows.gablab.wips.scripts.base import create_rest_prep
 if display:
     os.environ["DISPLAY"] = display
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variablesmark import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
+from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
 os.environ['SUBJECTS_DIR'] = '/scr/schweiz1/data/Final_High/'
 
