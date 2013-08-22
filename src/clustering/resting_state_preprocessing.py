@@ -20,7 +20,7 @@ from nipype.utils.filemanip import list_to_filename
 
 from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
-os.environ['SUBJECTS_DIR'] = '/scr/schweiz1/data/Final_High/'
+os.environ['SUBJECTS_DIR'] = '/Applications/freesurfer/subjects'
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -124,8 +124,8 @@ if __name__ == '__main__':
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber")
     datagrabber.inputs.base_directory = workingdir
     datagrabber.inputs.template = '%s/%s/%s'
-    #datagrabber.inputs.template_args['resting_dicoms'] = [['subject_id', '*func*', '*']]
-    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'session', 'func/rest.nii.gz']]
+    datagrabber.inputs.template_args['resting_dicoms'] = [['subject_id', '*func*', '*']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
     datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat', '*.nii.gz']]
     datagrabber.inputs.sort_filelist = False
     
@@ -162,7 +162,7 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.highpass_freq = 100
     preproc.inputs.inputspec.lowpass_freq = 10
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
-    preproc.inputs.inputspec.fssubject_dir = '/scr/schweiz1/data/Final_High/'
+    preproc.inputs.inputspec.fssubject_dir = freesurferdir
     preproc.inputs.inputspec.tr = 1400/1000
     preproc.inputs.inputspec.motion_correct_node = 'afni'
     #preproc.inputs.inputspec.sliceorder = slicetime_file
@@ -221,5 +221,5 @@ if __name__ == '__main__':
     wf.connect(sxfm, 'out_file', ds, 'sxfmout')
     wf.write_graph()
                
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
+#wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":16})

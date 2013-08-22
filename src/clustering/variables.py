@@ -13,7 +13,7 @@ analysis_subjects = ['3795193', #'3201815', '0021024', '3893245', '1961098', '70
 sessions = ['session1','session2']
 analysis_sessions = ['session1','session2']
 
-workingdir = os.path.join("/Volumes/Macintosh HD 2/Data/NKI")
+workingdir = os.path.join("/Volumes/Lotus/Data/NKI")
 resultsdir = os.path.join(workingdir, "Results");
 freesurferdir = '/Applications/freesurfer/subjects'
 
