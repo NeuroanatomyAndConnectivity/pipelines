@@ -107,8 +107,8 @@ if __name__ == '__main__':
     import numpy as np
 
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = os.path.join(workingdir,"rs_preprocessing")
-    wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
+    wf.base_dir = os.path.join(workingdir,"rs_preprocessing/")
+    wf.config['execution']['crashdump_dir'] = wf.base_dir + "crash_files/"
 
 ##Infosource##    
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
@@ -116,22 +116,37 @@ if __name__ == '__main__':
 
     session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     session_infosource.iterables = ('session', sessions)
-    
+
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_dicoms','resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
     datagrabber.inputs.template = '%s/%s/%s'
-    datagrabber.inputs.template_args['resting_dicoms'] = [['subject_id', '*func*', '*']]
-    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat', '*.nii.gz']]
-    datagrabber.inputs.sort_filelist = False
-    
+    datagrabber.inputs.template_args['resting_dicoms'] = [['DICOM/subject_id', 'session', 'RfMRI_mx_645/*.dcm']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI/subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI/subject_id', 'anat', '*.nii.gz']]
+    datagrabber.inputs.sort_filelist = True
+
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     wf.connect(session_infosource, 'session', datagrabber, 'session')
+    
+    def get_tr_and_sliceorder(dicom_files):
+        import numpy as np
+        import dcmstack, dicom
+        from dcmstack.dcmmeta import NiftiWrapper
+        nii_wrp = NiftiWrapper.from_filename(dicom_files)
+        sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
+        tr = nii_wrp.meta_ext.get_values('RepetitionTime')
+        import pdb
+        pdb.set_trace()
+        return tr/1000.,sliceorder
 
+    get_meta = pe.Node(util.Function(input_names=['dicom_files'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
+                       
+    wf.connect(datagrabber, "resting_dicoms", get_meta, "dicom_files")
+    
 ##Preproc##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
@@ -152,7 +167,7 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.surface_fwhm = 0.0
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
-    preproc.get_node('fwhm_input').iterables = ('fwhm', [0])
+    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,5])
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
@@ -163,14 +178,15 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.lowpass_freq = 10
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
-    preproc.inputs.inputspec.tr = 1400/1000
-    preproc.inputs.inputspec.motion_correct_node = 'afni'
+    #preproc.inputs.inputspec.tr = 1400/1000
+    #preproc.inputs.inputspec.motion_correct_node = 'afni'
     #preproc.inputs.inputspec.sliceorder = slicetime_file
     #preproc.inputs.inputspec.sliceorder = list(np.linspace(0,1.4,64))
     def get_fsid(subject_id):
         return  subject_id+'/FREESURFER'
-
-    wf.connect(subject_id_infosource, ('subject_id',get_fsid), preproc, "inputspec.fssubject_id")
+    wf.connect(get_meta, "tr", preproc, "inputspec.tr")
+    wf.connect(get_meta, "sliceorder", preproc, "inputspec.sliceorder")
+    wf.connect(subject_id_infosource, 'subject_id', preproc, "inputspec.fssubject_id")
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
 
 ##Sampler##
@@ -220,6 +236,7 @@ if __name__ == '__main__':
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')
     wf.connect(sxfm, 'out_file', ds, 'sxfmout')
     wf.write_graph()
-               
-#wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
+
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc"), plugin_args={"n_procs":16})
+    wf.run(plugin="Linear", updatehash=True)
