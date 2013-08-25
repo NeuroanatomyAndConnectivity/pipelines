@@ -20,7 +20,7 @@ from nipype.utils.filemanip import list_to_filename
 
 from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
-os.environ['SUBJECTS_DIR'] = '/Applications/freesurfer/subjects'
+os.environ['SUBJECTS_DIR'] = freesurferdir
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -103,7 +103,7 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     
     return wf
 
-if __name__ == '__main__':
+def get_wf():
     import numpy as np
 
     wf = pe.Workflow(name="main_workflow")
@@ -118,15 +118,14 @@ if __name__ == '__main__':
     session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
-    hemi_infosource.iterables = ('hemi', hemispheres)
 
 ##Datagrabber##
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_dicoms','resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
-    datagrabber.inputs.template = '%s/%s/%s'
-    datagrabber.inputs.template_args['resting_dicoms'] = [['DICOM/subject_id', 'session', 'RfMRI_mx_645/*.dcm']]
-    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI/subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI/subject_id', 'anat', '*.nii.gz']]
+    datagrabber.inputs.template = '%s/%s/%s/%s'
+    datagrabber.inputs.template_args['resting_dicoms'] =[['DICOM','subject_id', 'session', 'RfMRI_mx_645/*.dcm']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat', '*.nii.gz']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
@@ -236,7 +235,10 @@ if __name__ == '__main__':
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')
     wf.connect(sxfm, 'out_file', ds, 'sxfmout')
     wf.write_graph()
+    return wf
 
+if __name__=='__main__':
+    wf = get_wf()
     #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
     #wf.run(plugin="MultiProc"), plugin_args={"n_procs":16})
     wf.run(plugin="Linear", updatehash=True)
