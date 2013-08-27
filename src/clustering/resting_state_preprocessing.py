@@ -118,12 +118,13 @@ def get_wf():
     session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
+    hemi_infosource.iterables = ('hemi', hemispheres)
 
 ##Datagrabber##
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_dicoms','resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
     datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_dicoms'] =[['DICOM','subject_id', 'session', 'RfMRI_mx_645/*.dcm']]
+    datagrabber.inputs.template_args['resting_dicoms'] =[['DICOM','subject_id', 'session', 'RfMRI_mx_645/]]
     datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
     datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat', '*.nii.gz']]
     datagrabber.inputs.sort_filelist = True
@@ -133,13 +134,10 @@ def get_wf():
     
     def get_tr_and_sliceorder(dicom_files):
         import numpy as np
-        import dcmstack, dicom
-        from dcmstack.dcmmeta import NiftiWrapper
-        nii_wrp = NiftiWrapper.from_filename(dicom_files)
+        nii_wrp = nipype.interfaces.dcmstack(dicom_files)
+	#nipype.interfaces.lookupMeta
         sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
         tr = nii_wrp.meta_ext.get_values('RepetitionTime')
-        import pdb
-        pdb.set_trace()
         return tr/1000.,sliceorder
 
     get_meta = pe.Node(util.Function(input_names=['dicom_files'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")

@@ -13,11 +13,11 @@ analysis_subjects = ['3795193', #'3201815', '0021024', '3893245', '1961098', '70
 sessions = ['session1','session2']
 analysis_sessions = ['session1','session2']
 
-workingdir = "/Volumes/Lotus/Data/"
+workingdir = "/home/ghost/Data"
 resultsdir = os.path.join(workingdir, "Results/");
-freesurferdir = '/Applications/freesurfer/subjects'
+freesurferdir = '/usr/local/freesurfer/subjects'
 
-slicetime_file = '/scr/schweiz1/data/NKI_High/scripts/sliceTime2.txt'
+#slicetime_file = '/scr/schweiz1/data/NKI_High/scripts/sliceTime2.txt'
 rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
 
 def getvertices(hemi,freesurferdir):
