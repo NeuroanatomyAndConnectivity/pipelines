@@ -36,5 +36,5 @@ def Similarity(in_file,sim,mask):
 #corr.inputs.eta2 = True
 #res = corr.run()
 
-print res.outputs
+    print res.outputs
     return output
