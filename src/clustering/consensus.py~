@@ -11,12 +11,13 @@ def makeConsensus(in_File):
     for j in clustermap:
         for i in clustermap:
             consensus[j] = (clustermap[i] == clustermap[j])
+    saveSurface(consensus, in_File+str('consensus.nii'))
     return consensus
 
 def aggregate(clusters):
     sumConsensus = makeConsensus(clusters[0])
     for i, cluster in enumerate(clusters[1:]):
-        print('Cluster '+str(i)+' of '+str(len(clusters)))
+        print('Cluster '+str(i+1)+' of '+str(len(clusters)))
         eachConsensus = makeConsensus(cluster)
         sumConsensus = sumConsensus+eachConsensus
 
@@ -24,7 +25,9 @@ def aggregate(clusters):
     return totalConsensus
     
 def saveSurface(consensus, path):
-        savepath = os.path.basename(path) + '/Consensus.nii'
+        savepath = os.path.abspath(path) + '/Total_Consensus.nii'
+        if not os.path.exists(os.path.dirname(savepath)):
+            os.makedirs(os.path.dirname(savepath))
         nImg = nb.Nifti1Image(consensus, None)
         nb.save(nImg, savepath)
         print(savepath + '    Saved.')

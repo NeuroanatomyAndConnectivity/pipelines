@@ -7,15 +7,15 @@ subjects = [
 exclude_subjects = ['0021001']
 subjects = list(set(subjects) - set(exclude_subjects))
 
-analysis_subjects = ['3795193', #'3201815', '0021024', '3893245', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '8735778', '9630905', '0021018','3315657','6471972', '3313349', '6471972', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156'
+analysis_subjects = ['3795193', '3201815', '0021024', '3893245', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '8735778', '9630905', '0021018','3315657','6471972', '3313349', '6471972', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156'
 ]
 
 sessions = ['session1','session2']
 analysis_sessions = ['session1','session2']
 
-workingdir = "/home/ghost/Data"
-resultsdir = os.path.join(workingdir, "Results/");
-freesurferdir = '/usr/local/freesurfer/subjects'
+workingdir = "/SCR/Data/NKI_High"
+resultsdir = "/SCR/Data/volumes"
+freesurferdir = '/afs/cbs.mpg.de/software/freesurfer/5.1.0/amd64/2.15/subjects'
 
 #slicetime_file = '/scr/schweiz1/data/NKI_High/scripts/sliceTime2.txt'
 rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
