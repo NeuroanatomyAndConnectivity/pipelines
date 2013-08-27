@@ -24,9 +24,8 @@ def aggregate(clusters):
     return totalConsensus
     
 def saveSurface(consensus, path):
-        savepath = os.path.abspath(path) + '/Consensus.nii'
-        if not os.path.exists(os.path.dirname(savepath)):
-            os.makedirs(os.path.dirname(savepath))
+        savepath = os.path.abspath(path)
+        os.makedirs(os.path.dirname(savepath))
         nImg = nb.Nifti1Image(consensus, None)
         nb.save(nImg, savepath)
         print(savepath + '    Saved.')
@@ -41,5 +40,8 @@ for hemi in hemispheres:
                     if name.endswith('.nii'):
                         clusters.append(os.path.join(root, name))
             print(hemi+' '+session+' '+subject)
-            totalConsensus = aggregate(clusters)
-            saveSurface(totalConsensus, resultsdir+'/consensus/'+hemi+'/'+session+'/'+subject)
+
+            savepath = resultsdir+'/consensus/'+hemi+'/'+session+'/'+subject + '/Consensus.nii'
+            if not os.path.exists(os.path.dirname(savepath)):
+                totalConsensus = aggregate(clusters)
+                saveSurface(totalConsensus, savepath)
