@@ -185,7 +185,7 @@ def get_wf():
     #preproc.inputs.inputspec.sliceorder = list(np.linspace(0,1.4,64))
     def get_fsid(subject_id):
         return  subject_id+'/FREESURFER'
-    wf.connect(tr_lookup, "TR", preproc, "inputspec.tr")
+    wf.connect(tr_lookup, "TR"/1000, preproc, "inputspec.tr")
     wf.connect(sliceorder_lookup, "sliceorder", preproc, "inputspec.sliceorder")
     wf.connect(subject_id_infosource, 'subject_id', preproc, "inputspec.fssubject_id")
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
