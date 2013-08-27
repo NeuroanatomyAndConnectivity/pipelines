@@ -20,8 +20,6 @@ from nipype.utils.filemanip import list_to_filename
 
 from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
-os.environ['SUBJECTS_DIR'] = freesurferdir
-
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
     
