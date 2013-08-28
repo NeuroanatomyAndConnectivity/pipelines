@@ -138,7 +138,8 @@ def get_wf():
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
     def get_sliceorder(dicom_files):
-        nii_wrp = NiftiWrapper.from_filename(dicom_files)
+	import nipype.interfaces.dcmstack as dcm
+        nii_wrp = dcm.NiftiWrapper.from_filename(dicom_files)
         sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
         return sliceorder
 
@@ -147,7 +148,15 @@ def get_wf():
     wf.connect(datagrabber, "resting_dicoms", stack, "dicom_files")
     wf.connect(datagrabber, "resting_dicoms", sliceorder_lookup, "dicom_files")
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
+
+##recon-all##
+    reconall = pe.Node(fs.ReconAll(), name = 'reconall')
+    reconall.inputs.directive = 'autorecon2-inflate1'
+    reconall.inputs.subjects_dir = freesurferdir
     
+    wf.connect(datagrabber, 't1_nifti', reconall, 'T1_files')
+    wf.connect(subject_id_infosource, 'subject_id', reconall, 'subject_id')
+
 ##Preproc##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
@@ -185,7 +194,11 @@ def get_wf():
     #preproc.inputs.inputspec.sliceorder = list(np.linspace(0,1.4,64))
     def get_fsid(subject_id):
         return  subject_id+'/FREESURFER'
-    wf.connect(tr_lookup, "TR"/1000, preproc, "inputspec.tr")
+
+    def convert_units(tr):
+	return tr/1000
+
+    wf.connect(tr_lookup, ("TR", convert_units), preproc, "inputspec.tr")
     wf.connect(sliceorder_lookup, "sliceorder", preproc, "inputspec.sliceorder")
     wf.connect(subject_id_infosource, 'subject_id', preproc, "inputspec.fssubject_id")
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
