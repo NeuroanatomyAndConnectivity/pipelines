@@ -1,4 +1,8 @@
 from __future__ import division
+
+from nipype import config
+config.enable_debug_mode()
+
 import os
 import matplotlib
 matplotlib.use('Agg')
@@ -138,7 +142,7 @@ def get_wf():
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
     def get_sliceorder(dicom_files):
-	import nipype.interfaces.dcmstack as dcm
+        import nipype.interfaces.dcmstack as dcm
         nii_wrp = dcm.NiftiWrapper.from_filename(dicom_files)
         sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
         return sliceorder
@@ -196,7 +200,7 @@ def get_wf():
         return  subject_id+'/FREESURFER'
 
     def convert_units(tr):
-	return tr/1000
+	    return tr/1000
 
     wf.connect(tr_lookup, ("TR", convert_units), preproc, "inputspec.tr")
     wf.connect(sliceorder_lookup, "sliceorder", preproc, "inputspec.sliceorder")
@@ -249,11 +253,11 @@ def get_wf():
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')
     wf.connect(sxfm, 'out_file', ds, 'sxfmout')
-    wf.write_graph()
+    #wf.write_graph()
     return wf
 
 if __name__=='__main__':
     wf = get_wf()
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc"), plugin_args={"n_procs":16})
-    #wf.run(plugin="Linear", updatehash=True)
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
+    wf.run(plugin="Linear", updatehash=True)
