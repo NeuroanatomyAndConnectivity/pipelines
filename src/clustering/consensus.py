@@ -33,15 +33,16 @@ def saveSurface(consensus, path):
 for hemi in hemispheres:
     for session in analysis_sessions:
         for subject in analysis_subjects:
-            clusterPath = glob.glob(resultsdir+'/clustered/*'+hemi+'*/*'+session+'*/*'+subject+'*/')
-            clusters = []
-            for root, dirs, files in os.walk(clusterPath[0]):
-                for name in files:
-                    if name.endswith('.nii'):
-                        clusters.append(os.path.join(root, name))
-            print(hemi+' '+session+' '+subject)
+            clusterPath = glob.glob(volumedir+'/clustered/*'+hemi+'*/*'+session+'*/*'+subject+'*/')
+            if clusterPath != []:
+                clusters = []
+                for root, dirs, files in os.walk(clusterPath[0]):
+                    for name in files:
+                        if name.endswith('.nii'):
+                            clusters.append(os.path.join(root, name))
+                print(hemi+' '+session+' '+subject)
 
-            savepath = resultsdir+'/consensus/'+hemi+'/'+session+'/'+subject + '/Consensus.nii'
-            if not os.path.exists(os.path.dirname(savepath)):
-                totalConsensus = aggregate(clusters)
-                saveSurface(totalConsensus, savepath)
+                savepath = volumedir+'/consensus/'+hemi+'/'+session+'/'+subject + '/Consensus.nii'
+                if not os.path.exists(os.path.dirname(savepath)):
+                    totalConsensus = aggregate(clusters)
+                    saveSurface(totalConsensus, savepath)
