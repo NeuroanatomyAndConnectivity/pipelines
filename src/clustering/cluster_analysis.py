@@ -1,3 +1,6 @@
+#from nipype import config
+#config.enable_debug_mode()
+
 import matplotlib
 matplotlib.use('Agg')
 import os
@@ -40,7 +43,7 @@ def get_wf():
 
 ##Datagrabber##
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfmout']), name="datagrabber")
-    datagrabber.inputs.base_directory = resultsdir+'/sxfmout'
+    datagrabber.inputs.base_directory = resultsdir+'sxfmout/'
     datagrabber.inputs.template = '*%s/*%s/%s/*%s/%s'
     datagrabber.inputs.template_args['sxfmout'] = [['session','subject_id','*','hemi', '*.nii']]
     datagrabber.inputs.sort_filelist = True
@@ -70,7 +73,7 @@ def get_wf():
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
+    ds.inputs.base_directory = resultsdir
     wf.connect(simmatrix,'out_file', ds, 'similarity')
     wf.connect(clustering, 'clustered_volume', ds, 'clustered')
     wf.write_graph()

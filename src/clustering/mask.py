@@ -6,7 +6,6 @@ from nipype.utils.filemanip import split_filename
 import numpy as np
 import nibabel as nb
 from variables import workingdir, lhvertices, rhvertices
-import os
 
 class MaskInputSpec(BaseInterfaceInputSpec):
     sxfmout = File(exists=True, desc='original surface', mandatory=True)
