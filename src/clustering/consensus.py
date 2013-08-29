@@ -3,7 +3,7 @@ import numpy as np
 import os
 import glob
 import sys
-from variables import resultsdir, hemispheres, analysis_subjects, analysis_sessions, resultsdir
+from variables import resultsdir, hemispheres, analysis_subjects, analysis_sessions, volumedir
 
 def makeConsensus(in_File):
     clustermap=nb.load(in_File).get_data()
