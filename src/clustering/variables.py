@@ -1,21 +1,33 @@
 import os
 import nibabel as nb
-subjects = [
-            '3795193'#, '3201815', '0021024', '3893245', '3315657', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '0021001', '8735778', '9630905', '0021018', '3313349', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156',
-]
+
+workingdir = "/home/ghost/Data/"
+resultsdir = workingdir + 'results/'
+freesurferdir = workingdir + 'fssubjects/'
+
+def get_subjects_from(resultsDirectory):
+    subjects = []
+    for root, dirnames, fnames in os.walk(resultsDirectory):
+	for dirname in dirnames:
+		if 'subject_id' in dirname:
+			for s in dirname.split('_'):
+				if s.isdigit():
+					subjects.append(s)
+    return subjects
+
+subjects = ['3795193']
+#, '3201815', '0021024', '3893245', '3315657', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '0021001', '8735778', '9630905', '0021018', '3313349', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156']
 
 exclude_subjects = ['0021001']
 subjects = list(set(subjects) - set(exclude_subjects))
 
-analysis_subjects = ['3795193', '3201815', '0021024', '3893245', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '8735778', '9630905', '0021018','6471972', '3313349', '6471972', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156'
-]
+analysis_subjects = get_subjects_from(resultsdir + 'sxfmout/')
+#['3795193', '3201815', '0021024', '3893245', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '8735778', '9630905', '0021018','6471972', '3313349', '6471972', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156']
 
 sessions = ['session1','session2']
 analysis_sessions = ['session1','session2']
 
-workingdir = "/home/ghost/Data/"
-resultsdir = workingdir + 'results'
-freesurferdir = workingdir + 'fssubjects/'
+
 
 #slicetime_file = '/scr/schweiz1/data/NKI_High/scripts/sliceTime2.txt'
 rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
@@ -37,3 +49,4 @@ hemispheres = ['lh', 'rh']
 similarity_types = ['eta2', 'spat', 'temp']
 cluster_types = ['spectral', 'hiercluster', 'kmeans', 'dbscan']
 n_clusters = [7]
+epsilon = .03

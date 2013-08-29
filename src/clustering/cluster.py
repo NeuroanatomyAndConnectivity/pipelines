@@ -10,7 +10,7 @@ from sklearn.cluster import DBSCAN
 import numpy as np
 import nibabel as nb
 import os
-from variables import lhvertices, rhvertices, workingdir
+from variables import lhvertices, rhvertices, workingdir, epsilon
 import pickle
 
 class ClusterInputSpec(BaseInterfaceInputSpec):
@@ -48,7 +48,7 @@ class Cluster(BaseInterface):
         if self.inputs.cluster_type == 'kmeans':
             labels = km(n_clusters=self.inputs.n_clusters).fit_predict(corrmatrix)
         if self.inputs.cluster_type == 'dbscan':
-            labels = DBSCAN(eps=np.average(corrmatrix)+np.std(corrmatrix)).fit_predict(corrmatrix)
+            labels = DBSCAN(eps=epsilon).fit_predict(corrmatrix)
         sxfmout = self.inputs.sxfmout
         img = nb.load(sxfmout)
 

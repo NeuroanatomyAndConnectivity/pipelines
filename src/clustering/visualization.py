@@ -27,8 +27,9 @@ def all_brains(dir):
                 save(os.path.join(root,f))
 
 def find_cluster(subject_id,hemi,sim,cluster_type,n_clusters,session):
-    filestring = '/volumes/clustered/_hemi_{0}/_session_{1}/_subject_id_{2}/_sim_{3}/_cluster_{4}/_n_clusters_{5}'
-    filepath = resultsdir+filestring.format(hemi,session,subject_id,sim,cluster_type,n_clusters)
+    filestring = '/media/sf_Volumes/clustered/_hemi_{0}/_session_{1}/_subject_id_{2}/_sim_{3}/_cluster_{4}/_n_clusters_{5}'
+    #filepath = resultsdir+filestring.format(hemi,session,subject_id,sim,cluster_type,n_clusters)
+    filepath = filestring.format(hemi,session,subject_id,sim,cluster_type,n_clusters)
     os.chdir(filepath)
     clustermap = nb.load(''.join(glob.glob('*.nii'))).get_data()
     add_cluster(clustermap, hemi)

@@ -13,7 +13,7 @@ from variables import analysis_subjects, analysis_sessions, workingdir, resultsd
 
 os.environ['SUBJECTS_DIR'] = freesurferdir
 
-if __name__ == '__main__':
+def get_wf():
     
     wf = pe.Workflow(name="main_workflow")
     wf.base_dir = os.path.join(workingdir,"cluster_analysis")
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     datagrabber.inputs.base_directory = resultsdir+'/sxfmout'
     datagrabber.inputs.template = '*%s/*%s/%s/*%s/%s'
     datagrabber.inputs.template_args['sxfmout'] = [['session','subject_id','*','hemi', '*.nii']]
+    datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     wf.connect(session_infosource, 'session', datagrabber, 'session')
@@ -73,6 +74,9 @@ if __name__ == '__main__':
     wf.connect(simmatrix,'out_file', ds, 'similarity')
     wf.connect(clustering, 'clustered_volume', ds, 'clustered')
     wf.write_graph()
-               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    return wf
+
+if __name__ == '__main__':
+    wf = get_wf()               
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

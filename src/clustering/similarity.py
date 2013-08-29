@@ -35,6 +35,6 @@ def Similarity(in_file,sim,mask):
 #corr.inputs.in_file = "/SCR/data/11072.b1/results/rhsxfmoutfs4.nii"
 #corr.inputs.eta2 = True
 #res = corr.run()
+#print res.outputs
 
-    print res.outputs
     return output
