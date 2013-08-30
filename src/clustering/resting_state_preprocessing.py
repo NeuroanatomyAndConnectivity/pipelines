@@ -141,16 +141,14 @@ def get_wf():
     tr_lookup = pe.Node(dcm.LookupMeta(), name = 'tr_lookup')
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
-    def get_sliceorder(dicom_files):
+    def get_sliceorder(in_file):
         import nipype.interfaces.dcmstack as dcm
-        nii_wrp = dcm.NiftiWrapper.from_filename(dicom_files)
+        import numpy as np
+        nii_wrp = dcm.NiftiWrapper.from_filename(in_file)
         sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
         return sliceorder
-
-    sliceorder_lookup = pe.Node(util.Function(input_names=['dicom_files'], output_names=['sliceorder'], function=get_sliceorder), name="sliceorder_lookup")
         
     wf.connect(datagrabber, "resting_dicoms", stack, "dicom_files")
-    wf.connect(datagrabber, "resting_dicoms", sliceorder_lookup, "dicom_files")
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
 ##recon-all##
@@ -200,10 +198,11 @@ def get_wf():
         return  subject_id+'/FREESURFER'
 
     def convert_units(tr):
-	    return tr/1000
+        mstr = (tr*.001)
+        return tr
 
     wf.connect(tr_lookup, ("TR", convert_units), preproc, "inputspec.tr")
-    wf.connect(sliceorder_lookup, "sliceorder", preproc, "inputspec.sliceorder")
+    wf.connect(stack, ('out_file', get_sliceorder), preproc, "inputspec.sliceorder")
     wf.connect(subject_id_infosource, 'subject_id', preproc, "inputspec.fssubject_id")
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
 
