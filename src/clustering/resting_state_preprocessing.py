@@ -164,12 +164,16 @@ def get_wf():
     zscore = preproc.get_node('z_score')
     preproc.remove_nodes([zscore])
     mod_realign = preproc.get_node('mod_realign')
+    mod_realign.plugin_args = {'submit_specs':'request_memory=4000\n'}
     #workaround for realignment crashing in multiproc environment
-    mod_realign.run_without_submitting = True
+    #mod_realign.run_without_submitting = True
 
 
     # inputs
     preproc.inputs.inputspec.motion_correct_node = 'nipy'
+    ad = preproc.get_node('artifactdetect')
+    preproc.disconnect(mod_realign,'parameter_source',ad,'parameter_source')
+    ad.inputs.parameter_source = 'NiPy'
     preproc.inputs.inputspec.realign_parameters = {"loops":[5],
                                                    "speedup":[5]}
     preproc.inputs.inputspec.do_whitening = False
@@ -186,8 +190,7 @@ def get_wf():
     preproc.inputs.inputspec.do_slicetime = True
     preproc.inputs.inputspec.compcor_select = [True, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
-    preproc.inputs.inputspec.highpass_freq = 100
-    preproc.inputs.inputspec.lowpass_freq = 10
+    preproc.get_node('bandpass_filter').iterables = [('highass_freq',[0.01]),('lowpass_freq',[0.1])]
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
     #preproc.inputs.inputspec.tr = 1400/1000
