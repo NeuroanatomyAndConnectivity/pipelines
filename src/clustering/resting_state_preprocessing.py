@@ -159,6 +159,7 @@ def get_wf():
     
     wf.connect(datagrabber, 't1_nifti', reconall, 'T1_files')
     wf.connect(subject_id_infosource, 'subject_id', reconall, 'subject_id')
+    wf.connect(hemi_infosource, 'hemi', reconall, 'hemi')
 
 ##Preproc##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
