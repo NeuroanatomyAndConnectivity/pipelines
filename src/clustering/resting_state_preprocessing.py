@@ -138,6 +138,7 @@ def get_wf():
 ##DcmStack & MetaData##
     stack = pe.Node(dcm.DcmStack(), name = 'stack')
     stack.inputs.embed_meta = True
+
     tr_lookup = pe.Node(dcm.LookupMeta(), name = 'tr_lookup')
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
