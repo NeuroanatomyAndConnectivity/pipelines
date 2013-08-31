@@ -1,48 +1,54 @@
+from nipype.interfaces.base import BaseInterface, \
+    BaseInterfaceInputSpec, traits, File, TraitedSpec
+from nipype.utils.filemanip import split_filename
 import nibabel as nb
 import numpy as np
-import os
 import glob
-import sys
-from variables import resultsdir, hemispheres, analysis_subjects, analysis_sessions, volumedir
 
-def makeConsensus(in_File):
-    clustermap=nb.load(in_File).get_data()
-    consensus = np.zeros((len(clustermap),len(clustermap)))
-    for j in clustermap:
-        for i in clustermap:
-            consensus[j] = (clustermap[i] == clustermap[j])
-    return consensus
+class ConsensusInputSpec(BaseInterfaceInputSpec):
+    in_Files = traits.Either(InputMultiPath(File(exists=True)),
+                                Directory(exists=True),
+                                traits.Str(),
+                                mandatory=True)
+    hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
+    cluster_type = traits.String(exists=True, desc='spectral, hiercluster, kmeans, or dbscan', mandatory=True)
+    n_clusters = traits.Int(exists=True, desc='number of clusters', mandatory=True)
 
-def aggregate(clusters):
-    sumConsensus = makeConsensus(clusters[0])
-    for i, cluster in enumerate(clusters[1:]):
-        print('Cluster '+str(i+1)+' of '+str(len(clusters)))
-        eachConsensus = makeConsensus(cluster)
-        sumConsensus = sumConsensus+eachConsensus
+class ConsensusOutputSpec(TraitedSpec):
+    consensus_volume = File(exists=True, desc="consensus volume")
 
-    totalConsensus = sumConsensus/len(clusters)
-    return totalConsensus
-    
-def saveSurface(consensus, path):
-        savepath = os.path.abspath(path)
-        os.makedirs(os.path.dirname(savepath))
-        nImg = nb.Nifti1Image(consensus, None)
-        nb.save(nImg, savepath)
-        print(savepath + '    Saved.')
+class Consensus(BaseInterface):
+    input_spec = ConsensusInputSpec
+    output_spec = ConsensusutputSpec
 
-for hemi in hemispheres:
-    for session in analysis_sessions:
-        for subject in analysis_subjects:
-            clusterPath = glob.glob(volumedir+'/clustered/*'+hemi+'*/*'+session+'*/*'+subject+'*/')
-            if clusterPath != []:
-                clusters = []
-                for root, dirs, files in os.walk(clusterPath[0]):
-                    for name in files:
-                        if name.endswith('.nii'):
-                            clusters.append(os.path.join(root, name))
-                print(hemi+' '+session+' '+subject)
+    def _get_filelist(self, trait_input):
+        if isinstance(trait_input, str):
+            if path.isdir(trait_input):
+                return glob(path.join(trait_input, '*.nii'))
+            else:
+                return glob(trait_input)
+        return trait_input
 
-                savepath = volumedir+'/consensus/'+hemi+'/'+session+'/'+subject + '/Consensus.nii'
-                if not os.path.exists(os.path.dirname(savepath)):
-                    totalConsensus = aggregate(clusters)
-                    saveSurface(totalConsensus, savepath)
+    def makeConsensus(self, eachFile):
+        clustermap=nb.load(eachFile).get_data()
+        consensus = np.zeros((len(clustermap),len(clustermap)))
+        for j in clustermap:
+            for i in clustermap:
+                consensus[j] = (clustermap[i] == clustermap[j])
+        return consensus
+
+    def _run_interface(self, runtime):
+        src_paths = self._get_filelist(self.inputs.in_Files)
+        sumConsensus = []
+        for src_path in src_paths:
+            sumConsensus.append(makeConsensus(src_path)
+
+        ##make consensus into probabilities##
+        for eachConsensus in sumConsensus
+            totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
+
+        ##make into NiftiImage##
+        _, base, _ = split_filename(trait_input)
+        #os.makedirs(os.path.dirname(savepath))
+        nImg = nb.Nifti1Image(totalConsensus, None)
+        nb.save(nImg, os.path.abspath(base + '_clustered.nii'))
