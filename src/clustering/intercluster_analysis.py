@@ -8,7 +8,6 @@ import nipype.interfaces.io as nio
 from consensus import Consensus
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
-
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
     wf.base_dir = os.path.join(workingdir,"intercluster_analysis")
