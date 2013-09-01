@@ -8,6 +8,8 @@ import nipype.interfaces.io as nio
 from consensus import Consensus
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
+analysis_subjects = ['9630905']
+
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
     wf.base_dir = os.path.join(workingdir,"intercluster_analysis")
@@ -33,24 +35,36 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['clustered']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi', 'cluster', 'sim', 'n_clusters'], outfields=['all_cluster_types','all_sessions',]), name="datagrabber")
     datagrabber.inputs.base_directory = resultsdir+'clustered/'
-    datagrabber.inputs.template = '*%s*/*%s*/*%s*'
-    datagrabber.inputs.template_args['clustered'] = [['hemi', 'session','subject_id']]
+    datagrabber.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
+    datagrabber.inputs.template_args['all_cluster_types'] = [['hemi', 'session','subject_id','*','*','*']]
+    datagrabber.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     wf.connect(session_infosource, 'session', datagrabber, 'session')
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', datagrabber, 'cluster')
+    wf.connect(sim_infosource, 'sim', datagrabber, 'sim')
+    wf.connect(n_clusters_infosource, 'n_clusters', datagrabber, 'n_clusters')
 
 ##Consensus between cluster_types##
     consensus = pe.Node(Consensus(), name = 'consensus')
-    wf.connect(datagrabber, 'clustered', consensus, 'in_Files')
+    wf.connect(datagrabber, 'all_cluster_types', consensus, 'in_Files')
+
+##Consensus between sessions##
+    intersession = pe.Node(Consensus(), name = 'intersession')
+    wf.connect(datagrabber, 'all_sessions', intersession, 'in_Files')
+
+##Consensus between subjects?##
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
-    wf.connect(consensus, 'out_File', ds, 'consensus')
+    ds.inputs.parameterization = False
+    wf.connect(consensus, 'out_File', ds, 'compare_cluster_types.subjects.session')
+    wf.connect(intersession, 'out_File', ds, 'compare_sessions.subject_id')
     wf.write_graph()
     return wf
 
