@@ -60,11 +60,25 @@ def get_wf():
 ##Consensus between subjects?##
 
 ##Datasink##
-    ds = pe.Node(nio.DataSink(), name="datasink")
+    ds = pe.Node(nio.DataSink(infields=['subject_id','session','hemi', 'cluster', 'sim', 'n_clusters']), name="datasink")
     ds.inputs.base_directory = resultsdir
     ds.inputs.parameterization = False
-    wf.connect(consensus, 'out_File', ds, 'compare_cluster_types.subjects.session')
-    wf.connect(intersession, 'out_File', ds, 'compare_sessions.subject_id')
+    wf.connect(consensus, 'out_File', ds, 'compare_cluster_types._subject._session._hemi')
+    wf.connect(intersession, 'out_File', ds, 'compare_sessions._subject._hemi._sim._cluster._n_clusters')
+    ds.inputs.substitutions = [('_subject', 'subject_id'),
+                               ('_session', 'session'),
+                               ('_sim', 'sim'),
+                               ('_cluster', 'cluster'),
+                               ('_n_clusters', 'n_clusters')]
+    import pdb
+    pdb.set_trace()
+    wf.connect(subject_id_infosource, 'subject_id', ds, 'subject_id')
+    wf.connect(session_infosource, 'session', ds, 'session')
+    wf.connect(hemi_infosource, 'hemi', ds, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', ds, 'cluster')
+    wf.connect(sim_infosource, 'sim', ds, 'sim')
+    wf.connect(n_clusters_infosource, 'n_clusters', ds, 'n_clusters')
+
     wf.write_graph()
     return wf
 

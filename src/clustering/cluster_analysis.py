@@ -1,5 +1,5 @@
-#from nipype import config
-#config.enable_debug_mode()
+from nipype import config
+config.enable_debug_mode()
 
 import matplotlib
 matplotlib.use('Agg')
@@ -12,7 +12,7 @@ import nipype.interfaces.freesurfer as fs
 from cluster import Cluster
 from similarity import Similarity
 from mask import Mask
-from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
+from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
 os.environ['SUBJECTS_DIR'] = freesurferdir
 
@@ -81,5 +81,5 @@ def get_wf():
 
 if __name__ == '__main__':
     wf = get_wf()               
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

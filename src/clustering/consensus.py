@@ -50,11 +50,11 @@ class Consensus(BaseInterface):
         ##make into NiftiImage##
         nImg = nb.Nifti1Image(stability, None)
         _, base, _ = split_filename(self.inputs.in_Files[0])
-        nb.save(nImg, os.path.abspath(base+'Stability.nii'))
+        nb.save(nImg, os.path.abspath(base+'_Stability.nii'))
         return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
         _, base, _ = split_filename(self.inputs.in_Files[0])
-        outputs["out_File"] = os.path.abspath(base+'Stability.nii')
+        outputs["out_File"] = os.path.abspath(base+'_Stability.nii')
         return outputs

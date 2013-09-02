@@ -4,7 +4,6 @@ from nipype.utils.filemanip import split_filename
 import nibabel as nb
 import numpy as np
 import os
-from variables import resultsdir
 
 class ConsensusInputSpec(BaseInterfaceInputSpec):
     in_Files = traits.Either(InputMultiPath(File(exists=True)),
@@ -50,12 +49,12 @@ class Consensus(BaseInterface):
         stability = np.mean(likeness,axis=0)
         ##make into NiftiImage##
         nImg = nb.Nifti1Image(stability, None)
-        _, base, _ = split_filename(fname)
+        _, base, _ = split_filename(self.inputs.in_Files[0])
         nb.save(nImg, os.path.abspath(base+'Stability.nii'))
         return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        _, base, _ = split_filename(fname)
+        _, base, _ = split_filename(self.inputs.in_Files[0])
         outputs["out_File"] = os.path.abspath(base+'Stability.nii')
         return outputs
