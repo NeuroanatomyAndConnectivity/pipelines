@@ -25,6 +25,8 @@ from nipype.utils.filemanip import list_to_filename
 
 from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
+subjects = ['9630905']
+
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
     
@@ -151,15 +153,6 @@ def get_wf():
         
     wf.connect(datagrabber, "resting_dicoms", stack, "dicom_files")
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
-
-##recon-all##
-    reconall = pe.Node(fs.ReconAll(), name = 'reconall')
-    reconall.inputs.directive = 'autorecon2-inflate1'
-    reconall.inputs.subjects_dir = freesurferdir
-    
-    wf.connect(datagrabber, 't1_nifti', reconall, 'T1_files')
-    wf.connect(subject_id_infosource, 'subject_id', reconall, 'subject_id')
-    wf.connect(hemi_infosource, 'hemi', reconall, 'hemi')
 
 ##Preproc##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)

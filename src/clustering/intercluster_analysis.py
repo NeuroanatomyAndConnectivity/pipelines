@@ -34,50 +34,60 @@ def get_wf():
     n_clusters_infosource = pe.Node(util.IdentityInterface(fields=['n_clusters']), name="n_clusters_infosource")
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
-##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi', 'cluster', 'sim', 'n_clusters'], outfields=['all_cluster_types','all_sessions',]), name="datagrabber")
-    datagrabber.inputs.base_directory = resultsdir+'clustered/'
-    datagrabber.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
-    datagrabber.inputs.template_args['all_cluster_types'] = [['hemi', 'session','subject_id','*','*','*']]
-    datagrabber.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
-    datagrabber.inputs.sort_filelist = True
+##Datagrabber for cluster_type##
+    dg_clusters = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['all_cluster_types']), name="dg_clusters")
+    dg_clusters.inputs.base_directory = resultsdir+'clustered/'
+    dg_clusters.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
+    dg_clusters.inputs.template_args['all_cluster_types'] = [['hemi', 'session','subject_id','*','*','n_clusters']]
+    dg_clusters.inputs.sort_filelist = True
 
-    wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
-    wf.connect(session_infosource, 'session', datagrabber, 'session')
-    wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
-    wf.connect(cluster_infosource, 'cluster', datagrabber, 'cluster')
-    wf.connect(sim_infosource, 'sim', datagrabber, 'sim')
-    wf.connect(n_clusters_infosource, 'n_clusters', datagrabber, 'n_clusters')
+    wf.connect(subject_id_infosource, 'subject_id', dg_clusters, 'subject_id')
+    wf.connect(session_infosource, 'session', dg_clusters, 'session')
+    wf.connect(hemi_infosource, 'hemi', dg_clusters, 'hemi')
+    wf.connect(n_clusters_infosource, 'n_clusters', dg_clusters, 'n_clusters')
+
+##Datagrabber for sessions##
+    dg_sessions = pe.Node(nio.DataGrabber(infields=['subject_id','hemi', 'cluster', 'sim', 'n_clusters'], outfields=['all_sessions']), name="dg_sessions")
+    dg_sessions.inputs.base_directory = resultsdir+'clustered/'
+    dg_sessions.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
+    dg_sessions.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
+
+    wf.connect(subject_id_infosource, 'subject_id', dg_sessions, 'subject_id')
+    wf.connect(hemi_infosource, 'hemi', dg_sessions, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', dg_sessions, 'cluster')
+    wf.connect(sim_infosource, 'sim', dg_sessions, 'sim')
+    wf.connect(n_clusters_infosource, 'n_clusters', dg_sessions, 'n_clusters')
+
+##Datagrabber for subjects##
+    dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'session','cluster', 'sim', 'n_clusters'], outfields=['all_sessions']), name="dg_subjects")
+    dg_subjects.inputs.base_directory = resultsdir+'clustered/'
+    dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
+    dg_subjects.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
+
+    wf.connect(session_infosource, 'session', dg_subjects, 'session')
+    wf.connect(hemi_infosource, 'hemi', dg_subjects, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', dg_subjects, 'cluster')
+    wf.connect(sim_infosource, 'sim', dg_subjects, 'sim')
+    wf.connect(n_clusters_infosource, 'n_clusters', dg_subjects, 'n_clusters')
 
 ##Consensus between cluster_types##
     consensus = pe.Node(Consensus(), name = 'consensus')
-    wf.connect(datagrabber, 'all_cluster_types', consensus, 'in_Files')
+    wf.connect(dg_clusters, 'all_cluster_types', consensus, 'in_Files')
 
 ##Consensus between sessions##
     intersession = pe.Node(Consensus(), name = 'intersession')
-    wf.connect(datagrabber, 'all_sessions', intersession, 'in_Files')
+    wf.connect(dg_sessions, 'all_sessions', intersession, 'in_Files')
 
-##Consensus between subjects?##
+##Consensus between subjects##
+    intersubject = pe.Node(Consensus(), name = 'intersubject')
+    wf.connect(dg_subjects, 'all_sessions', intersubject, 'in_Files')
 
 ##Datasink##
-    ds = pe.Node(nio.DataSink(infields=['subject_id','session','hemi', 'cluster', 'sim', 'n_clusters']), name="datasink")
+    ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
-    ds.inputs.parameterization = False
-    wf.connect(consensus, 'out_File', ds, 'compare_cluster_types._subject._session._hemi')
-    wf.connect(intersession, 'out_File', ds, 'compare_sessions._subject._hemi._sim._cluster._n_clusters')
-    ds.inputs.substitutions = [('_subject', 'subject_id'),
-                               ('_session', 'session'),
-                               ('_sim', 'sim'),
-                               ('_cluster', 'cluster'),
-                               ('_n_clusters', 'n_clusters')]
-    import pdb
-    pdb.set_trace()
-    wf.connect(subject_id_infosource, 'subject_id', ds, 'subject_id')
-    wf.connect(session_infosource, 'session', ds, 'session')
-    wf.connect(hemi_infosource, 'hemi', ds, 'hemi')
-    wf.connect(cluster_infosource, 'cluster', ds, 'cluster')
-    wf.connect(sim_infosource, 'sim', ds, 'sim')
-    wf.connect(n_clusters_infosource, 'n_clusters', ds, 'n_clusters')
+    wf.connect(consensus, 'out_File', ds, 'compare_cluster_types')
+    wf.connect(intersession, 'out_File', ds, 'compare_sessions')
+    wf.connect(intersubject, 'out_File', ds 'compare_subjects')
 
     wf.write_graph()
     return wf
