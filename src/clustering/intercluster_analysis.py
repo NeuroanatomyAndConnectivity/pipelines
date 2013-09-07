@@ -8,7 +8,6 @@ import nipype.interfaces.io as nio
 from consensus import Consensus
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
-analysis_subjects = ['9630905']
 
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
@@ -51,6 +50,7 @@ def get_wf():
     dg_sessions.inputs.base_directory = resultsdir+'clustered/'
     dg_sessions.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
     dg_sessions.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
+    dg_sessions.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', dg_sessions, 'subject_id')
     wf.connect(hemi_infosource, 'hemi', dg_sessions, 'hemi')
@@ -63,6 +63,7 @@ def get_wf():
     dg_subjects.inputs.base_directory = resultsdir+'clustered/'
     dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
     dg_subjects.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
+    dg_subjects.inputs.sort_filelist = True
 
     wf.connect(session_infosource, 'session', dg_subjects, 'session')
     wf.connect(hemi_infosource, 'hemi', dg_subjects, 'hemi')
@@ -87,12 +88,12 @@ def get_wf():
     ds.inputs.base_directory = resultsdir
     wf.connect(consensus, 'out_File', ds, 'compare_cluster_types')
     wf.connect(intersession, 'out_File', ds, 'compare_sessions')
-    wf.connect(intersubject, 'out_File', ds 'compare_subjects')
+    wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
 
     wf.write_graph()
     return wf
 
 if __name__ == '__main__':
     wf = get_wf()               
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
