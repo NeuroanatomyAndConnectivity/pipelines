@@ -6,6 +6,7 @@ import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 
 from consensus import Consensus
+from cluster import Cluster
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
 
@@ -72,8 +73,8 @@ def get_wf():
     wf.connect(n_clusters_infosource, 'n_clusters', dg_subjects, 'n_clusters')
 
 ##Consensus between cluster_types##
-    consensus = pe.Node(Consensus(), name = 'consensus')
-    wf.connect(dg_clusters, 'all_cluster_types', consensus, 'in_Files')
+    intercluster = pe.Node(Consensus(), name = 'intercluster')
+    wf.connect(dg_clusters, 'all_cluster_types', intercluster, 'in_Files')
 
 ##Consensus between sessions##
     intersession = pe.Node(Consensus(), name = 'intersession')
@@ -83,10 +84,14 @@ def get_wf():
     intersubject = pe.Node(Consensus(), name = 'intersubject')
     wf.connect(dg_subjects, 'all_sessions', intersubject, 'in_Files')
 
+##Cluster the Consensus Matrix##
+    consensus = pe.Node(Cluster(), name = 'consensus')
+    wf.connect(intercluster, 'consensus_mat', cluster, 'volume')
+
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
-    wf.connect(consensus, 'out_File', ds, 'compare_cluster_types')
+    wf.connect(intercluster, 'out_File', ds, 'compare_cluster_types')
     wf.connect(intersession, 'out_File', ds, 'compare_sessions')
     wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
 

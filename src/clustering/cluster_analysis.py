@@ -14,7 +14,7 @@ from similarity import Similarity
 from mask import Mask
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
-os.environ['SUBJECTS_DIR'] = freesurferdir
+analysis_subjects = ['9630905']
 
 def get_wf():
     
@@ -65,7 +65,6 @@ def get_wf():
 
 ##clustering##
     clustering = pe.Node(Cluster(), name = 'clustering')
-    wf.connect(datagrabber, 'sxfmout', clustering, 'sxfmout')
     wf.connect(hemi_infosource, 'hemi', clustering, 'hemi')
     wf.connect(cluster_infosource, 'cluster', clustering, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
