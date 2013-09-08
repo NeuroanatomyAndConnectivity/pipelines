@@ -68,17 +68,17 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', clustering, 'hemi')
     wf.connect(cluster_infosource, 'cluster', clustering, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
-    wf.connect(simmatrix, 'out_file', clustering, 'volume')
+    wf.connect(simmatrix, 'out_file', clustering, 'in_File')
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
     wf.connect(simmatrix,'out_file', ds, 'similarity')
-    wf.connect(clustering, 'clustered_volume', ds, 'clustered')
+    wf.connect(clustering, 'out_File', ds, 'clustered')
     wf.write_graph()
     return wf
 
 if __name__ == '__main__':
     wf = get_wf()               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

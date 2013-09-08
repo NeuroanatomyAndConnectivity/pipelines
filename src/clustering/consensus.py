@@ -47,7 +47,7 @@ class Consensus(BaseInterface):
             sumConsensus.append(self.makeConsensus(src_path))
         ##average across all consensus instances and output##
         totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
-        pickle.dump(totalConsensus, os.path.abspath(base+'_ConsensusMat')
+        pickle.dump(totalConsensus, os.path.abspath(base+'_ConsensusMat'))
         ##make consensus into stability measure##
         likeness = abs(totalConsensus-0.5)
         stability = np.mean(likeness,axis=0)

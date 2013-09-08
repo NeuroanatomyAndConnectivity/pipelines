@@ -13,13 +13,13 @@ import os
 from variables import lhvertices, rhvertices, workingdir, epsilon
 
 class ClusterInputSpec(BaseInterfaceInputSpec):
-    volume = File(exists=True, desc='surface to be clustered', mandatory=True)
+    in_File = File(exists=True, desc='surface to be clustered', mandatory=True)
     hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
     cluster_type = traits.String(exists=True, desc='spectral, hiercluster, kmeans, or dbscan', mandatory=True)
     n_clusters = traits.Int(exists=True, desc='number of clusters', mandatory=True)
 
 class ClusterOutputSpec(TraitedSpec):
-    clustered_volume = File(exists=True, desc="clustered volume")
+    out_File = File(exists=True, desc="clustered volume")
 
 class Cluster(BaseInterface):
     input_spec = ClusterInputSpec
@@ -58,5 +58,5 @@ class Cluster(BaseInterface):
         outputs = self._outputs().get()
         fname = self.inputs.in_File
         _, base, _ = split_filename(fname)
-        outputs["clustered_volume"] = os.path.abspath(base+'_clustered.nii')
+        outputs["out_File"] = os.path.abspath(base+'_clustered.nii')
         return outputs

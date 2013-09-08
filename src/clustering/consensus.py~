@@ -47,7 +47,7 @@ class Consensus(BaseInterface):
             sumConsensus.append(self.makeConsensus(src_path))
         ##average across all consensus instances and output##
         totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
-        pickle.
+        pickle.dump(totalConsensus, os.path.abspath(base+'_ConsensusMat')
         ##make consensus into stability measure##
         likeness = abs(totalConsensus-0.5)
         stability = np.mean(likeness,axis=0)
@@ -61,5 +61,5 @@ class Consensus(BaseInterface):
         outputs = self._outputs().get()
         _, base, _ = split_filename(self.inputs.in_Files[0])
         outputs["out_File"] = os.path.abspath(base+'_Stability.nii')
-        outputs['consensus_mat'] = os.path.abspath(base+'_ConsensusMat.nii')
+        outputs['consensus_mat'] = os.path.abspath(base+'_ConsensusMat')
         return outputs

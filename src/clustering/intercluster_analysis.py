@@ -85,8 +85,8 @@ def get_wf():
     wf.connect(dg_subjects, 'all_sessions', intersubject, 'in_Files')
 
 ##Cluster the Consensus Matrix##
-    consensus = pe.Node(Cluster(), name = 'consensus')
-    wf.connect(intercluster, 'consensus_mat', cluster, 'volume')
+    consensus_cluster = pe.Node(Cluster(), name = 'consensus')
+    wf.connect(intercluster, 'consensus_mat', consensus_cluster, 'in_File')
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
@@ -94,11 +94,12 @@ def get_wf():
     wf.connect(intercluster, 'out_File', ds, 'compare_cluster_types')
     wf.connect(intersession, 'out_File', ds, 'compare_sessions')
     wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
+    wf.connect(consensus_cluster, 'out_File', ds, 'consensus_clustered')
 
     wf.write_graph()
     return wf
 
 if __name__ == '__main__':
     wf = get_wf()               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

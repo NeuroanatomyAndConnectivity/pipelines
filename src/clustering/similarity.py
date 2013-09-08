@@ -11,7 +11,8 @@ def Similarity(in_file,sim,mask):
     corr.inputs.in_file = in_file
     corr.inputs.mask=mask
     corr.inputs.mask_only_targets = sim!='temp'
-    corr.inputs.out_file = base +'_'+sim+'_simmatrix.1D'
+    #corr.inputs.out_file = base +'_'+sim+'_simmatrix'
+    corr.inputs.outputtype = 'NIFTI'
 
     corr_res = corr.run()
     corr_out_file = corr_res.outputs.out_file
@@ -24,7 +25,7 @@ def Similarity(in_file,sim,mask):
         similarity.inputs.polort = -1
         similarity.inputs.eta2 = sim=='eta2'
         similarity.inputs.in_file = corr_out_file
-        similarity.inputs.out_file = base +'_'+sim+'_simmatrix.nii'
+        #similarity.inputs.out_file = base +'_'+sim+'_simmatrix'
         similarity.inputs.outputtype = 'NIFTI'
         sim_res = similarity.run()
         output = sim_res.outputs.out_file
