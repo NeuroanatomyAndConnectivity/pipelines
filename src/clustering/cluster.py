@@ -32,6 +32,8 @@ class Cluster(BaseInterface):
         if self.inputs.hemi == 'lh': chosenvertices = lhvertices
         if self.inputs.hemi == 'rh': chosenvertices = rhvertices
         corrmatrix = np.zeros((len(chosenvertices),len(chosenvertices)))
+        data = np.squeeze(data)
+
         for x, vertex in enumerate(chosenvertices):
         	for i in xrange(len(chosenvertices)):
 	            corrmatrix[x][i] = data[vertex][i]

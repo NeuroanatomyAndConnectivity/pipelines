@@ -25,8 +25,7 @@ def Similarity(in_file,sim,mask):
         similarity.inputs.polort = -1
         similarity.inputs.eta2 = sim=='eta2'
         similarity.inputs.in_file = corr_out_file
-        #similarity.inputs.out_file = base +'_'+sim+'_simmatrix'
-        similarity.inputs.outputtype = 'NIFTI'
+        similarity.inputs.out_file = base +'_'+sim+'_simmatrix'
         sim_res = similarity.run()
         output = sim_res.outputs.out_file
 

@@ -4,7 +4,6 @@ from nipype.utils.filemanip import split_filename
 import nibabel as nb
 import numpy as np
 import os
-import pickle
 
 class ConsensusInputSpec(BaseInterfaceInputSpec):
     in_Files = traits.Either(InputMultiPath(File(exists=True)),
@@ -15,7 +14,7 @@ class ConsensusInputSpec(BaseInterfaceInputSpec):
 
 class ConsensusOutputSpec(TraitedSpec):
     out_File = File(exists=True, desc="out_File")
-    consensus_mat = File(exists=True, desc='consensus_mat')
+    consensus_mat = File(exists=True, desc="consensus_mat")
 
 class Consensus(BaseInterface):
     input_spec = ConsensusInputSpec
@@ -42,18 +41,19 @@ class Consensus(BaseInterface):
 
     def _run_interface(self, runtime):
         src_paths = self._get_filelist(self.inputs.in_Files)
+        _, base, _ = split_filename(self.inputs.in_Files[0])
         sumConsensus = []
         for src_path in src_paths:
             sumConsensus.append(self.makeConsensus(src_path))
         ##average across all consensus instances and output##
         totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
-        pickle.dump(totalConsensus, os.path.abspath(base+'_ConsensusMat'))
+        cImg = nb.Nifti1Image(totalConsensus, None)
+        nb.save(cImg, os.path.abspath(base+'_ConsensusMat.nii'))
         ##make consensus into stability measure##
         likeness = abs(totalConsensus-0.5)
         stability = np.mean(likeness,axis=0)
         ##make into NiftiImage##
         nImg = nb.Nifti1Image(stability, None)
-        _, base, _ = split_filename(self.inputs.in_Files[0])
         nb.save(nImg, os.path.abspath(base+'_Stability.nii'))
         return runtime
 
@@ -61,5 +61,5 @@ class Consensus(BaseInterface):
         outputs = self._outputs().get()
         _, base, _ = split_filename(self.inputs.in_Files[0])
         outputs["out_File"] = os.path.abspath(base+'_Stability.nii')
-        outputs['consensus_mat'] = os.path.abspath(base+'_ConsensusMat')
+        outputs["consensus_mat"] = os.path.abspath(base+'_ConsensusMat.nii')
         return outputs

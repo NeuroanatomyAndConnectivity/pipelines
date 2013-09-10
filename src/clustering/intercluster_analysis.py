@@ -75,18 +75,34 @@ def get_wf():
 ##Consensus between cluster_types##
     intercluster = pe.Node(Consensus(), name = 'intercluster')
     wf.connect(dg_clusters, 'all_cluster_types', intercluster, 'in_Files')
+    ##Cluster the Consensus Matrix##
+    intercluster_cluster = pe.Node(Cluster(), name = 'intercluster consensus is reclustered')
+    wf.connect(intercluster, 'consensus_mat', intercluster_cluster, 'in_File')
+    wf.connect(hemi_infosource, 'hemi', intercluster_cluster, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', intercluster_cluster, 'cluster_type')
+    wf.connect(n_clusters_infosource, 'n_clusters', intercluster_cluster, 'n_clusters')
 
 ##Consensus between sessions##
     intersession = pe.Node(Consensus(), name = 'intersession')
     wf.connect(dg_sessions, 'all_sessions', intersession, 'in_Files')
+    ##Cluster the Consensus Matrix##
+    intersession_cluster = pe.Node(Cluster(), name = 'intersession consensus is reclustered')
+    wf.connect(intersession, 'consensus_mat', intersession_cluster, 'in_File')
+    wf.connect(hemi_infosource, 'hemi', intersession_cluster, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', intersession_cluster, 'cluster_type')
+    wf.connect(n_clusters_infosource, 'n_clusters', intersession_cluster, 'n_clusters')
 
 ##Consensus between subjects##
     intersubject = pe.Node(Consensus(), name = 'intersubject')
     wf.connect(dg_subjects, 'all_sessions', intersubject, 'in_Files')
+    ##Cluster the Consensus Matrix##
+    intersubject_cluster = pe.Node(Cluster(), name = 'intersubject consensus is reclustered')
+    wf.connect(intersubject, 'consensus_mat', intersubject_cluster, 'in_File')
+    wf.connect(hemi_infosource, 'hemi', intersubject_cluster, 'hemi')
+    wf.connect(cluster_infosource, 'cluster', intersubject_cluster, 'cluster_type')
+    wf.connect(n_clusters_infosource, 'n_clusters', intersubject_cluster, 'n_clusters')
 
-##Cluster the Consensus Matrix##
-    consensus_cluster = pe.Node(Cluster(), name = 'consensus')
-    wf.connect(intercluster, 'consensus_mat', consensus_cluster, 'in_File')
+
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
@@ -94,8 +110,9 @@ def get_wf():
     wf.connect(intercluster, 'out_File', ds, 'compare_cluster_types')
     wf.connect(intersession, 'out_File', ds, 'compare_sessions')
     wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
-    wf.connect(consensus_cluster, 'out_File', ds, 'consensus_clustered')
-
+    wf.connect(intercluster_cluster, 'out_File', ds, 'consensus_intercluster')
+    wf.connect(intersession_cluster, 'out_File', ds, 'consensus_intersession')
+    wf.connect(intersubject_cluster, 'out_File', ds, 'consensus_intersubject')
     wf.write_graph()
     return wf
 
