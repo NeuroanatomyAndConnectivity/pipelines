@@ -9,6 +9,7 @@ import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.freesurfer as fs
+import nipype.interfaces.afni as afni
 from cluster import Cluster
 from similarity import Similarity
 from mask import Mask
@@ -63,17 +64,21 @@ def get_wf():
     wf.connect(datagrabber, 'sxfmout', simmatrix, 'in_file')
     wf.connect(sim_infosource, 'sim', simmatrix, 'sim')
 
+##convert AFNI similarityMatrix to NIFTI file##
+    convert = pe.Node(afni.AFNItoNIFTI(), name = 'convert to NIFTI')
+    wf.connect(simmatrix, 'out_file', convert, 'in_file')
+
 ##clustering##
     clustering = pe.Node(Cluster(), name = 'clustering')
     wf.connect(hemi_infosource, 'hemi', clustering, 'hemi')
     wf.connect(cluster_infosource, 'cluster', clustering, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
-    wf.connect(simmatrix, 'out_file', clustering, 'in_File')
+    wf.connect(convert, 'out_file', clustering, 'in_File')
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
-    wf.connect(simmatrix,'out_file', ds, 'similarity')
+    wf.connect(convert,'out_file', ds, 'similarity')
     wf.connect(clustering, 'out_File', ds, 'clustered')
     wf.write_graph()
     return wf
