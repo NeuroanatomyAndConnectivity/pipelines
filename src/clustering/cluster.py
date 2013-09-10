@@ -36,7 +36,8 @@ class Cluster(BaseInterface):
 
         for x, vertex in enumerate(chosenvertices):
         	for i in xrange(len(chosenvertices)):
-	            corrmatrix[x][i] = data[vertex][i]
+        	    if data[vertex][i]>0:
+	                corrmatrix[x][i] = data[vertex][i]
         if self.inputs.cluster_type == 'spectral':
             labels = spectral(corrmatrix, n_clusters=self.inputs.n_clusters, mode='arpack')
         if self.inputs.cluster_type == 'hiercluster':
