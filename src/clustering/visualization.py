@@ -37,7 +37,7 @@ def find_cluster(subject_id,hemi,sim,cluster_type,n_clusters,session):
 def add_cluster(clustermap, hemi):
     hemisphere = hemi[-2:]
     brain = Brain(subject_id, hemisphere, surface,config_opts=dict(background="lightslategray", cortex="high_contrast"))
-    brain.add_data(clustermap, clustermap.min(), float(np.max(clustermap[np.where(clustermap<.5)])), colormap='binary', alpha=.8)
+    brain.add_data(clustermap, 0, clustermap.max(), colormap='spectral', alpha=.8)
 
 if __name__ == '__main__' :
 	#fs.FSCommand.set_default_subjects_dir('SCR/data/Final_High')#(freesurferdir)
