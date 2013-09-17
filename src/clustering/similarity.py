@@ -1,39 +1,44 @@
-def Similarity(in_file,sim,mask):
-    import nipype.pipeline.engine as pe
-    from nipype.interfaces import afni as afni
-    import os
-    from nipype.utils.filemanip import split_filename
+from nipype.interfaces import afni as afni
+import os
+from nipype.interfaces.base import BaseInterface, \
+    BaseInterfaceInputSpec, traits, File, TraitedSpec
+from nipype.utils.filemanip import split_filename
 
-    ##correlationmatrix##
-    _, base, _ = split_filename(in_file)
+class SimilarityInputSpec(BaseInterfaceInputSpec):
+    in_file = File(exists=True, desc='surface data to construct similarity matrix', mandatory=True)
+    sim = traits.String(exists=True, desc='type of similarity', mandatory=True)
+    mask = File(exists=True, desc='mask surface which is correlation target', mandatory=True)
 
-    corr = pe.Node(afni.AutoTcorrelate(), name='corr')
-    corr.inputs.in_file = in_file
-    corr.inputs.mask=mask
-    corr.inputs.mask_only_targets = sim!='temp'
-    corr.inputs.out_file = base +'_'+sim+'_simmatrix.1D'
+class SimilarityOutputSpec(TraitedSpec):
+    out_file = File(exists=True, desc="similarity matrix output")
+    
+class Similarity(BaseInterface):
+    input_spec = SimilarityInputSpec
+    output_spec = SimilarityOutputSpec
 
-    corr_res = corr.run()
-    corr_out_file = corr_res.outputs.out_file
+    def _run_interface(self, runtime):
+        ##correlationmatrix##
+        corr = afni.AutoTcorrelate()
+        corr.inputs.in_file = self.inputs.in_file
+        corr.inputs.mask= self.inputs.mask
+        corr.inputs.mask_only_targets = self.inputs.sim!='temp'
+        corr.inputs.out_file = os.path.abspath(self.inputs.sim+'_simmatrix.1D')
 
-    if sim=='temp':
-        output = corr_out_file
-    else:      
-        ##similaritymatrix##
-        similarity = pe.Node(afni.AutoTcorrelate(), name = 'similarity')
-        similarity.inputs.polort = -1
-        similarity.inputs.eta2 = sim=='eta2'
-        similarity.inputs.in_file = corr_out_file
-        similarity.inputs.out_file = base +'_'+sim+'_simmatrix.1D'
-        sim_res = similarity.run()
-        output = sim_res.outputs.out_file
+        ##pipe output through another correlation, unless sim type is temp##
+        corr_res = corr.run()
 
-#from nipype.interfaces.afni import AutoTcorrelate
-#corr = AutoTcorrelate()
-#corr.inputs.mask = "/SCR/data/11072.b1/results/rhprefrontalMaskfs4.nii"
-#corr.inputs.in_file = "/SCR/data/11072.b1/results/rhsxfmoutfs4.nii"
-#corr.inputs.eta2 = True
-#res = corr.run()
-#print res.outputs
+        if self.inputs.sim!='temp':    
+            ##similaritymatrix##
+            similarity = afni.AutoTcorrelate()
+            similarity.inputs.polort = -1
+            similarity.inputs.eta2 = self.inputs.sim=='eta2'
+            similarity.inputs.in_file = corr.inputs.out_file
+            similarity.inputs.out_file = os.path.abspath(self.inputs.sim+'_simmatrix.1D')
+            sim_res = similarity.run()
 
-    return output
+        return runtime
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["out_file"] = os.path.abspath(self.inputs.sim+'_simmatrix.1D')
+        return outputs

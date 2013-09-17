@@ -103,8 +103,6 @@ def get_wf():
     wf.connect(cluster_infosource, 'cluster', intersubject_cluster, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', intersubject_cluster, 'n_clusters')
 
-
-
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
