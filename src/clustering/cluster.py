@@ -53,7 +53,7 @@ class Cluster(BaseInterface):
 
         new_img = nb.Nifti1Image(outarray, None)
         _, base, _ = split_filename(self.inputs.in_File)
-        nb.save(new_img, os.path.abspath(base + '_clustered.nii'))
+        nb.save(new_img, os.path.abspath(base+'_'+str(self.inputs.n_clusters)+'_'+self.inputs.cluster_type+'_'+self.inputs.hemi+'.nii'))
 
         return runtime
 
@@ -61,5 +61,5 @@ class Cluster(BaseInterface):
         outputs = self._outputs().get()
         fname = self.inputs.in_File
         _, base, _ = split_filename(fname)
-        outputs["out_File"] = os.path.abspath(base+'_clustered.nii')
+        outputs["out_File"] = os.path.abspath(base+'_'+str(self.inputs.n_clusters)+'_'+self.inputs.cluster_type+'_'+self.inputs.hemi+'.nii')
         return outputs

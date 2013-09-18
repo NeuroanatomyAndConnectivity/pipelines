@@ -23,7 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
+from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, dicomdir, hemispheres
 
 subjects = ['9630905']
 
@@ -129,29 +129,22 @@ def get_wf():
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_dicoms','resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
     datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_dicoms'] =[['DICOM','subject_id', 'session', 'RfMRI_mx_645/*.dcm']]
-    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat', '*.nii.gz']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session'+ '/RfMRI_mx_645/rest.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat','*']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     wf.connect(session_infosource, 'session', datagrabber, 'session')
 
 ##DcmStack & MetaData##
-    stack = pe.Node(dcm.DcmStack(), name = 'stack')
+    stack = pe.Node(dcm.DcmStack(infields=['subject_id']), name = 'stack')
+    stack.inputs.dicom_files = dicomdir + 'subject_id' +'/anat/'
     stack.inputs.embed_meta = True
 
     tr_lookup = pe.Node(dcm.LookupMeta(), name = 'tr_lookup')
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
-    def get_sliceorder(in_file):
-        import nipype.interfaces.dcmstack as dcm
-        import numpy as np
-        nii_wrp = dcm.NiftiWrapper.from_filename(in_file)
-        sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
-        return sliceorder
-        
-    wf.connect(datagrabber, "resting_dicoms", stack, "dicom_files")
+    wf.connect(subject_id_infosource, 'subject_id', stack, 'subject_id')        
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
 ##Preproc##    
@@ -178,7 +171,7 @@ def get_wf():
     preproc.inputs.inputspec.surface_fwhm = 0.0
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
-    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,5])
+    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,6])
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
@@ -192,12 +185,17 @@ def get_wf():
     #preproc.inputs.inputspec.motion_correct_node = 'afni'
     #preproc.inputs.inputspec.sliceorder = slicetime_file
     #preproc.inputs.inputspec.sliceorder = list(np.linspace(0,1.4,64))
-    def get_fsid(subject_id):
-        return  subject_id+'/FREESURFER'
 
     def convert_units(tr):
         mstr = (tr*.001)
         return tr
+
+    def get_sliceorder(in_file):
+        import nipype.interfaces.dcmstack as dcm
+        import numpy as np
+        nii_wrp = dcm.NiftiWrapper.from_filename(in_file)
+        sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
+        return sliceorder
 
     wf.connect(tr_lookup, ("TR", convert_units), preproc, "inputspec.tr")
     wf.connect(stack, ('out_file', get_sliceorder), preproc, "inputspec.sliceorder")
@@ -219,8 +217,11 @@ def get_wf():
 ##SXFM##
     sxfm = pe.Node(fs.SurfaceTransform(), name = 'sxfm')
     sxfm.inputs.target_subject = 'fsaverage4'
-    sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
+    sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'78
     sxfm.inputs.target_type = 'nii'
+
+    def get_fsid(subject_id):
+        return  subject_id+'/FREESURFER'
 	
     wf.connect(sampler, 'out_file', sxfm, 'source_file')
     wf.connect(subject_id_infosource, ('subject_id',get_fsid), sxfm, 'source_subject')
@@ -255,6 +256,6 @@ def get_wf():
 
 if __name__=='__main__':
     wf = get_wf()
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
     #wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
-    #wf.run(plugin="Linear", updatehash=True)
+    wf.run(plugin="Linear", updatehash=True)

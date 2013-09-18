@@ -34,6 +34,10 @@ def find_cluster(subject_id,hemi,sim,cluster_type,n_clusters,session):
     clustermap = nb.load(''.join(glob.glob('*.nii'))).get_data()
     add_cluster(clustermap, hemi)
 
+def click_thru(filedir, hemi, n):
+    clustermap = nb.load(glob.glob(filedir+'_n_clusters_'+str(n)+'/*.nii')).get_data()
+    add_cluster(clustermap, hemi)
+
 def add_cluster(clustermap, hemi):
     hemisphere = hemi[-2:]
     brain = Brain(subject_id, hemisphere, surface,config_opts=dict(background="lightslategray", cortex="high_contrast"))
@@ -44,6 +48,6 @@ if __name__ == '__main__' :
 	#pysurfer visualization
     subject_id = 'fsaverage4'
     hemi = 'lh'
-    surface = 'inflated'
+    surface = 'pial'
     brain = Brain(subject_id, hemi, surface, config_opts=dict(background="lightslategray", cortex="high_contrast"))
     print('FORMAT: add_cluster(niftifile,hemisphere)\nfind_cluster(subject_id,hemi,sim,cluster_type,n_clusters,session)')

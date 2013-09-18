@@ -15,8 +15,6 @@ from similarity import Similarity
 from mask import Mask
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
-analysis_subjects = ['3795193']
-
 def get_wf():
     
     wf = pe.Workflow(name="main_workflow")
@@ -66,7 +64,6 @@ def get_wf():
 
 ##convert AFNI similarityMatrix to NIFTI file##
     convert = pe.Node(afni.AFNItoNIFTI(), name = 'convert_AFNI_to_NIFTI')
-    convert.inputs.out_file = convert.inputs.in_file
     wf.connect(simmatrix, 'out_file', convert, 'in_file')
 
 ##clustering##
@@ -87,5 +84,5 @@ def get_wf():
 if __name__ == '__main__':
     wf = get_wf()               
     #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
-    wf.run(plugin='Linear')
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    #wf.run(plugin='Linear')

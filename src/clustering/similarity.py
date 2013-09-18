@@ -22,7 +22,7 @@ class Similarity(BaseInterface):
         corr.inputs.in_file = self.inputs.in_file
         corr.inputs.mask= self.inputs.mask
         corr.inputs.mask_only_targets = self.inputs.sim!='temp'
-        corr.inputs.out_file = os.path.abspath(self.inputs.sim+'_simmatrix.1D')
+        corr.inputs.out_file = os.path.abspath(self.inputs.sim+'.1D')
 
         ##pipe output through another correlation, unless sim type is temp##
         corr_res = corr.run()
@@ -33,12 +33,12 @@ class Similarity(BaseInterface):
             similarity.inputs.polort = -1
             similarity.inputs.eta2 = self.inputs.sim=='eta2'
             similarity.inputs.in_file = corr.inputs.out_file
-            similarity.inputs.out_file = os.path.abspath(self.inputs.sim+'_simmatrix.1D')
+            similarity.inputs.out_file = os.path.abspath(self.inputs.sim+'.1D')
             sim_res = similarity.run()
 
         return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        outputs["out_file"] = os.path.abspath(self.inputs.sim+'_simmatrix.1D')
+        outputs["out_file"] = os.path.abspath(self.inputs.sim+'.1D')
         return outputs
