@@ -41,10 +41,10 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfmout']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['timeseries']), name="datagrabber")
     datagrabber.inputs.base_directory = resultsdir+'sxfmout/'
     datagrabber.inputs.template = '*%s/*%s/%s/*%s/%s'
-    datagrabber.inputs.template_args['sxfmout'] = [['session','subject_id','*','hemi', '*.nii']]
+    datagrabber.inputs.template_args['timeseries'] = [['session','subject_id','*','hemi', '*.nii']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
@@ -54,12 +54,12 @@ def get_wf():
 ##mask##
     mask = pe.Node(Mask(), name = 'mask')
     wf.connect(hemi_infosource, 'hemi', mask, 'hemi')
-    wf.connect(datagrabber, 'sxfmout', mask, 'sxfmout')
+    wf.connect(datagrabber, 'timeseries', mask, 'sxfmout')
 
 ##similaritymatrix##
     simmatrix = pe.Node(Similarity(), name='simmatrix')
     wf.connect(mask, 'mask_volume', simmatrix, 'mask')
-    wf.connect(datagrabber, 'sxfmout', simmatrix, 'in_file')
+    wf.connect(datagrabber, 'timeseries', simmatrix, 'in_file')
     wf.connect(sim_infosource, 'sim', simmatrix, 'sim')
 
 ##convert AFNI similarityMatrix to NIFTI file##

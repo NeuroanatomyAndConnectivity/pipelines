@@ -61,10 +61,10 @@ def get_wf():
     wf.connect(n_clusters_infosource, 'n_clusters', dg_sessions, 'n_clusters')
 
 ##Datagrabber for subjects##
-    dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'session','cluster', 'sim', 'n_clusters'], outfields=['all_sessions']), name="dg_subjects")
+    dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'session','cluster', 'sim', 'n_clusters'], outfields=['all_subjects']), name="dg_subjects")
     dg_subjects.inputs.base_directory = resultsdir+'clustered/'
     dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
-    dg_subjects.inputs.template_args['all_sessions'] = [['hemi', '*','subject_id','sim', 'cluster', 'n_clusters']]
+    dg_subjects.inputs.template_args['all_subjects'] = [['hemi', 'session','*','sim', 'cluster', 'n_clusters']]
     dg_subjects.inputs.sort_filelist = True
 
     wf.connect(session_infosource, 'session', dg_subjects, 'session')
@@ -77,7 +77,7 @@ def get_wf():
     intercluster = pe.Node(Consensus(), name = 'intercluster')
     wf.connect(dg_clusters, 'all_cluster_types', intercluster, 'in_Files')
     ##Cluster the Consensus Matrix##
-    intercluster_cluster = pe.Node(Cluster(), name = 'intercluster consensus is reclustered')
+    intercluster_cluster = pe.Node(Cluster(), name = 'intercluster_cluster')
     wf.connect(intercluster, 'consensus_mat', intercluster_cluster, 'in_File')
     wf.connect(hemi_infosource, 'hemi', intercluster_cluster, 'hemi')
     wf.connect(cluster_infosource, 'cluster', intercluster_cluster, 'cluster_type')
@@ -87,7 +87,7 @@ def get_wf():
     intersession = pe.Node(Consensus(), name = 'intersession')
     wf.connect(dg_sessions, 'all_sessions', intersession, 'in_Files')
     ##Cluster the Consensus Matrix##
-    intersession_cluster = pe.Node(Cluster(), name = 'intersession consensus is reclustered')
+    intersession_cluster = pe.Node(Cluster(), name = 'intersession_cluster')
     wf.connect(intersession, 'consensus_mat', intersession_cluster, 'in_File')
     wf.connect(hemi_infosource, 'hemi', intersession_cluster, 'hemi')
     wf.connect(cluster_infosource, 'cluster', intersession_cluster, 'cluster_type')
@@ -95,9 +95,9 @@ def get_wf():
 
 ##Consensus between subjects##
     intersubject = pe.Node(Consensus(), name = 'intersubject')
-    wf.connect(dg_subjects, 'all_sessions', intersubject, 'in_Files')
+    wf.connect(dg_subjects, 'all_subjects', intersubject, 'in_Files')
     ##Cluster the Consensus Matrix##
-    intersubject_cluster = pe.Node(Cluster(), name = 'intersubject consensus is reclustered')
+    intersubject_cluster = pe.Node(Cluster(), name = 'intersubject_cluster')
     wf.connect(intersubject, 'consensus_mat', intersubject_cluster, 'in_File')
     wf.connect(hemi_infosource, 'hemi', intersubject_cluster, 'hemi')
     wf.connect(cluster_infosource, 'cluster', intersubject_cluster, 'cluster_type')
@@ -117,5 +117,5 @@ def get_wf():
 
 if __name__ == '__main__':
     wf = get_wf()               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

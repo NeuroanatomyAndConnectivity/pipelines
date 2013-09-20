@@ -23,7 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, dicomdir, hemispheres
+from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
 
 subjects = ['9630905']
 
@@ -126,10 +126,10 @@ def get_wf():
     hemi_infosource.iterables = ('hemi', hemispheres)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_dicoms','resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
     datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session'+ '/RfMRI_mx_645/rest.nii.gz']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', '/RfMRI_mx_645/rest.nii.gz']]
     datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat','*']]
     datagrabber.inputs.sort_filelist = True
 
@@ -137,14 +137,17 @@ def get_wf():
     wf.connect(session_infosource, 'session', datagrabber, 'session')
 
 ##DcmStack & MetaData##
-    stack = pe.Node(dcm.DcmStack(infields=['subject_id']), name = 'stack')
-    stack.inputs.dicom_files = dicomdir + 'subject_id' +'/anat/'
+    stack = pe.Node(dcm.DcmStack(), name = 'stack')
     stack.inputs.embed_meta = True
 
     tr_lookup = pe.Node(dcm.LookupMeta(), name = 'tr_lookup')
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
-    wf.connect(subject_id_infosource, 'subject_id', stack, 'subject_id')        
+    def construct_filedir(subject_id):
+        from variables import dicomdir
+        filedir = dicomdir + subject_id + '/anat/'
+        return filedir
+    wf.connect(subject_id_infosource, ('subject_id', construct_filedir), stack, 'dicom_files')        
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
 ##Preproc##    
@@ -154,7 +157,7 @@ def get_wf():
     mod_realign = preproc.get_node('mod_realign')
     mod_realign.plugin_args = {'submit_specs':'request_memory=4000\n'}
     #workaround for realignment crashing in multiproc environment
-    #mod_realign.run_without_submitting = True
+    mod_realign.run_without_submitting = True
 
 
     # inputs
@@ -171,7 +174,7 @@ def get_wf():
     preproc.inputs.inputspec.surface_fwhm = 0.0
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
-    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,6])
+    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,5])
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
@@ -217,7 +220,7 @@ def get_wf():
 ##SXFM##
     sxfm = pe.Node(fs.SurfaceTransform(), name = 'sxfm')
     sxfm.inputs.target_subject = 'fsaverage4'
-    sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'78
+    sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
     sxfm.inputs.target_type = 'nii'
 
     def get_fsid(subject_id):
