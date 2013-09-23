@@ -23,7 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres
+from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, dicomdir, hemispheres
 
 subjects = ['9630905']
 
@@ -129,7 +129,7 @@ def get_wf():
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
     datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', '/RfMRI_mx_645/rest.nii.gz']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
     datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat','*']]
     datagrabber.inputs.sort_filelist = True
 
@@ -145,7 +145,8 @@ def get_wf():
 
     def construct_filedir(subject_id):
         from variables import dicomdir
-        filedir = dicomdir + subject_id + '/anat/'
+        import os
+        filedir = os.path.join(dicomdir, subject_id + '/anat/')
         return filedir
     wf.connect(subject_id_infosource, ('subject_id', construct_filedir), stack, 'dicom_files')        
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
@@ -231,7 +232,7 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
-    report_wf = create_preproc_report_wf(resultsdir + "/reports")
+    report_wf = create_preproc_report_wf(os.path.join(resultsdir + "/reports"))
     report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
