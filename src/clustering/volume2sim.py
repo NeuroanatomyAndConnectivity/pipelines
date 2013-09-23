@@ -33,6 +33,13 @@ sourcemaskfile = os.path.join(workingdir,'masks/','sourcemask.nii')
 sourceImg = nb.Nifti1Image(sourcemask, None)
 nb.save(sourceImg, sourcemaskfile)
 
+#define target mask (surface, volume)
+targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
+targetmask = get_mask(sourcelabels)
+targetmaskfile = os.path.join(workingdir, 'masks/', 'targetmask.nii')
+targetImg = nb.Nifti1Image(targetmask, None)
+nb.save(targetImg, targetmaskfile)
+
 #invert transform matrix
 invt = fsl.ConvertXFM()
 invt.inputs.in_file = regfile
@@ -50,7 +57,7 @@ sourcexfm.inputs.interp = 'nearestneighbour'
 sourcexfm.inputs.apply_xfm = True
 sourcexfm_result = sourcexfm.run()
 
-#same for target
+#same transform for target
 targetxfm = fsl.ApplyXfm()
 targetxfm.inputs.in_file = targetmaskfile
 targetxfm.inputs.in_matrix_file = invt_result.outputs.out_file
@@ -60,7 +67,7 @@ targetxfm.inputs.interp = 'nearestneighbour'
 targetxfm.inputs.apply_xfm = True
 targetxfm_result = targetxfm.run()
 
-sourcemask_xfm = nb.load(applyxfm_result.outputs.out_file).get_data()
+sourcemask_xfm = nb.load(sourcexfm_result.outputs.out_file).get_data()
 inputdata = nb.load(preprocessedfile).get_data()
 #manual source data creation (-mask_source option not yet available in afni)
 maskedinput = np.zeros_like(inputdata)
@@ -70,17 +77,11 @@ maskedinputfile = os.path.join(workingdir,'masks/','inputfile.nii')
 inputImg = nb.Nifti1Image(maskedinput, None)
 nb.save(inputImg, maskedinputfile)
 
-#define target mask (surface, volume)
-targetlabels = [11114, 11113] #ctx_lh_G_front_inf-Triangul, ctx_lh_G_front_inf-Orbital
-targetmask = get_mask(sourcelabels)
-targetmaskfile = os.path.join(workingdir, 'masks/', 'targetmask.nii')
-targetImg = nb.Nifti1Image(targetmask, None)
-nb.save(targetImg, targetmaskfile)
-
 #run Similarity
 corr = afni.AutoTcorrelate()
 corr.inputs.in_file = maskedinputfile
 corr.inputs.mask = targetxfm_result.outputs.out_file
+corr.inputs.mask_only_targets = True
 corr.inputs.out_file = os.path.join(workingdir,'masks/','corr_out.1D')
 corr_result = corr.run()
 
