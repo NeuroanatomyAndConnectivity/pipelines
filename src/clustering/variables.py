@@ -38,7 +38,7 @@ analysis_sessions = ['session1','session2']
 
 def getvertices(hemi,freesurferdir):
     labellist = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71]
-    [vertices,colortable,names] = nb.freesurfer.read_annot(os.path.join(freesurferdir,'/fsaverage4/label/'+hemi[-2:]+'.aparc.a2009s.annot'), orig_ids=True)
+    [vertices,colortable,names] = nb.freesurfer.read_annot(os.path.join(freesurferdir,'fsaverage4/label/'+hemi[-2:]+'.aparc.a2009s.annot'), orig_ids=True)
     chosenvertices = list()
     for j, value in enumerate(vertices) :
         for i, index in enumerate(labellist) :
