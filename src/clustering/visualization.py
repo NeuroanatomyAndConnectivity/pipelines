@@ -3,7 +3,7 @@ from surfer import Brain
 import numpy as np
 import nibabel as nb
 import nipype.interfaces.freesurfer as fs
-from variables import freesurferdir, resultsdir
+#from variables import freesurferdir, resultsdir
 import os
 import glob
 import sys
@@ -50,4 +50,4 @@ if __name__ == '__main__' :
     hemi = 'lh'
     surface = 'pial'
     brain = Brain(subject_id, hemi, surface, config_opts=dict(background="lightslategray", cortex="high_contrast"))
-    print('FORMAT: add_cluster(niftifile,hemisphere)\nfind_cluster(subject_id,hemi,sim,cluster_type,n_clusters,session)')
+    print('FORMAT: add_cluster(clustermap,hemisphere)\nfind_cluster(subject_id,hemi,sim,cluster_type,n_clusters,session)')
