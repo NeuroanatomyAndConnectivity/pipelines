@@ -10,7 +10,5 @@ vol = np.squeeze(volume)
 
 values = vol[np.where(targetmask)]
 linear_vol = np.zeros((vol.shape[0]*vol.shape[1]*vol.shape[2],vol.shape[3]))
-cropped_surf = np.zeros_like(linear_vol.shape[1])
+cropped_surf = np.zeros((linear_vol.shape[0]))
 cropped_surf = surf[:len(cropped_surf)]
-
-

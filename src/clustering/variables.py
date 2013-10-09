@@ -31,8 +31,6 @@ analysis_subjects = list(set(analysis_subjects) - set(analysis_exclude_subjects)
 sessions = ['session1','session2']
 analysis_sessions = ['session1','session2']
 
-
-
 #slicetime_file = '/scr/schweiz1/data/NKI_High/scripts/sliceTime2.txt'
 #rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
 

@@ -12,7 +12,7 @@ subject_id = '9630905'
 workingdir = '/scr/kongo1/NKIMASKS'
 
 preprocessedfile = '/SCR/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
-regfile = '/SCR/Data/results/func2anat_transform/_session_session1/_subject_id_9630905/_register0/FREESURFER.mat'
+regfile = '/scr/ilz1/Data/results/func2anat_transform/_session_session1/_subject_id_9630905/_register0/FREESURFER.mat'
 parcfile = '/SCR/Data/freesurfer/9630905/mri/aparc.a2009s+aseg.mgz'
 
 def get_mask(labels):
