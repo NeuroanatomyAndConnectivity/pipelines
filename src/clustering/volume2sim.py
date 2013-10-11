@@ -11,9 +11,9 @@ import subprocess
 subject_id = '9630905'
 workingdir = '/scr/kongo1/NKIMASKS'
 
-preprocessedfile = '/SCR/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
+preprocessedfile = '/scr/ilz1/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
 regfile = '/scr/ilz1/Data/results/func2anat_transform/_session_session1/_subject_id_9630905/_register0/FREESURFER.mat'
-parcfile = '/SCR/Data/freesurfer/9630905/mri/aparc.a2009s+aseg.mgz'
+parcfile = '/scr/ilz1/Data/freesurfer/9630905/mri/aparc.a2009s+aseg.mgz'
 
 def get_mask(labels):
     parcdata = nb.load(parcfile).get_data()
@@ -35,7 +35,7 @@ nb.save(sourceImg, sourcemaskfile)
 
 #define target mask (surface, volume)
 targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
-targetmask = get_mask(sourcelabels)
+targetmask = get_mask(targetlabels)
 targetmaskfile = os.path.join(workingdir, 'masks/', 'targetmask.nii')
 targetImg = nb.Nifti1Image(targetmask, None)
 nb.save(targetImg, targetmaskfile)
@@ -78,7 +78,7 @@ inputImg = nb.Nifti1Image(maskedinput, None)
 nb.save(inputImg, maskedinputfile)
 
 #run Similarity
-corr = afni.AutoTcorrelate()
+corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
 corr.inputs.in_file = maskedinputfile
 corr.inputs.mask = targetxfm_result.outputs.out_file
 corr.inputs.mask_only_targets = True
