@@ -12,7 +12,7 @@ import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.afni as afni
 from cluster import Cluster
 from similarity import Similarity
-from mask import Mask
+from mask_surface import MaskSurface
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
 def get_wf():
@@ -52,7 +52,7 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
 
 ##mask##
-    mask = pe.Node(Mask(), name = 'mask')
+    mask = pe.Node(MaskSurface(), name = 'mask')
     wf.connect(hemi_infosource, 'hemi', mask, 'hemi')
     wf.connect(datagrabber, 'timeseries', mask, 'sxfmout')
 
