@@ -20,16 +20,16 @@ _, base, _ = split_filename(preprocessedfile)
 volumeinput = volumeinput = np.resize(maskedinput,(maskedinput.size/maskedinput.shape[-1],maskedinput.shape[-1]))
 surfaceinput = np.squeeze(sxfm)
 totalinput = np.concatenate((surfaceinput,volumeinput))
-nImg = nb.Nifti1Image(totalinput, None)
-nb.save(nImg, os.path.abspath(base + '_concatInput.nii'))
+concatinputfile = os.path.abspath(base + '_concatInput.nii')
+concatinputfile.write(totalinput)
 ##write to ascii file instead of nifti
 
 ##CONCATENATE TARGET##
 volumetarget = np.reshape(targetmask,(targetmask.size))
 surfacetarget = surfacemask[:,0,0,0] ##one timepoint
 totaltarget = np.concatenate((surfacetarget,volumetarget))
-mImg = nb.Nifti1Image(totaltarget, None)
-nb.save(mImg, os.path.abspath(base + '_concatTarget.nii'))
+concattargetfile = os.path.abspath(base + '_concatTarget.nii')
+concatargetfile.write(totaltarget)
 
 #run Similarity
 corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
