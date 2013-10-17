@@ -3,20 +3,33 @@ import nibabel as nb
 import os
 from similarity import Similarity
 import nipype.interfaces.afni as afni
+from nipype.utils.filemanip import split_filename
 
 from utils import get_mask
 
 preprocessedfile = '/scr/ilz1/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
 sxfm = nb.load('/scr/schweiz1/Data/results/sxfmout/_session_session1/_subject_id_9630905/_fwhm_0/_hemi_lh/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4.nii').get_data()
 maskedinput = nb.load('/scr/kongo1/NKIMASKS/masks/inputfile.nii').get_data()
+sourcemask = nb.load('/scr/kongo1/NKIMASKS/masks/sourcemask.nii_xfm.nii.gz').get_data()
+targetmask = nb.load('/scr/kongo1/NKIMASKS/masks/sourcemask.nii_xfm.nii.gz').get_data()
+surfacemask = nb.load('/scr/schweiz1/Data/cluster_analysis/main_workflow/_hemi_lh/_session_session1/_subject_id_9630905/mask/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4_mask.nii').get_data()
 
+_, base, _ = split_filename(preprocessedfile)
 
 ##CONCATENATE INPUT##
-volumeinput = maskedinput[np.where(targetmask)]
+volumeinput = volumeinput = np.resize(maskedinput,(maskedinput.size/maskedinput.shape[-1],maskedinput.shape[-1]))
 surfaceinput = np.squeeze(sxfm)
 totalinput = np.concatenate((surfaceinput,volumeinput))
+nImg = nb.Nifti1Image(totalinput, None)
+nb.save(nImg, os.path.abspath(base + '_concatInput.nii'))
+##write to ascii file instead of nifti
 
 ##CONCATENATE TARGET##
+volumetarget = np.reshape(targetmask,(targetmask.size))
+surfacetarget = surfacemask[:,0,0,0] ##one timepoint
+totaltarget = np.concatenate((surfacetarget,volumetarget))
+mImg = nb.Nifti1Image(totaltarget, None)
+nb.save(mImg, os.path.abspath(base + '_concatTarget.nii'))
 
 #run Similarity
 corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??

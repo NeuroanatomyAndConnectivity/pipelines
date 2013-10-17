@@ -1,6 +1,7 @@
 import nibabel as nb
+from nipype.utils.filemanip import split_filename
 
-sxfm = nb.load('/scr/schweiz1/Data/results/sxfmout/_session_session1/_subject_id_9630905/_fwhm_0/_hemi_lh/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4.nii').get_data()
+sxfmout = nb.load('/scr/schweiz1/Data/results/sxfmout/_session_session1/_subject_id_9630905/_fwhm_0/_hemi_lh/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4.nii').get_data()
 
 ##from mask_surface import MaskSurface
 data = nb.load(sxfmout).get_data()
@@ -14,7 +15,7 @@ for i,vertex in enumerate(chosenvertices):
     mask[vertex][:] = 1
 mask.resize(origdata)
 maskImg = nb.Nifti1Image(mask, affine)
-
+_, base, _ = split_filename(sxfmout)
 nb.save(maskImg, os.path.abspath(base + '_mask.nii'))
 
 

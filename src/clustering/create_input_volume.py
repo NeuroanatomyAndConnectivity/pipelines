@@ -5,6 +5,7 @@ import os
 from variables import workingdir
 import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.fsl as fsl
+from nipype.utils.filemanip import split_filename
 
 from utils import get_mask
 
@@ -32,7 +33,8 @@ nb.save(sourceImg, sourcemaskfile)
 sourcexfm = fsl.ApplyXfm()
 sourcexfm.inputs.in_file = sourcemaskfile
 sourcexfm.inputs.in_matrix_file = invt_result.outputs.out_file
-sourcexfm.inputs.out_file = sourcemaskfile + '_xfm.nii.gz'
+_, base, _ = split_filename(sourcemaskfile)
+sourcexfm.inputs.out_file = base + '_xfm.nii.gz'
 sourcexfm.inputs.reference = preprocessedfile
 sourcexfm.inputs.interp = 'nearestneighbour'
 sourcexfm.inputs.apply_xfm = True
@@ -61,7 +63,8 @@ nb.save(targetImg, targetmaskfile)
 targetxfm = fsl.ApplyXfm()
 targetxfm.inputs.in_file = targetmaskfile
 targetxfm.inputs.in_matrix_file = invt_result.outputs.out_file
-targetxfm.inputs.out_file = targetmaskfile + '_xfm.nii.gz'
+_, base, _ = split_filename(targetmaskfile)
+targetxfm.inputs.out_file = base + '_xfm.nii.gz'
 targetxfm.inputs.reference = preprocessedfile
 targetxfm.inputs.interp = 'nearestneighbour'
 targetxfm.inputs.apply_xfm = True
