@@ -15,6 +15,11 @@ workingdir = '/scr/kongo1/NKIMASKS'
 preprocessedfile = '/scr/ilz1/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
 regfile = '/scr/ilz1/Data/results/func2anat_transform/_session_session1/_subject_id_9630905/_register0/FREESURFER.mat'
 
+#labels
+sourcelabels = [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
+targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
+inputlabels = sourcelabels + targetlabels
+
 #invert transform matrix
 invt = fsl.ConvertXFM()
 invt.inputs.in_file = regfile
@@ -23,8 +28,7 @@ invt.inputs.out_file = regfile + '_inv.mat'
 invt_result= invt.run()
 
 #define source mask (surface, volume)
-sourcelabels = [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
-sourcemask = get_mask(sourcelabels)
+sourcemask = get_mask(inputlabels)
 sourcemaskfile = os.path.join(workingdir,'masks/','sourcemask.nii')
 sourceImg = nb.Nifti1Image(sourcemask, None)
 nb.save(sourceImg, sourcemaskfile)

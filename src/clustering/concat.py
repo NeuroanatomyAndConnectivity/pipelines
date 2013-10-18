@@ -10,14 +10,11 @@ from utils import get_mask
 
 workingdir = '/scr/kongo1/NKIMASKS'
 
-preprocessedfile = '/scr/ilz1/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
 sxfm = nb.load('/scr/schweiz1/Data/results/sxfmout/_session_session1/_subject_id_9630905/_fwhm_0/_hemi_lh/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4.nii').get_data()
 maskedinput = nb.load('/scr/kongo1/NKIMASKS/masks/inputfile.nii').get_data()
 sourcemask = nb.load('/scr/kongo1/NKIMASKS/masks/sourcemask.nii_xfm.nii.gz').get_data()
-targetmask = nb.load('/scr/kongo1/NKIMASKS/masks/sourcemask.nii_xfm.nii.gz').get_data()
+targetmask = nb.load('/scr/kongo1/NKIMASKS/masks/targetmask.nii_xfm.nii.gz').get_data()
 surfacemask = nb.load('/scr/schweiz1/Data/cluster_analysis/main_workflow/_hemi_lh/_session_session1/_subject_id_9630905/mask/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4_mask.nii').get_data()
-
-_, base, _ = split_filename(preprocessedfile)
 
 ##CONCATENATE INPUT##
 volumeinput = volumeinput = np.resize(maskedinput,(maskedinput.size/maskedinput.shape[-1],maskedinput.shape[-1]))
@@ -26,6 +23,9 @@ totalinput = np.concatenate((surfaceinput,volumeinput))
 inputfile = os.path.join(workingdir, 'simInput.dat')
 datI = np.memmap(inputfile, dtype = totalinput.dtype, mode='w+', shape = totalinput.shape)
 datI = totalinput
+
+##SQUEEZE SPARSE MATRIX##
+the_zeroes = totalinput == 0
 
 ##CONCATENATE TARGET##
 volumetarget = np.reshape(targetmask,(targetmask.size))

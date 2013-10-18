@@ -6,7 +6,7 @@ resultsdir = os.path.join(workingdir, 'results/')
 freesurferdir = os.path.join(workingdir, 'freesurfer/')
 dicomdir = os.path.join(workingdir, 'DICOM/')
 
-from utils.py import get_vertices, get_subjects_from
+from utils import get_vertices, get_subjects_from
 
 subjects = ['3795193']
 #, '3201815', '0021024', '3893245', '3315657', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '0021001', '8735778', '9630905', '0021018', '3313349', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156']

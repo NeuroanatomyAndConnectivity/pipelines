@@ -1,3 +1,7 @@
+import os
+import nibabel as nb
+import numpy as np
+
 def get_subjects_from(resultsDirectory):
     subjects = []
     for root, dirnames, fnames in os.walk(resultsDirectory):
