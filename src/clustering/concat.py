@@ -4,8 +4,11 @@ import os
 from similarity import Similarity
 import nipype.interfaces.afni as afni
 from nipype.utils.filemanip import split_filename
+import tables
 
 from utils import get_mask
+
+workingdir = '/scr/kongo1/NKIMASKS'
 
 preprocessedfile = '/scr/ilz1/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
 sxfm = nb.load('/scr/schweiz1/Data/results/sxfmout/_session_session1/_subject_id_9630905/_fwhm_0/_hemi_lh/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4.nii').get_data()
@@ -20,23 +23,25 @@ _, base, _ = split_filename(preprocessedfile)
 volumeinput = volumeinput = np.resize(maskedinput,(maskedinput.size/maskedinput.shape[-1],maskedinput.shape[-1]))
 surfaceinput = np.squeeze(sxfm)
 totalinput = np.concatenate((surfaceinput,volumeinput))
-concatinputfile = os.path.abspath(base + '_concatInput.nii')
-concatinputfile.write(totalinput)
-##write to ascii file instead of nifti
+inputfile = os.path.join(workingdir, 'simInput.dat')
+datI = np.memmap(inputfile, dtype = totalinput.dtype, mode='w+', shape = totalinput.shape)
+datI = totalinput
 
 ##CONCATENATE TARGET##
 volumetarget = np.reshape(targetmask,(targetmask.size))
 surfacetarget = surfacemask[:,0,0,0] ##one timepoint
 totaltarget = np.concatenate((surfacetarget,volumetarget))
-concattargetfile = os.path.abspath(base + '_concatTarget.nii')
-concatargetfile.write(totaltarget)
+targetfile = os.path.join(workingdir, 'simTarget.dat')
+datT = np.memmap(targetfile, dtype = totaltarget.dtype, mode='w+', shape = totaltarget.shape)
+datT = totaltarget
 
+#r = memmap(concatinputfile, mode='r', shape = totalinput.shape)
 #run Similarity
 corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
-corr.inputs.in_file = concatenatedfile
-corr.inputs.mask = targetxfm_result.outputs.out_file
+corr.inputs.in_file = inputfile
+corr.inputs.mask = targetfile
 corr.inputs.mask_only_targets = True
-corr.inputs.out_file = os.path.join(workingdir,'masks/','corr_out.1D')
+corr.inputs.out_file = os.path.join(workingdir,'masks/corr_out.1D')
 corr_result = corr.run()
 
 #convert from AFNI file to NIFTI
