@@ -20,14 +20,12 @@ totalinput = np.concatenate((surfaceinput,volumeinput))
 
 ##SQUEEZE SPARSE MATRIX##
 input_sum = np.sum(totalinput,axis=1) #find rows of all zeroes
-the_indices = np.where(totalinput!=0)[0] #save indices to reinflate after squeeze
-#first save indices of zeroes
-inputfile = os.path.join(workingdir, 'simInput.dat')
-dat = np.memmap(inputfile, dtype = totalinput.dtype, mode='w+', shape = totalinput.shape)
-dat = totalinput
-#squeeze
-denseinput = totalinput[totalinput>0]
-#save and input as 3dautoTcorrelate
+the_indices = np.where(input_sum!=0)[0] #save indices for reinflation after squeeze
+np.save(os.path.join(workingdir, 'indices.npy'),the_indices)
+#squeeze & save
+denseinput = totalinput[the_indices]
+nImg = nb.Nifti1Image(denseinput, None)
+nb.save(nImg, os.path.join(workingdir, 'simInput.nii'))
 
 ##CONCATENATE TARGET##
 volumetarget = np.reshape(targetmask,(targetmask.size))
