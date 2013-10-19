@@ -1,12 +1,9 @@
 import numpy as np
 import nibabel as nb
 import os
-from similarity import Similarity
 import nipype.interfaces.afni as afni
 from nipype.utils.filemanip import split_filename
 import tables
-
-from utils import get_mask
 
 workingdir = '/scr/kongo1/NKIMASKS'
 
@@ -20,12 +17,17 @@ surfacemask = nb.load('/scr/schweiz1/Data/cluster_analysis/main_workflow/_hemi_l
 volumeinput = volumeinput = np.resize(maskedinput,(maskedinput.size/maskedinput.shape[-1],maskedinput.shape[-1]))
 surfaceinput = np.squeeze(sxfm)
 totalinput = np.concatenate((surfaceinput,volumeinput))
-inputfile = os.path.join(workingdir, 'simInput.dat')
-datI = np.memmap(inputfile, dtype = totalinput.dtype, mode='w+', shape = totalinput.shape)
-datI = totalinput
 
 ##SQUEEZE SPARSE MATRIX##
-the_zeroes = totalinput == 0
+input_sum = np.sum(totalinput,axis=1) #find rows of all zeroes
+the_indices = np.where(totalinput!=0)[0] #save indices to reinflate after squeeze
+#first save indices of zeroes
+inputfile = os.path.join(workingdir, 'simInput.dat')
+dat = np.memmap(inputfile, dtype = totalinput.dtype, mode='w+', shape = totalinput.shape)
+dat = totalinput
+#squeeze
+denseinput = totalinput[totalinput>0]
+#save and input as 3dautoTcorrelate
 
 ##CONCATENATE TARGET##
 volumetarget = np.reshape(targetmask,(targetmask.size))
