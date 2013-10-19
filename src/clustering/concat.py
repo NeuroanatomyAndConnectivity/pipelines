@@ -24,16 +24,19 @@ the_indices = np.where(input_sum!=0)[0] #save indices for reinflation after sque
 np.save(os.path.join(workingdir, 'indices.npy'),the_indices)
 #squeeze & save
 denseinput = totalinput[the_indices]
-nImg = nb.Nifti1Image(denseinput, None)
-nb.save(nImg, os.path.join(workingdir, 'simInput.nii'))
+niftishape = np.reshape(denseinput,(-1,1,1,maskedinput.shape[3]))#reshape into proper nifti (N,1,1,time)
+inputfile = os.path.join(workingdir, 'simInput.nii')
+nImg = nb.Nifti1Image(niftishape, None)
+nb.save(nImg, inputfile)
 
 ##CONCATENATE TARGET##
 volumetarget = np.reshape(targetmask,(targetmask.size))
 surfacetarget = surfacemask[:,0,0,0] ##one timepoint
 totaltarget = np.concatenate((surfacetarget,volumetarget))
-targetfile = os.path.join(workingdir, 'simTarget.dat')
-datT = np.memmap(targetfile, dtype = totaltarget.dtype, mode='w+', shape = totaltarget.shape)
-datT = totaltarget
+densetarget = totaltarget[the_indices] ##squeeze target mask
+targetfile = os.path.join(workingdir, 'simTarget.nii')
+nImg = nb.Nifti1Image(densetarget, None)
+nb.save(nImg, targetfile)
 
 #r = memmap(concatinputfile, mode='r', shape = totalinput.shape)
 #run Similarity
