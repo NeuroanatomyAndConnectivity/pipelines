@@ -2,8 +2,6 @@ import numpy as np
 import nibabel as nb
 import os
 import nipype.interfaces.afni as afni
-from nipype.utils.filemanip import split_filename
-import tables
 
 workingdir = '/scr/kongo1/NKIMASKS'
 
@@ -38,8 +36,7 @@ targetfile = os.path.join(workingdir, 'simTarget.nii')
 nImg = nb.Nifti1Image(densetarget, None)
 nb.save(nImg, targetfile)
 
-#r = memmap(concatinputfile, mode='r', shape = totalinput.shape)
-#run Similarity
+#run Connectivity (source x target)
 corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
 corr.inputs.in_file = inputfile
 corr.inputs.mask = targetfile
@@ -47,8 +44,14 @@ corr.inputs.mask_only_targets = True
 corr.inputs.out_file = os.path.join(workingdir,'masks/corr_out.1D')
 corr_result = corr.run()
 
+#run Similarity (target x target)
+sim = afni.AutoTcorrelate()
+sim.inputs.in_file = corr_result.outputs.out_file
+sim.inputs.out_file = os.path.join(workingdir,'masks/sim_out.1D')
+sim_result = sim.run()
+
 #convert from AFNI file to NIFTI
 convert = afni.AFNItoNIFTI()
-convert.inputs.in_file = corr_result.outputs.out_file
-convert.inputs.out_file = corr_result.outputs.out_file + '.nii'
+convert.inputs.in_file = sim_result.outputs.out_file
+convert.inputs.out_file = sim_result.outputs.out_file + '.nii'
 convert_result = convert.run()
