@@ -51,10 +51,14 @@ def get_wf():
     wf.connect(session_infosource, 'session', datagrabber, 'session')
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
 
-##mask##
-    mask = pe.Node(MaskSurface(), name = 'mask')
-    wf.connect(hemi_infosource, 'hemi', mask, 'hemi')
-    wf.connect(datagrabber, 'timeseries', mask, 'sxfmout')
+##mask surface##
+    Smask = pe.Node(MaskSurface(), name = 'surface mask')
+    wf.connect(hemi_infosource, 'hemi', Smask, 'hemi')
+    wf.connect(datagrabber, 'timeseries', Smask, 'sxfmout')
+
+##mask volume##
+    Vmask = pe.Node(MaskVolume(), name = 'volume mask')
+    wf.connect(
 
 ##similaritymatrix##
     simmatrix = pe.Node(Similarity(), name='simmatrix')

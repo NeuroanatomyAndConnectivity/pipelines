@@ -12,11 +12,11 @@ class MaskSurfaceInputSpec(BaseInterfaceInputSpec):
     hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
 
 class MaskSurfaceOutputSpec(TraitedSpec):
-    mask_volume = File(exists=True, desc="mask volume")
+    surface_mask = File(exists=True, desc="surface as mask")
 
 class MaskSurface(BaseInterface):
-    input_spec = MaskInputSpec
-    output_spec = MaskOutputSpec
+    input_spec = MaskSurfaceInputSpec
+    output_spec = MaskSurfaceOutputSpec
 
     def _run_interface(self, runtime):
         sxfmout = self.inputs.sxfmout
@@ -35,12 +35,10 @@ class MaskSurface(BaseInterface):
         mask.resize(origdata)
         maskImg = nb.Nifti1Image(mask, affine)
 
-        nb.save(maskImg, os.path.abspath(base + '_mask.nii'))
+        nb.save(maskImg, 'surfacemask.nii')
         return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        fname = self.inputs.sxfmout
-        _, base, _ = split_filename(fname)
-        outputs["mask_volume"] = os.path.abspath(base+'_mask.nii')
+        outputs["mask_surface"] = 'surfacemask.nii'
         return outputs
