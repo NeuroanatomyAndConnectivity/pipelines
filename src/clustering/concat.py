@@ -10,6 +10,16 @@ maskedinput = nb.load('/scr/kongo1/NKIMASKS/masks/inputfile.nii').get_data()
 sourcemask = nb.load('/scr/kongo1/NKIMASKS/masks/sourcemask.nii_xfm.nii.gz').get_data()
 targetmask = nb.load('/scr/kongo1/NKIMASKS/masks/targetmask.nii_xfm.nii.gz').get_data()
 surfacemask = nb.load('/scr/schweiz1/Data/cluster_analysis/main_workflow/_hemi_lh/_session_session1/_subject_id_9630905/mask/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4_mask.nii').get_data()
+class MaskVolumeInputSpec(BaseInterfaceInputSpec):
+    volume_input = File(exists=True, desc="input volume for similarity")
+    surface_input = File(exists=True, desc="input surface")
+    volume_source_mask = File(exists=True, desc="source volume as mask")
+    volume_target_mask = File(exists=True, desc="target volume as mask")
+    surface_mask = File(exists=True, desc="target surface as mask")
+
+
+class MaskVolumeOutputSpec(TraitedSpec):
+    simmatrix = File(exists=True, desc="output similarity")
 
 ##CONCATENATE INPUT##
 volumeinput = volumeinput = np.resize(maskedinput,(maskedinput.size/maskedinput.shape[-1],maskedinput.shape[-1]))

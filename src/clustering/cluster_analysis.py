@@ -13,7 +13,10 @@ import nipype.interfaces.afni as afni
 from cluster import Cluster
 from similarity import Similarity
 from mask_surface import MaskSurface
+from mask_volume import MaskVolume
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
+
+analysis_subjects = ['3795193']
 
 def get_wf():
     
@@ -41,10 +44,12 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['timeseries']), name="datagrabber")
-    datagrabber.inputs.base_directory = resultsdir+'sxfmout/'
-    datagrabber.inputs.template = '*%s/*%s/%s/*%s/%s'
-    datagrabber.inputs.template_args['timeseries'] = [['session','subject_id','*','hemi', '*.nii']]
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['surfacedata','volumedata','regfile']), name="datagrabber")
+    datagrabber.inputs.base_directory = resultsdir
+    datagrabber.inputs.template = '*%s/*%s/*%s/*%s/*%s%s'
+    datagrabber.inputs.template_args['surfacedata'] = [['sxfmout','session','subject_id','','hemi','/*.nii']]
+    datagrabber.inputs.template_args['volumedata'] = [['preprocessed_resting','session','subject_id','','','/*.nii.gz']]
+    datagrabber.inputs.template_args['regfile'] = [['func2anat_transform','session','subject_id','','FREESURFER.mat','']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
@@ -52,17 +57,21 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
 
 ##mask surface##
-    Smask = pe.Node(MaskSurface(), name = 'surface mask')
+    Smask = pe.Node(MaskSurface(), name = 'surface_mask')
     wf.connect(hemi_infosource, 'hemi', Smask, 'hemi')
-    wf.connect(datagrabber, 'timeseries', Smask, 'sxfmout')
+    wf.connect(datagrabber, 'surfacedata', Smask, 'sxfmout')
 
 ##mask volume##
-    Vmask = pe.Node(MaskVolume(), name = 'volume mask')
-    wf.connect(
+    Vmask = pe.Node(MaskVolume(), name = 'volume_mask')
+    wf.connect(datagrabber, 'volumedata', Vmask, 'preprocessedfile')
+    wf.connect(datagrabber, 'regfile', Vmask, 'regfile')
+
+##concatenate data##
+    
 
 ##similaritymatrix##
     simmatrix = pe.Node(Similarity(), name='simmatrix')
-    wf.connect(mask, 'mask_volume', simmatrix, 'mask')
+    wf.connect(Smask, 'surface_mask', simmatrix, 'mask')
     wf.connect(datagrabber, 'timeseries', simmatrix, 'in_file')
     wf.connect(sim_infosource, 'sim', simmatrix, 'sim')
 

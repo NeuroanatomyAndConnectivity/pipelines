@@ -11,12 +11,6 @@ from nipype.utils.filemanip import split_filename
 
 from utils import get_mask
 
-subject_id = '9630905'
-workingdir = '/scr/kongo1/NKIMASKS'
-
-preprocessedfile = '/scr/ilz1/Data/results/preprocessed_resting/_session_session1/_subject_id_9630905/_fwhm_0/_bandpass_filter0/afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.nii.gz'
-regfile = '/scr/ilz1/Data/results/func2anat_transform/_session_session1/_subject_id_9630905/_register0/FREESURFER.mat'
-
 #labels
 sourcelabels = [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
 targetlabels = [11114] #ctx_lh_G_front_inf-Triangul

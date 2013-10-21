@@ -40,5 +40,5 @@ class MaskSurface(BaseInterface):
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        outputs["mask_surface"] = 'surfacemask.nii'
+        outputs["surface_mask"] = 'surfacemask.nii'
         return outputs
