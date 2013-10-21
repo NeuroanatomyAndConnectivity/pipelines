@@ -12,10 +12,11 @@ def get_subjects_from(resultsDirectory):
 					subjects.append(s)
     return subjects
 
-def get_vertices(hemi,freesurferdir):
-    labellist = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71]
+def get_vertices(hemi,freesurferdir, labellist):
     [vertices,colortable,names] = nb.freesurfer.read_annot(os.path.join(freesurferdir,'fsaverage4/label/'+hemi[-2:]+'.aparc.a2009s.annot'), orig_ids=True)
     chosenvertices = list()
+    if labellist == []:
+        chosenvertices = xrange(len(vertices)) #all vertices
     for j, value in enumerate(vertices) :
         for i, index in enumerate(labellist) :
             if colortable[index][4]==value :

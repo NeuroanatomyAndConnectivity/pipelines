@@ -26,8 +26,12 @@ analysis_sessions = ['session1','session2']
 #slicetime_file = '/scr/schweiz1/data/NKI_High/scripts/sliceTime2.txt'
 #rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
 
-lhvertices = get_vertices('lh',freesurferdir)
-rhvertices = get_vertices('rh',freesurferdir)
+
+#Surface Data#
+sourcelabels = [] #all
+targetlabels = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71]
+lhvertices = get_vertices('lh',freesurferdir, targetlabels)
+rhvertices = get_vertices('rh',freesurferdir, targetlabels)
 
 hemispheres = ['lh', 'rh']
 similarity_types = ['eta2', 'spat', 'temp']

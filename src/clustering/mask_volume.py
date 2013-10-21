@@ -70,7 +70,6 @@ class MaskVolume(BaseInterface):
         ##PREPARE TARGET MASK##
 
         #define target mask (surface, volume)
-        targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
         targetmask = get_mask(targetlabels)
         targetmaskfile = os.path.abspath('targetmask.nii')
         targetImg = nb.Nifti1Image(targetmask, None)

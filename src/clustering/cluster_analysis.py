@@ -14,6 +14,7 @@ from cluster import Cluster
 from similarity import Similarity
 from mask_surface import MaskSurface
 from mask_volume import MaskVolume
+from concat import Concat
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
 analysis_subjects = ['3795193']
@@ -66,25 +67,20 @@ def get_wf():
     wf.connect(datagrabber, 'volumedata', Vmask, 'preprocessedfile')
     wf.connect(datagrabber, 'regfile', Vmask, 'regfile')
 
-##concatenate data##
-    
-
-##similaritymatrix##
-    simmatrix = pe.Node(Similarity(), name='simmatrix')
-    wf.connect(Smask, 'surface_mask', simmatrix, 'mask')
-    wf.connect(datagrabber, 'timeseries', simmatrix, 'in_file')
-    wf.connect(sim_infosource, 'sim', simmatrix, 'sim')
-
-##convert AFNI similarityMatrix to NIFTI file##
-    convert = pe.Node(afni.AFNItoNIFTI(), name = 'convert_AFNI_to_NIFTI')
-    wf.connect(simmatrix, 'out_file', convert, 'in_file')
+##concatenate data & run similarity##
+    concat = pe.Node(Concat(), name = 'concat')
+    wf.connect(Vmask, 'volume_input_mask', concat, 'volume_input')
+    wf.connect(Vmask, 'volume_target_mask', concat, 'volume_target_mask')
+    wf.connect(datagrabber, 'surfacedata', concat, 'surface_input')
+    wf.connect(Smask, 'surface_mask', concat, 'surface_mask')
+    wf.connect(sim_infosource, 'sim', concat, 'sim_type')
 
 ##clustering##
     clustering = pe.Node(Cluster(), name = 'clustering')
     wf.connect(hemi_infosource, 'hemi', clustering, 'hemi')
     wf.connect(cluster_infosource, 'cluster', clustering, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
-    wf.connect(convert, 'out_file', clustering, 'in_File')
+    wf.connect(concat, 'simmatrix', clustering, 'in_File')
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
