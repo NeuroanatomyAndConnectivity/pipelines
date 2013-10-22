@@ -2,13 +2,9 @@ import numpy as np
 import nibabel as nb
 import os
 import nipype.interfaces.afni as afni
+from nipype.interfaces.base import BaseInterface, \
+    BaseInterfaceInputSpec, traits, File, TraitedSpec
 
-workingdir = '/scr/kongo1/NKIMASKS'
-
-sxfm = nb.load('/scr/schweiz1/Data/results/sxfmout/_session_session1/_subject_id_9630905/_fwhm_0/_hemi_lh/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4.nii').get_data()
-maskedinput = nb.load('/scr/kongo1/NKIMASKS/masks/inputfile.nii').get_data()
-targetmask = nb.load('/scr/kongo1/NKIMASKS/masks/targetmask.nii_xfm.nii.gz').get_data()
-surfacemask = nb.load('/scr/schweiz1/Data/cluster_analysis/main_workflow/_hemi_lh/_session_session1/_subject_id_9630905/mask/lh.afni_corr_rest_roi_dtype_tshift_detrended_regfilt_gms_filt.fsaverage4_mask.nii').get_data()
 class ConcatInputSpec(BaseInterfaceInputSpec):
     volume_input = File(exists=True, desc="input volume for similarity")
     surface_input = File(exists=True, desc="input surface")
@@ -18,7 +14,7 @@ class ConcatInputSpec(BaseInterfaceInputSpec):
 
 class ConcatOutputSpec(TraitedSpec):
     simmatrix = File(exists=True, desc="output similarity")
-    maskindex = File(exists=True, dexc='
+    maskindex = File(exists=True, desc='index for later returning to anat space')
 
 class Concat(BaseInterface):
     input_spec = ConcatInputSpec

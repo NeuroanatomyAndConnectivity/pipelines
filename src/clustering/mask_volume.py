@@ -10,10 +10,8 @@ from nipype.interfaces.base import BaseInterface, \
 from nipype.utils.filemanip import split_filename
 
 from utils import get_mask
-
+from variables import sourcelabels, targetlabels
 #labels
-sourcelabels = [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
-targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
 inputlabels = sourcelabels + targetlabels
 
 class MaskVolumeInputSpec(BaseInterfaceInputSpec):

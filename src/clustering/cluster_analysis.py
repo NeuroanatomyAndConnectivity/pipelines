@@ -45,10 +45,10 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['surfacedata','volumedata','regfile']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfm','volumedata','regfile']), name="datagrabber")
     datagrabber.inputs.base_directory = resultsdir
     datagrabber.inputs.template = '*%s/*%s/*%s/*%s/*%s%s'
-    datagrabber.inputs.template_args['surfacedata'] = [['sxfmout','session','subject_id','','hemi','/*.nii']]
+    datagrabber.inputs.template_args['sxfm'] = [['sxfmout','session','subject_id','','hemi','/*.nii']]
     datagrabber.inputs.template_args['volumedata'] = [['preprocessed_resting','session','subject_id','','','/*.nii.gz']]
     datagrabber.inputs.template_args['regfile'] = [['func2anat_transform','session','subject_id','','FREESURFER.mat','']]
     datagrabber.inputs.sort_filelist = True
@@ -60,7 +60,7 @@ def get_wf():
 ##mask surface##
     Smask = pe.Node(MaskSurface(), name = 'surface_mask')
     wf.connect(hemi_infosource, 'hemi', Smask, 'hemi')
-    wf.connect(datagrabber, 'surfacedata', Smask, 'sxfmout')
+    wf.connect(datagrabber, 'sxfm', Smask, 'sxfmout')
 
 ##mask volume##
     Vmask = pe.Node(MaskVolume(), name = 'volume_mask')
@@ -71,7 +71,7 @@ def get_wf():
     concat = pe.Node(Concat(), name = 'concat')
     wf.connect(Vmask, 'volume_input_mask', concat, 'volume_input')
     wf.connect(Vmask, 'volume_target_mask', concat, 'volume_target_mask')
-    wf.connect(datagrabber, 'surfacedata', concat, 'surface_input')
+    wf.connect(datagrabber, 'surface_data', concat, 'surface_input')
     wf.connect(Smask, 'surface_mask', concat, 'surface_mask')
     wf.connect(sim_infosource, 'sim', concat, 'sim_type')
 
@@ -85,7 +85,8 @@ def get_wf():
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = resultsdir
-    wf.connect(convert,'out_file', ds, 'similarity')
+    wf.connect(concat,'simmatrix', ds, 'similarity')
+    wf.connect(concat,'maskindex', ds, 'maskindex')
     wf.connect(clustering, 'out_File', ds, 'clustered')
     wf.write_graph()
     return wf
