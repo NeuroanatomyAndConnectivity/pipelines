@@ -73,7 +73,7 @@ def get_wf():
     concat = pe.Node(Concat(), name = 'concat')
     wf.connect(Vmask, 'volume_input_mask', concat, 'volume_input')
     wf.connect(Vmask, 'volume_target_mask', concat, 'volume_target_mask')
-    wf.connect(datagrabber, 'surface_data', concat, 'surface_input')
+    wf.connect(Smask, 'surface_data', concat, 'surface_input')
     wf.connect(Smask, 'surface_mask', concat, 'surface_mask')
     wf.connect(sim_infosource, 'sim', concat, 'sim_type')
 
