@@ -1,6 +1,7 @@
 import os
 
 import matplotlib
+from nipype.interfaces.traits_extension import Undefined
 matplotlib.use('Agg')
 
 import nipype.pipeline.engine as pe
@@ -83,7 +84,7 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf.connect(inputspec, "fssubjects_dir", plot_reg, "fssubjects_dir")
     
     plot_tsnr = pe.Node(fsl.Slicer(), name="plot_tsnr")
-    plot_tsnr.inputs.all_axial = True
+    plot_tsnr.inputs.sample_axial = 5
     plot_tsnr.inputs.image_width = 600
     
     wf.connect(inputspec, "tsnr_file", plot_tsnr, "in_file")
@@ -108,51 +109,48 @@ if __name__ == '__main__':
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
     
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
-    subject_id_infosource.iterables = ("subject_id", subjects)
+    subject_id_infosource.iterables = ("subject_id", [subjects[0]])
     
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti']), 
+    tr_infosource = pe.Node(util.IdentityInterface(fields=['tr']), name="tr_infosource")
+    tr_infosource.iterables = ("tr", ["645", "1400", "2500"])
+    
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id', 'tr'], outfields=['resting_nifti']), 
                           name="datagrabber",
                           overwrite=True)
-    datagrabber.inputs.base_directory = '/scr/namibia1/baird/MPI_Project/Neuroimaging_Data'
-    datagrabber.inputs.template = '%s/%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'func', '*.nii.gz']]
+    datagrabber.inputs.base_directory = '/scr/kalifornien1/data/nki_enhanced/niftis/'#'/scr/namibia1/baird/MPI_Project/Neuroimaging_Data/'
+    datagrabber.inputs.template = '%s/RfMRI*%s*.nii.gz'
+    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'tr']]
     datagrabber.inputs.sort_filelist = True
+    datagrabber.run_without_submitting = True
     
     wf.connect(subject_id_infosource, "subject_id", datagrabber, "subject_id")
+    wf.connect(tr_infosource, "tr", datagrabber, "tr")
     
-    def get_tr_and_sliceorder(dicom_files, convention="french"):
+    def get_tr_and_sliceorder(nifti_file):
         import numpy as np
+        import os
         import dcmstack, dicom
         from dcmstack.dcmmeta import NiftiWrapper
-        nii_wrp = NiftiWrapper.from_filename(dicom_files)
-        if convention == "french":
-            sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
-        elif convention == "SPM":
-            sliceorder = np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0]).tolist()
-        tr = nii_wrp.meta_ext.get_values('RepetitionTime')
-        return tr/1000.,sliceorder
+        nii = NiftiWrapper.from_filename(nifti_file)
+        f = open("slicetiming.txt", "w")
+        f.write("\n".join(["%g"%(i/1000.) for i in nii.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[1]]) + "\n")
+        f.close()
+        tr = nii.meta_ext.get_values('RepetitionTime')
+        return tr/1000., os.path.abspath("slicetiming.txt")
     
-    get_meta = pe.Node(util.Function(input_names=['dicom_files', 'convention'], output_names=['tr', 'sliceorder'], function=get_tr_and_sliceorder), name="get_meta")
-    get_meta.inputs.convention = "french"
+    get_meta = pe.Node(util.Function(input_names=['nifti_file'], output_names=['tr', 'sliceorder_file'], function=get_tr_and_sliceorder), name="get_meta")
     
-    wf.connect(datagrabber, "resting_nifti", get_meta, "dicom_files")
+    wf.connect(datagrabber, "resting_nifti", get_meta, "nifti_file")
     
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
     preproc.remove_nodes([zscore])
     
     mod_realign = preproc.get_node("mod_realign")
-    mod_realign.plugin_args = {"submit_specs":"request_memory=4000\n"}
+    #mod_realign.plugin_args = {"submit_specs":"request_memory=4000\n"}
     
     # inputs
-    preproc.inputs.inputspec.motion_correct_node = 'nipy'
-    ad = preproc.get_node('artifactdetect')
-    preproc.disconnect(mod_realign,'parameter_source',
-        ad,'parameter_source')
-    ad.inputs.parameter_source = "NiPy"
-    
-    preproc.inputs.inputspec.realign_parameters = {"loops":[5],
-                                                   "speedup":[5]}
+    preproc.inputs.inputspec.motion_correct_node = 'afni'
     preproc.inputs.inputspec.do_whitening = False
     preproc.inputs.inputspec.timepoints_to_remove = 4
     preproc.inputs.inputspec.smooth_type = 'susan'
@@ -161,39 +159,52 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
     preproc.get_node('fwhm_input').iterables = ('fwhm', [5])
+    #[motion_params, composite_norm, compcorr_components, global_signal, art_outliers, motion derivatives]
+    preproc.get_node('create_nuisance_filter').iterables = ('selector', [[True, True, True, False, True, False]]) #[[False, False, False, False, False, False]]) #,[True, True, True, False, True, False]])
+    preproc.get_node('bandpass_filter').iterables = [('highpass_freq', [-1]), ('lowpass_freq', [-1])]
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
-#preproc.get_node('take_mean_art').get_node('strict_artifact_detect').overwrite=True
+    cc_wf = preproc.get_node("CompCor")
+    tsnr = cc_wf.get_node("tsnr")
+    compcor = cc_wf.get_node("compcor_components")
+    c_inputspec = cc_wf.get_node("inputspec")
+    c_outspec = cc_wf.get_node("outputspec")
+    tsnr.inputs.regress_poly = Undefined
+    cc_wf.disconnect(tsnr, 'detrended_file',
+                       compcor, 'realigned_file')
+    cc_wf.connect(c_inputspec, 'realigned_file',
+                       compcor, 'realigned_file')
+    cc_wf.disconnect(tsnr, 'detrended_file',
+                       c_outspec, 'tsnr_detrended')
+    cc_wf.connect(c_inputspec, 'realigned_file',
+                       c_outspec, 'tsnr_detrended')
+    
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
-    preproc.inputs.inputspec.do_slicetime = True
-    preproc.inputs.inputspec.compcor_select = [True, True]
+    preproc.inputs.inputspec.do_slicetime = False
+    preproc.inputs.inputspec.compcor_select = [False, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
-    preproc.get_node('bandpass_filter').iterables = [('highpass_freq', [0.01]), ('lowpass_freq', [0.1])]
-#     preproc.inputs.inputspec.highpass_freq = 0.01
-#     preproc.inputs.inputspec.lowpass_freq = 0.1
-    #[motion_params, composite_norm, compcorr_components, global_signal, art_outliers, motion derivatives]
-    preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
+    
     wf.connect(get_meta, "tr", preproc, "inputspec.tr")
-    wf.connect(get_meta, "sliceorder", preproc, "inputspec.sliceorder")
+    wf.connect(get_meta, "sliceorder_file", preproc, "inputspec.sliceorder")
     wf.connect(subject_id_infosource, "subject_id", preproc, 'inputspec.fssubject_id')
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
     
- #   report_wf = create_preproc_report_wf(resultsdir + "/reports")
- #   report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
+    #report_wf = create_preproc_report_wf(resultsdir + "/reports")
+    #report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
-    def pick_full_brain_ribbon(l):
-        import os
-        for path in l:
-            if os.path.split(path)[1] == "ribbon.mgz":
-                return path
-            
- #   wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
- #   wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
- #   wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
- #   wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
- #   wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
- #   wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
+#     def pick_full_brain_ribbon(l):
+#         import os
+#         for path in l:
+#             if os.path.split(path)[1] == "ribbon.mgz":
+#                 return path
+#             
+#     wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
+#     wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
+#     wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
+#     wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
+#     wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
+#     wf.connect(subject_id_infosource, "subject_id", report_wf, "inputspec.subject_id")
     
     ds = pe.Node(nio.DataSink(), name="datasink", overwrite=True)
     ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
@@ -202,4 +213,4 @@ if __name__ == '__main__':
     wf.connect(preproc, 'outputspec.mask', ds, "epi_mask")
     wf.write_graph()
                
-    wf.run(plugin="MultiProc")
+    wf.run(plugin="Linear", plugin_args={'submit_specs': 'request_memory = 4000\n'})

@@ -44,7 +44,7 @@ def write_correlation_matrix(in_file, mask_file, out_file):
 #            corr_matrix[counter] = r
 #            counter += 1
     del corr_matrix
-    return os.path.abspath(out_file)
+    return os.path.abspath(out_file)    
             
 
 if __name__ == '__main__':

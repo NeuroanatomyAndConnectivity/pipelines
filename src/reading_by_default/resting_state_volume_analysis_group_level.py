@@ -46,7 +46,7 @@ if __name__ == '__main__':
     
         func_datasource = pe.Node(nio.DataGrabber(infields=['subject_ids', 'roi'], outfields = ['connectivity_maps']), name="func_datasource"+suffix)
         func_datasource.inputs.base_directory = os.path.join(resultsdir,'volumes')
-        func_datasource.inputs.template = 'normalized_z_scored_corr_map/_subject_id_%s/_roi_*/_fwhm_5/roi_%s_masked.nii'
+        func_datasource.inputs.template = 'normalized_z_scored_corr_map/_subject_id_%s/_roi_*/_bandpass_highpass_freq_0.01_lowpass_freq_0.1/_fwhm_5/roi_%s_masked.nii'
         func_datasource.inputs.sort_filelist = True
         func_datasource.inputs.subject_ids = subjects
         func_datasource.inputs.roi = format_roi(roi)
@@ -90,12 +90,12 @@ if __name__ == '__main__':
             wf.connect(ds2, "connectivity_maps", avg_i, "operand_files")
             wf.connect(avg_i, 'out_file', ds, "avg_files"+suffix)
             
-#            diff = pe.Node(fsl.maths.BinaryMaths(), name="diff"+suffix)
-#            diff.inputs.operation = "sub"
-#            merge1 = wf.get_node("merge_conn_maps"+"_"+format_roi(roi1))
-#            wf.connect(merge1, "merged_file", diff, "in_file")
-#            merge2 = wf.get_node("merge_conn_maps"+"_"+format_roi(roi2))
-#            wf.connect(merge2, "merged_file", diff, "operand_file")
+            diff = pe.Node(fsl.maths.BinaryMaths(), name="diff"+suffix)
+            diff.inputs.operation = "sub"
+            merge1 = wf.get_node("merge_conn_maps"+"_"+format_roi(roi1))
+            wf.connect(merge1, "merged_file", diff, "in_file")
+            merge2 = wf.get_node("merge_conn_maps"+"_"+format_roi(roi2))
+            wf.connect(merge2, "merged_file", diff, "operand_file")
             
 #            onesample_t_test = pe.Node(fsl.Randomise(), name="onesample_t_test" + suffix)
 #            onesample_t_test.inputs.base_name = suffix

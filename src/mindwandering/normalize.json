@@ -1,0 +1,32 @@
+{
+    "advanced_script": "", 
+    "base_dir": "/scr/kalifornien1/mindwandering/results", 
+    "crash_dir": "/scr/kalifornien1/mindwandering/crash", 
+    "do_anatomical_only": false, 
+    "do_segment": false, 
+    "fsl_mat_template": "%s/preproc/bbreg/*.mat", 
+    "fwhm": [
+        6.0
+    ], 
+    "inputs_template": "%s/preproc/output/*/fwhm_%s/*.nii.gz", 
+    "meanfunc_template": "%s/preproc/mean/*.nii.gz", 
+    "norm_template": "/usr/share/fsl/5.0/data/standard/MNI152lin_T1_1mm_brain.nii.gz", 
+    "plugin": "CondorDAGMan", 
+    "plugin_args": {}, 
+    "run_using_plugin": true, 
+    "save_script_only": false, 
+    "sink_dir": "/scr/kalifornien1/mindwandering/results", 
+    "subjects": [
+        "0182604", 
+        "0173358", 
+        "0166094", 
+        "0156678", 
+        "0142673"
+    ], 
+    "surf_dir": "/scr/kalifornien1/data/nki_enhanced/freesurfer", 
+    "test_mode": false, 
+    "timeout": 14.0, 
+    "use_advanced_options": false, 
+    "uuid": "21abfee68e2211e181190019b9f22493", 
+    "working_dir": "/scr/kalifornien1/mindwandering/workdir"
+}

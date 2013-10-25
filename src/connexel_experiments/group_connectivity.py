@@ -2,7 +2,7 @@ import numpy as np
 from scipy import stats
 from nipy.modalities.fmri.glm import GeneralLinearModel
 
-beh_data = np.recfromcsv('/home/raid3/gorgolewski/Downloads/DataForChris_10_30_12.csv')
+beh_data = np.recfromcsv('/scr/adenauer1/PowerFolder/Dropbox/papers/meta_cognition/DataForChris_AccScores_4_10_13.csv')
 
 corr_mmaps = []
 for name in beh_data['sub_id_database_brain']:
@@ -10,12 +10,12 @@ for name in beh_data['sub_id_database_brain']:
     mmap = np.memmap(filename, dtype='int16', mode='r')
     corr_mmaps.append(mmap)
 
-design_matrix = np.vstack((np.ones(len(beh_data['sub_id_database_brain'])), beh_data['mem_meta_d'], beh_data['percep_aroc'], beh_data['age'])).T
+design_matrix = np.vstack((np.ones(len(beh_data['sub_id_database_brain'])), beh_data['memory_acc'], beh_data['perception_acc'], beh_data['age'])).T
 design_matrix[1,:] = stats.zscore(design_matrix[1,:])
 design_matrix[2,:] = stats.zscore(design_matrix[2,:])
 design_matrix[3,:] = stats.zscore(design_matrix[3,:])
 
-contrasts = {"memory":[0,1,0,0], "perception": [0,0,1,0]}#, "memory>perception": [0,1,-1,0]}
+contrasts = 1#, "memory>perception": [0,1,-1,0]}
 contrasts_t_mmaps = {}
 contrasts_p_mmaps = {}
 contrasts_z_mmaps = {}
