@@ -76,6 +76,7 @@ class Concat(BaseInterface):
         convert.inputs.in_file = sim_file
         convert.inputs.out_file = convert.inputs.in_file + '.nii'
         convert_result = convert.run()
+        return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
