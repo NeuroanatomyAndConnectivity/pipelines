@@ -38,18 +38,18 @@ class MaskSurface(BaseInterface):
 
         targetmask.resize(origdata)
         targetmaskImg = nb.Nifti1Image(targetmask, affine)
-        nb.save(targetmaskImg, 'surfacemask.nii')
+        nb.save(targetmaskImg, os.path.abspath('surfacemask.nii'))
 
         ## make new input data with source mask
         sourcedata = np.where(sourcemask,data,0)
         sourcedata.resize(origdata)
         sourcedataImg = nb.Nifti1Image(sourcedata, affine)
-        nb.save(sourcedataImg, 'surfacedata.nii')
+        nb.save(sourcedataImg, os.path.abspath('surfacedata.nii'))
 
         return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        outputs["surface_mask"] = 'surfacemask.nii'
-        outputs["surface_data"] = 'surfacedata.nii'
+        outputs["surface_mask"] = os.path.abspath('surfacemask.nii')
+        outputs["surface_data"] = os.path.abspath('surfacedata.nii')
         return outputs

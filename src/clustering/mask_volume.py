@@ -89,7 +89,7 @@ class MaskVolume(BaseInterface):
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        outputs["volume_input_mask"] = 'inputfile.nii'
-        outputs["volume_source_mask"] = 'sourcemask.nii'
-        outputs["volume_target_mask"] = 'targetmask.nii'
+        outputs["volume_input_mask"] = os.path.abspath('inputfile.nii')
+        outputs["volume_source_mask"] = os.path.abspath('sourcemask.nii')
+        outputs["volume_target_mask"] = os.path.abspath('targetmask.nii')
         return outputs

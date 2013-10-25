@@ -44,6 +44,7 @@ dataset_file = '/home/raid3/watanabe/neurosynth/data/dataset.pkl'
 if not os.path.exists(dataset_file):
     dataset = Dataset('/home/raid3/watanabe/neurosynth/data/database.txt')
     dataset.add_features('/home/raid3/watanabe/neurosynth/data/features.txt')
+    dataset.save(dataset_file)
 else:
     dataset = cPickle.load(open(dataset_file,'rb'))
 

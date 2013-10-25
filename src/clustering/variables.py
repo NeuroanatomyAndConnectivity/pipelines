@@ -40,7 +40,7 @@ rhvertices = get_vertices('rh',freesurferdir, targetlabels)
 #Analysis Parameters#
 hemispheres = ['lh', 'rh']
 similarity_types = ['eta2', 'spat', 'temp']
-cluster_types = ['spectral', 'hiercluster', 'kmeans', 'dbscan']
+cluster_types = ['hiercluster']#, 'kmeans', 'spectral', 'dbscan']
 intercluster_input = ['spectral', 'hiercluster', 'kmeans']#remove dbscan for now
-n_clusters = [02,03,04,05,06,07,10,11,12,13,14,15,16,17,18,19,20,21,22]
+n_clusters = [8]#[02,03,04,05,06,07,10,11,12,13,14,15,16,17,18,19,20,21,22]
 epsilon = [.03]

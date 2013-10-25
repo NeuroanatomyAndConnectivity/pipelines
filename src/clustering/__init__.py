@@ -11,3 +11,5 @@ import resting_state_volume.analysis.py
 import similarity
 import variables
 import visualization
+import mask_volume
+import mask_surface
