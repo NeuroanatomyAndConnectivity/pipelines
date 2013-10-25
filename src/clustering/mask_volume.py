@@ -85,6 +85,8 @@ class MaskVolume(BaseInterface):
         targetxfm.inputs.apply_xfm = True
         targetxfm_result = targetxfm.run()
 
+        return runtime
+
     def _list_outputs(self):
         outputs = self._outputs().get()
         outputs["volume_input_mask"] = 'inputfile.nii'

@@ -28,16 +28,7 @@ class Cluster(BaseInterface):
     def _run_interface(self, runtime):        
         #load data
         data = nb.load(self.inputs.in_File).get_data()
-
-        if self.inputs.hemi == 'lh': chosenvertices = lhvertices
-        if self.inputs.hemi == 'rh': chosenvertices = rhvertices
-        corrmatrix = np.zeros((len(chosenvertices),len(chosenvertices)))
-        data = np.squeeze(data)
-
-        for x, vertex in enumerate(chosenvertices):
-        	for i in xrange(len(chosenvertices)):
-        	    if data[vertex][i]>0:
-	                corrmatrix[x][i] = data[vertex][i]
+        corrmatrix = np.squeeze(data)
         if self.inputs.cluster_type == 'spectral':
             labels = spectral(corrmatrix, n_clusters=self.inputs.n_clusters, mode='arpack')
         if self.inputs.cluster_type == 'hiercluster':
@@ -47,11 +38,7 @@ class Cluster(BaseInterface):
         if self.inputs.cluster_type == 'dbscan':
             labels = DBSCAN(eps=epsilon).fit_predict(corrmatrix)
 
-        outarray = -np.ones(shape=data.shape[0])
-        for j, cluster in enumerate(labels):
-            outarray[chosenvertices[j]] = cluster+1
-
-        new_img = nb.Nifti1Image(outarray, None)
+        new_img = nb.Nifti1Image(labels, None)
         _, base, _ = split_filename(self.inputs.in_File)
         nb.save(new_img, os.path.abspath(base+'_'+str(self.inputs.n_clusters)+'_'+self.inputs.cluster_type+'_'+self.inputs.hemi+'.nii'))
 

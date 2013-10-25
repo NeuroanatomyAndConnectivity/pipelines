@@ -45,6 +45,7 @@ class MaskSurface(BaseInterface):
         sourcedata.resize(origdata)
         sourcedataImg = nb.Nifti1Image(sourcedata, affine)
         nb.save(sourcedataImg, 'surfacedata.nii')
+
         return runtime
 
     def _list_outputs(self):
