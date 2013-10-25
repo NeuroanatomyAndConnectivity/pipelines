@@ -45,12 +45,13 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfm','volumedata','regfile']), name="datagrabber")
-    datagrabber.inputs.base_directory = resultsdir
-    datagrabber.inputs.template = '*%s/*%s/*%s/*%s/*%s%s'
-    datagrabber.inputs.template_args['sxfm'] = [['sxfmout','session','subject_id','','hemi','/*.nii']]
-    datagrabber.inputs.template_args['volumedata'] = [['preprocessed_resting','session','subject_id','','','/*.nii.gz']]
-    datagrabber.inputs.template_args['regfile'] = [['func2anat_transform','session','subject_id','','FREESURFER.mat','']]
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
+    datagrabber.inputs.base_directory = workingdir
+    datagrabber.inputs.template = '%s*%s/*%s*%s%s%s'
+    datagrabber.inputs.template_args['sxfm'] = [['results/sxfmout/','session','subject_id','/*/*','hemi','/*.nii']]
+    datagrabber.inputs.template_args['volumedata'] = [['results/preprocessed_resting/','session','subject_id','/*/*','/*.nii.gz','']]
+    datagrabber.inputs.template_args['regfile'] = [['results/func2anat_transform/','session','subject_id','/*/','FREESURFER.mat','']]
+    datagrabber.inputs.template_args['parcfile'] = [['freesurfer/','subject_id','FREESURFER','/mri','/aparc.a2009s+aseg.mgz','']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
@@ -66,6 +67,7 @@ def get_wf():
     Vmask = pe.Node(MaskVolume(), name = 'volume_mask')
     wf.connect(datagrabber, 'volumedata', Vmask, 'preprocessedfile')
     wf.connect(datagrabber, 'regfile', Vmask, 'regfile')
+    wf.connect(datagrabber, 'parcfile', Vmask, 'parcfile')
 
 ##concatenate data & run similarity##
     concat = pe.Node(Concat(), name = 'concat')

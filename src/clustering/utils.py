@@ -23,8 +23,7 @@ def get_vertices(hemi,freesurferdir, labellist):
                 chosenvertices.append(j)
     return chosenvertices
 
-def get_mask(labels):
-    parcfile = '/scr/ilz1/Data/freesurfer/9630905/mri/aparc.a2009s+aseg.mgz'
+def get_mask(labels, parcfile):
     parcdata = nb.load(parcfile).get_data()
 
     if labels == []:

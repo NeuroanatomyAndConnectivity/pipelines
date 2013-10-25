@@ -23,7 +23,7 @@ class Concat(BaseInterface):
     def _run_interface(self, runtime):
         ##CONCATENATE INPUT##
         vol = self.inputs.volume_input
-        volumeinput = np.resize(vol,(vo.size/vol.shape[-1],vol.shape[-1]))
+        volumeinput = np.resize(vol,(vol.size/vol.shape[-1],vol.shape[-1]))
         surfaceinput = np.squeeze(self.inputs.surface_input)
         totalinput = np.concatenate((surfaceinput,volumeinput))
 

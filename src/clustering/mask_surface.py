@@ -27,8 +27,8 @@ class MaskSurface(BaseInterface):
         affine = None
         data.resize(data.shape[0]*data.shape[2],1,1,data.shape[3]) #in case of fsaverage, where nifti splits large dim
 
-        sourcemask = np.zeros(origdata, dtype=numpy.int)
-        targetmask = np.zeros(origdata, dtype=numpy.int)
+        sourcemask = np.zeros(origdata, dtype=np.int)
+        targetmask = np.zeros(origdata, dtype=np.int)
         if hemi == 'lh': 
             sourcemask[lhsource] = 1
             targetmask[lhvertices] = 1
