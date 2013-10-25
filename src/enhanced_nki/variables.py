@@ -191,8 +191,8 @@ subjects = [
 
 #subjects = [subjects[1]]
 
-workingdir = "/scr/kansas1/workingdir/nki"
-resultsdir = "/scr/kalifornien1/data/nki_enhanced/results"
+workingdir = "/scr/ilz1/workingdir/nki"
+resultsdir = "/scr/ilz1/nki_enhanced_DATA/results"
 #resultsdir = "/scr/adenauer1/results"
 
 freesurferdir = '/scr/kalifornien1/data/nki_enhanced/freesurfer/' #'/scr/adenauer1/freesurfer'

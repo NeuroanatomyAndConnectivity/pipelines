@@ -47,7 +47,7 @@ class Concat(BaseInterface):
         volumetarget = np.reshape(vol_target,(vol_target.size))
         surfacetarget = surf_mask[:,0,0,0] ##one timepoint
         totaltarget = np.concatenate((surfacetarget,volumetarget))
-        densetarget = totaltarget[the_indices] ##squeeze target mask
+        densetarget = np.array(totaltarget[the_indices],dtype='f') ##squeeze target mask, save as float32 for afni input
         targetfile = os.path.abspath('simTarget.nii')
         nImg = nb.Nifti1Image(densetarget, None)
         nb.save(nImg, targetfile)
@@ -57,7 +57,7 @@ class Concat(BaseInterface):
         corr.inputs.in_file = inputfile
         corr.inputs.mask = targetfile
         corr.inputs.mask_only_targets = self.inputs.sim_type!='temp' #False for temp, True for eta2 and spat
-        corr.inputs.out_file = 'corr_out.1D'
+        corr.inputs.out_file = os.path.abspath('corr_out.1D')
         corr_result = corr.run()
 
         if self.inputs.sim_type=='temp':
