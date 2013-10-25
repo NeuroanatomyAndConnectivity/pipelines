@@ -17,8 +17,6 @@ from mask_volume import MaskVolume
 from concat import Concat
 from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir,  freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
-analysis_subjects = ['3795193']
-
 def get_wf():
     
     wf = pe.Workflow(name="main_workflow")
