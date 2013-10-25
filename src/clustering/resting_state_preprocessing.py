@@ -1,4 +1,8 @@
 from __future__ import division
+
+from nipype import config
+config.enable_debug_mode()
+
 import os
 import matplotlib
 matplotlib.use('Agg')
@@ -7,20 +11,21 @@ import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.freesurfer as fs
+import nipype.interfaces.dcmstack as dcm
 
 display = None
 if "DISPLAY" in os.environ:
     display = os.environ["DISPLAY"]
     os.environ.pop("DISPLAY")
-from bips.workflows.scripts.u0a14c5b5899911e1bca80023dfa375f2.base import create_rest_prep
+from bips.workflows.gablab.wips.scripts.base import create_rest_prep
 if display:
     os.environ["DISPLAY"] = display
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, hemispheres, slicetime_file
+from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, dicomdir, hemispheres
 
-os.environ['SUBJECTS_DIR'] = '/scr/schweiz1/data/Final_High/'
+subjects = ['9630905']
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -103,12 +108,12 @@ def create_preproc_report_wf(report_dir, name="preproc_report"):
     
     return wf
 
-if __name__ == '__main__':
+def get_wf():
     import numpy as np
 
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = os.path.join(workingdir,"rs_preprocessing")
-    wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
+    wf.base_dir = os.path.join(workingdir,"rs_preprocessing/")
+    wf.config['execution']['crashdump_dir'] = wf.base_dir + "crash_files/"
 
 ##Infosource##    
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
@@ -116,33 +121,51 @@ if __name__ == '__main__':
 
     session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     session_infosource.iterables = ('session', sessions)
-    
+
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = workingdir
-    datagrabber.inputs.template = '%s/%s/%s'
-    #datagrabber.inputs.template_args['resting_dicoms'] = [['subject_id', '*func*', '*']]
-    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'session', 'func/rest.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat', '*.nii.gz']]
-    datagrabber.inputs.sort_filelist = False
-    
+    datagrabber.inputs.template = '%s/%s/%s/%s'
+    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat','*']]
+    datagrabber.inputs.sort_filelist = True
+
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     wf.connect(session_infosource, 'session', datagrabber, 'session')
+
+##DcmStack & MetaData##
+    stack = pe.Node(dcm.DcmStack(), name = 'stack')
+    stack.inputs.embed_meta = True
+
+    tr_lookup = pe.Node(dcm.LookupMeta(), name = 'tr_lookup')
+    tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
+
+    def construct_filedir(subject_id):
+        from variables import dicomdir
+        import os
+        filedir = os.path.join(dicomdir, subject_id + '/anat/')
+        return filedir
+    wf.connect(subject_id_infosource, ('subject_id', construct_filedir), stack, 'dicom_files')        
+    wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
 ##Preproc##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
     preproc.remove_nodes([zscore])
     mod_realign = preproc.get_node('mod_realign')
+    mod_realign.plugin_args = {'submit_specs':'request_memory=4000\n'}
     #workaround for realignment crashing in multiproc environment
     mod_realign.run_without_submitting = True
 
 
     # inputs
     preproc.inputs.inputspec.motion_correct_node = 'nipy'
+    ad = preproc.get_node('artifactdetect')
+    preproc.disconnect(mod_realign,'parameter_source',ad,'parameter_source')
+    ad.inputs.parameter_source = 'NiPy'
     preproc.inputs.inputspec.realign_parameters = {"loops":[5],
                                                    "speedup":[5]}
     preproc.inputs.inputspec.do_whitening = False
@@ -152,25 +175,35 @@ if __name__ == '__main__':
     preproc.inputs.inputspec.surface_fwhm = 0.0
     preproc.inputs.inputspec.num_noise_components = 6
     preproc.inputs.inputspec.regress_before_PCA = False
-    preproc.get_node('fwhm_input').iterables = ('fwhm', [0])
+    preproc.get_node('fwhm_input').iterables = ('fwhm', [0,5])
     preproc.get_node('take_mean_art').get_node('strict_artifact_detect').inputs.save_plot = True
     preproc.inputs.inputspec.ad_normthresh = 1
     preproc.inputs.inputspec.ad_zthresh = 3
     preproc.inputs.inputspec.do_slicetime = True
     preproc.inputs.inputspec.compcor_select = [True, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
-    preproc.inputs.inputspec.highpass_freq = 100
-    preproc.inputs.inputspec.lowpass_freq = 10
+    preproc.get_node('bandpass_filter').iterables = [('highass_freq',[0.01]),('lowpass_freq',[0.1])]
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
-    preproc.inputs.inputspec.fssubject_dir = '/scr/schweiz1/data/Final_High/'
-    preproc.inputs.inputspec.tr = 1400/1000
-    preproc.inputs.inputspec.motion_correct_node = 'afni'
-    preproc.inputs.inputspec.sliceorder = slicetime_file
+    preproc.inputs.inputspec.fssubject_dir = freesurferdir
+    #preproc.inputs.inputspec.tr = 1400/1000
+    #preproc.inputs.inputspec.motion_correct_node = 'afni'
+    #preproc.inputs.inputspec.sliceorder = slicetime_file
     #preproc.inputs.inputspec.sliceorder = list(np.linspace(0,1.4,64))
-    def get_fsid(subject_id):
-        return  subject_id+'/FREESURFER'
 
-    wf.connect(subject_id_infosource, ('subject_id',get_fsid), preproc, "inputspec.fssubject_id")
+    def convert_units(tr):
+        mstr = (tr*.001)
+        return tr
+
+    def get_sliceorder(in_file):
+        import nipype.interfaces.dcmstack as dcm
+        import numpy as np
+        nii_wrp = dcm.NiftiWrapper.from_filename(in_file)
+        sliceorder = np.argsort(np.argsort(nii_wrp.meta_ext.get_values('CsaImage.MosaicRefAcqTimes')[0])).tolist()
+        return sliceorder
+
+    wf.connect(tr_lookup, ("TR", convert_units), preproc, "inputspec.tr")
+    wf.connect(stack, ('out_file', get_sliceorder), preproc, "inputspec.sliceorder")
+    wf.connect(subject_id_infosource, 'subject_id', preproc, "inputspec.fssubject_id")
     wf.connect(datagrabber, "resting_nifti", preproc, "inputspec.func")
 
 ##Sampler##
@@ -190,13 +223,16 @@ if __name__ == '__main__':
     sxfm.inputs.target_subject = 'fsaverage4'
     sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
     sxfm.inputs.target_type = 'nii'
+
+    def get_fsid(subject_id):
+        return  subject_id+'/FREESURFER'
 	
     wf.connect(sampler, 'out_file', sxfm, 'source_file')
     wf.connect(subject_id_infosource, ('subject_id',get_fsid), sxfm, 'source_subject')
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
-    report_wf = create_preproc_report_wf(resultsdir + "/reports")
+    report_wf = create_preproc_report_wf(os.path.join(resultsdir + "/reports"))
     report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
@@ -219,7 +255,11 @@ if __name__ == '__main__':
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')
     wf.connect(sxfm, 'out_file', ds, 'sxfmout')
-    wf.write_graph()
-               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.write_graph()
+    return wf
+
+if __name__=='__main__':
+    wf = get_wf()
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
     #wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
+    wf.run(plugin="Linear", updatehash=True)

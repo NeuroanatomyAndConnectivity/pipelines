@@ -112,7 +112,7 @@ if __name__ == '__main__':
     subject_id_infosource.iterables = ("subject_id", [subjects[0]])
     
     tr_infosource = pe.Node(util.IdentityInterface(fields=['tr']), name="tr_infosource")
-    tr_infosource.iterables = ("tr", ["645", "1400", "2500"])
+    tr_infosource.iterables = ("tr", ["1400"])#, "645", "2500"])
     
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id', 'tr'], outfields=['resting_nifti']), 
                           name="datagrabber",
@@ -214,3 +214,4 @@ if __name__ == '__main__':
     wf.write_graph()
                
     wf.run(plugin="Linear", plugin_args={'submit_specs': 'request_memory = 4000\n'})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
