@@ -13,10 +13,13 @@ cluster_types = intercluster_input #removing dbscan for now
 
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = os.path.join(workingdir,"intercluster_analysis")
+    wf.base_dir = os.path.join(workingdir,"pres_intercluster_analysis")
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
 
 ##Infosource##    
+    subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
+    subject_id_infosource.iterables = ('subject_id', analysis_subjects)
+
     session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     session_infosource.iterables = ('session', analysis_sessions)
     
@@ -57,7 +60,9 @@ def get_wf():
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = resultsdir
+    ds.inputs.base_directory = resultsdir+ 'pres'
+    wf.connect(intercluster, 'out_File', ds, 'compare_cluster_types')
+    wf.connect(intersession, 'out_File', ds, 'compare_sessions')
     wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
     wf.connect(intercluster_cluster, 'out_File', ds, 'consensus_intercluster_nodbscan')
     wf.connect(intersession_cluster, 'out_File', ds, 'consensus_intersession')

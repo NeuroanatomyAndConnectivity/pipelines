@@ -25,11 +25,11 @@ def get_vertices(hemi,freesurferdir, labellist):
 
 def get_mask(labels, parcfile):
     parcdata = nb.load(parcfile).get_data()
+    mask = np.zeros_like(parcdata)
 
     if labels == []:
-        mask = np.ones_like(parcdata)
+        mask = parcdata>0
     else:
-        mask = np.zeros_like(parcdata)
         for label in labels:
             newdata = parcdata == label
             mask = mask + newdata

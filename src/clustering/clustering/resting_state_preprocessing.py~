@@ -23,7 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, resultsdir, freesurferdir, dicomdir, hemispheres
+from variables import subjects, sessions, workingdir, preprocdir, freesurferdir, dicomdir, hemispheres
 
 subjects = ['9630905']
 

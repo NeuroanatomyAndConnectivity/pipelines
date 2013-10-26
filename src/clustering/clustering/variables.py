@@ -7,7 +7,7 @@ interclusterdir = os.path.abspath('/scr/ilz1/Data/consensusResults/')
 freesurferdir = os.path.abspath('/scr/ilz1/Data/freesurfer/')
 dicomdir = os.path.abspath('/scr/ilz1/Data/DICOM/')
 
-from clustering.utils import get_vertices, get_subjects_from
+from utils import get_vertices, get_subjects_from
 
 #Subjects & Sessions#
 subjects = ['3795193']

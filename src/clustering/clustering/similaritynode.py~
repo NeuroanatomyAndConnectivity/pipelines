@@ -1,0 +1,103 @@
+from nipype.interfaces.base import BaseInterface, \
+    BaseInterfaceInputSpec, traits, File, TraitedSpec, InputMultiPath, Directory
+from nipype.utils.filemanip import split_filename
+import nibabel as nb
+import numpy as np
+import os
+import pickle
+import nipype.pipeline.engine as pe
+from nipype.interfaces import afni as afni
+from nipype.utils.filemanip import split_filename
+
+class SimilarityInputSpec(BaseInterfaceInputSpec):
+    in_File = File(exists=True, desc='surface to be clustered', mandatory=True)
+    sim = traits.String(exists=True, desc='type of similarity ', mandatory=True)
+    mask = File(exists=True, desc='mask (nifti file)', mandatory=True)
+
+class SimilarityOutputSpec(TraitedSpec):
+    out_File = File(exists=True, desc="out_File")
+
+class Similarity(BaseInterface):
+    input_spec = SimilarityInputSpec
+    output_spec = SimilarityOutputSpec
+    ##correlationmatrix##
+    _, base, _ = split_filename(self.inputs.in_File)
+
+    corr = pe.Node(afni.AutoTcorrelate(), name='corr')
+    corr.inputs.in_file = in_File
+    corr.inputs.mask=mask
+    corr.inputs.mask_only_targets = sim!='temp'
+    #corr.inputs.out_file = base +'_'+sim+'_simmatrix'
+    corr.inputs.outputtype = 'NIFTI'
+
+    corr_res = corr.run()
+    corr_out_file = corr_res.outputs.out_file
+
+    if sim=='temp':
+        output = corr_out_file
+    else:      
+        ##similaritymatrix##
+        similarity = pe.Node(afni.AutoTcorrelate(), name = 'similarity')
+        similarity.inputs.polort = -1
+        similarity.inputs.eta2 = sim=='eta2'
+        similarity.inputs.in_file = corr_out_file
+        #similarity.inputs.out_file = base +'_'+sim+'_simmatrix'
+        similarity.inputs.outputtype = 'NIFTI'
+        sim_res = similarity.run()
+        output = sim_res.outputs.out_file
+    def _get_filelist(self, trait_input):
+        if os.path.isdir(trait_input[0]):
+            filelist = []
+            for directory in trait_input:
+                for root, dirnames, fnames in os.walk(directory):
+                    for f in fnames:
+                        if f.endswith('.nii'):
+                            filelist.append(os.path.join(root,f))
+            return filelist
+        if os.path.isfile(trait_input[0]): 
+            return trait_input
+
+    def makeConsensus(self, eachFile):
+        clustermap=nb.load(eachFile).get_data()
+        consensus = np.zeros((len(clustermap),len(clustermap)))
+        for j in range(len(clustermap)):
+            consensus[j] = clustermap == clustermap[j]
+        return consensus
+
+    def _run_interface(self, runtime):
+        src_paths = self._get_filelist(self.inputs.in_Files)
+        sumConsensus = []
+        for src_path in src_paths:
+            sumConsensus.append(self.makeConsensus(src_path))
+        ##average across all consensus instances and output##
+        totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
+        pickle.dump(totalConsensus, os.path.abspath(base+'_ConsensusMat'))
+        ##make consensus into stability measure##
+        likeness = abs(totalConsensus-0.5)
+        stability = np.mean(likeness,axis=0)
+        ##make into NiftiImage##
+        nImg = nb.Nifti1Image(stability, None)
+        _, base, _ = split_filename(self.inputs.in_Files[0])
+        nb.save(nImg, os.path.abspath(base+'_Stability.nii'))
+        return runtime
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        _, base, _ = split_filename(self.inputs.in_Files[0])
+        outputs["out_File"] = os.path.abspath(base+'_Stability.nii')
+        outputs['consensus_mat'] = os.path.abspath(base+'_ConsensusMat')
+        return outputs
+def Similarity(in_file,sim,mask):
+
+
+
+
+#from nipype.interfaces.afni import AutoTcorrelate
+#corr = AutoTcorrelate()
+#corr.inputs.mask = "/SCR/data/11072.b1/results/rhprefrontalMaskfs4.nii"
+#corr.inputs.in_file = "/SCR/data/11072.b1/results/rhsxfmoutfs4.nii"
+#corr.inputs.eta2 = True
+#res = corr.run()
+#print res.outputs
+
+    return output
