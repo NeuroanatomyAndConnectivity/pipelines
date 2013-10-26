@@ -5,18 +5,21 @@ import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 
-from clustering.consensus import Consensus
-from clustering.cluster import Cluster
-from variables import subjects, sessions, workingdir, clusterdir, interclusterdir, freesurferdir, hemispheres, similarity_types, intercluster_input, n_clusters
+from consensus import Consensus
+from cluster import Cluster
+from variables import analysis_subjects, analysis_sessions, workingdir, resultsdir, freesurferdir, hemispheres, similarity_types, intercluster_input, n_clusters
 
 cluster_types = intercluster_input #removing dbscan for now
 
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
-    wf.base_dir = os.path.join(workingdir,"intercluster_analysis")
+    wf.base_dir = os.path.join(workingdir,"pres_intercluster_analysis")
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
 
 ##Infosource##    
+    subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
+    subject_id_infosource.iterables = ('subject_id', analysis_subjects)
+
     session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     session_infosource.iterables = ('session', analysis_sessions)
     
@@ -34,7 +37,7 @@ def get_wf():
 
 ##Datagrabber for subjects##
     dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'session','cluster', 'sim', 'n_clusters'], outfields=['all_subjects']), name="dg_subjects")
-    dg_subjects.inputs.base_directory = clusterdir+'clustered/'
+    dg_subjects.inputs.base_directory = resultsdir+'clustered/'
     dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
     dg_subjects.inputs.template_args['all_subjects'] = [['hemi', 'session','*','sim', 'cluster', 'n_clusters']]
     dg_subjects.inputs.sort_filelist = True
@@ -57,10 +60,7 @@ def get_wf():
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = interclusterdir
-    wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
-    wf.connect(intercluster_cluster, 'out_File', ds, 'consensus_intercluster_nodbscan')
-    wf.connect(intersession_cluster, 'out_File', ds, 'consensus_intersession')
+    ds.inputs.base_directory = resultsdir+ '_pres'
     wf.connect(intersubject_cluster, 'out_File', ds, 'consensus_intersubject')
     wf.write_graph()
     return wf

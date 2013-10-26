@@ -5,8 +5,8 @@ import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 
-from clustering.consensus import Consensus
-from clustering.cluster import Cluster
+from consensus import Consensus
+from cluster import Cluster
 from variables import subjects, sessions, workingdir, clusterdir, interclusterdir, freesurferdir, hemispheres, similarity_types, intercluster_input, n_clusters
 
 cluster_types = intercluster_input #removing dbscan for now

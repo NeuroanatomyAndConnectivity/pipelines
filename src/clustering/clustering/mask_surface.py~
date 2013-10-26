@@ -4,7 +4,6 @@ from nipype.interfaces.base import BaseInterface, \
 
 import numpy as np
 import nibabel as nb
-from variables import workingdir, lhvertices, rhvertices, lhsource, rhsource
 
 class MaskSurfaceInputSpec(BaseInterfaceInputSpec):
     sxfmout = File(exists=True, desc='original surface', mandatory=True)
@@ -13,6 +12,10 @@ class MaskSurfaceInputSpec(BaseInterfaceInputSpec):
 class MaskSurfaceOutputSpec(TraitedSpec):
     surface_mask = File(exists=True, desc="surface target as mask")
     surface_data = File(exists=True, desc="surface masked by sourcemask")
+    lhvertices = ListInt(exists=True, desc= 'lh target labels', mandatory=True)
+    rhvertices = ListInt(exists=True, desc= 'rh target labels', mandatory=True)
+    lhsource = ListInt(exists=True, desc= 'lh source labels', mandatory=True)
+    rhsource = ListInt(exists=True, desc= 'rh source labels', mandatory=True)
 
 class MaskSurface(BaseInterface):
     input_spec = MaskSurfaceInputSpec
@@ -30,11 +33,11 @@ class MaskSurface(BaseInterface):
         sourcemask = np.zeros(origdata, dtype=np.int)
         targetmask = np.zeros(origdata, dtype=np.int)
         if hemi == 'lh': 
-            sourcemask[lhsource] = 1
-            targetmask[lhvertices] = 1
+            sourcemask[self.inputs.lhsource] = 1
+            targetmask[self.inputs.lhvertices] = 1
         if hemi == 'rh': 
-            sourcemask[rhsource] = 1
-            targetmask[rhvertices] = 1
+            sourcemask[self.inputs.rhsource] = 1
+            targetmask[self.inputs.rhvertices] = 1
 
         targetmask.resize(origdata)
         targetmaskImg = nb.Nifti1Image(targetmask, affine)

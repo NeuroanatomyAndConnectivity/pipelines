@@ -10,7 +10,7 @@ from sklearn.cluster import DBSCAN
 import numpy as np
 import nibabel as nb
 import os
-from variables import lhvertices, rhvertices, workingdir, epsilon
+from variables import epsilon
 
 class ClusterInputSpec(BaseInterfaceInputSpec):
     in_File = File(exists=True, desc='surface to be clustered', mandatory=True)

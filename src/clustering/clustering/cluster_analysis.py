@@ -10,13 +10,12 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.afni as afni
-from clustering.cluster import Cluster
-from clustering.similarity import Similarity
-from clustering.mask_surface import MaskSurface
-from clustering.mask_volume import MaskVolume
-from clustering.concat import Concat
+from cluster import Cluster
+from similarity import Similarity
+from mask_surface import MaskSurface
+from mask_volume import MaskVolume
+from concat import Concat
 from variables import subjects, sessions, workingdir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
-from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
 
 def get_wf():
     
@@ -73,17 +72,11 @@ def get_wf():
 
 ##mask surface##
     Smask = pe.Node(MaskSurface(), name = 'surface_mask')
-    Smask.inputs.lhvertices = lhvertices
-    Smask.inputs.rhvertices = rhvertices
-    Smask.inputs.lhsource = lhsource
-    Smask.inputs.rhsource = rhsource
     wf.connect(hemi_infosource, 'hemi', Smask, 'hemi')
     wf.connect(datagrabber, 'sxfm', Smask, 'sxfmout')
 
 ##mask volume##
     Vmask = pe.Node(MaskVolume(), name = 'volume_mask')
-    Vmask.inputs.vol_source = volume_sourcelabels
-    Vmask.input.vol_target = volume_targetlabels
     wf.connect(datagrabber, 'volumedata', Vmask, 'preprocessedfile')
     wf.connect(datagrabber, 'regfile', Vmask, 'regfile')
     wf.connect(datagrabber, 'parcfile', Vmask, 'parcfile')

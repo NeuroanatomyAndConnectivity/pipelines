@@ -2,7 +2,6 @@ import nibabel as nb
 import numpy as np
 import os
 
-from variables import workingdir
 import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.fsl as fsl
 from nipype.interfaces.base import BaseInterface, \
@@ -10,14 +9,13 @@ from nipype.interfaces.base import BaseInterface, \
 from nipype.utils.filemanip import split_filename
 
 from utils import get_mask
-from variables import sourcelabels, targetlabels
-#labels
-inputlabels = sourcelabels + targetlabels
 
 class MaskVolumeInputSpec(BaseInterfaceInputSpec):
     preprocessedfile = File(exists=True, desc='original volume', mandatory=True)
     regfile = File(exists=True, desc='register .mat file', mandatory=True)
     parcfile = File(exists=True, desc='parcellation/segmentation file', mandatory=True)
+    vol_source = traits.ListInt(exists=True, desc= 'source labels', mandatory=True)
+    vol_target = traits.ListInt(exists=True, desc= 'target labels', mandatory=True)
 
 class MaskVolumeOutputSpec(TraitedSpec):
     volume_input_mask = File(exists=True, desc="input volume for similarity")
@@ -40,7 +38,8 @@ class MaskVolume(BaseInterface):
         invt_result= invt.run()
 
         #define source mask (surface, volume)
-        sourcemask = get_mask(inputlabels, self.inputs.parcfile)
+        input_labels = self.input.vol_source+self.input.vol_target
+        sourcemask = get_mask(input_labels, self.inputs.parcfile)
         sourcemaskfile = os.path.abspath('sourcemask.nii')
         sourceImg = nb.Nifti1Image(sourcemask, None)
         nb.save(sourceImg, sourcemaskfile)
@@ -69,7 +68,7 @@ class MaskVolume(BaseInterface):
         ##PREPARE TARGET MASK##
 
         #define target mask (surface, volume)
-        targetmask = get_mask(targetlabels, self.inputs.parcfile)
+        targetmask = get_mask(self.inputs.vol_target, self.inputs.parcfile)
         targetmaskfile = os.path.abspath('targetmask.nii')
         targetImg = nb.Nifti1Image(targetmask, None)
         nb.save(targetImg, targetmaskfile)

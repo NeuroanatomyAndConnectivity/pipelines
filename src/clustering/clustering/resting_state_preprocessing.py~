@@ -232,7 +232,7 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
-    report_wf = create_preproc_report_wf(os.path.join(preprocdir + "/reports"))
+    report_wf = create_preproc_report_wf(os.path.join(resultsdir + "/reports"))
     report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
@@ -250,7 +250,7 @@ def get_wf():
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = os.path.join(preprocdir, "volumes")
+    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')

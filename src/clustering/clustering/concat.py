@@ -74,7 +74,7 @@ class Concat(BaseInterface):
         #convert from AFNI file to NIFTI
         convert = afni.AFNItoNIFTI()
         convert.inputs.in_file = sim_file
-        convert.inputs.out_file = convert.inputs.in_file + '.nii'
+        convert.inputs.out_file = os.path.abspath('similarity.1D.nii')
         convert_result = convert.run()
         return runtime
 
