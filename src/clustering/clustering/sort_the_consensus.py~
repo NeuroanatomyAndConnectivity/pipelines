@@ -1,6 +1,0 @@
-import numpy as np
-from consensus import consensus
-lts = [x for x in consensus]
-lts.sort(key=lambda x: [x.argmax(), x[x.argmax()]])
-arr = np.array(lts)
-
