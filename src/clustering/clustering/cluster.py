@@ -10,13 +10,13 @@ from sklearn.cluster import DBSCAN
 import numpy as np
 import nibabel as nb
 import os
-from variables import epsilon
 
 class ClusterInputSpec(BaseInterfaceInputSpec):
     in_File = File(exists=True, desc='surface to be clustered', mandatory=True)
     hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
     cluster_type = traits.String(exists=True, desc='spectral, hiercluster, kmeans, or dbscan', mandatory=True)
     n_clusters = traits.Int(exists=True, desc='number of clusters', mandatory=True)
+    epsilon = traits.Float(exists=True, desc='epsilon parameter for dbscan', mandatory=True)
 
 class ClusterOutputSpec(TraitedSpec):
     out_File = File(exists=True, desc="clustered volume")
@@ -36,7 +36,7 @@ class Cluster(BaseInterface):
         if self.inputs.cluster_type == 'kmeans':
             labels = km(n_clusters=self.inputs.n_clusters).fit_predict(corrmatrix)
         if self.inputs.cluster_type == 'dbscan':
-            labels = DBSCAN(eps=epsilon).fit_predict(corrmatrix)
+            labels = DBSCAN(eps=self.inputs.epsilon).fit_predict(corrmatrix)
 
         new_img = nb.Nifti1Image(labels, None)
         _, base, _ = split_filename(self.inputs.in_File)

@@ -1,17 +1,21 @@
 import os
 
-workingdir = os.path.abspath("/scr/ilz1/Data/")
-preprocdir = os.path.abspath('/scr/ilz1/Data/preprocResults/')
-clusterdir = os.path.abspath('/scr/ilz1/Data/clusterResults/')
-interclusterdir = os.path.abspath('/scr/ilz1/Data/consensusResults/')
-freesurferdir = os.path.abspath('/scr/ilz1/Data/freesurfer/')
-dicomdir = os.path.abspath('/scr/ilz1/Data/DICOM/')
+basedir = os.path.abspath('/scr/ilz1/nki_enhanced/')
+workingdir = os.path.join(basedir,'workingdir')
+
+preprocdir = os.path.join(basedir,'Results/preprocResults')
+clusterdir = os.path.join(basedir,'Results/clusterResults')
+interclusterdir = os.path.join(basedir,'Results/consensusResults')
+
+freesurferdir = os.path.join(basedir,'freesurfer')
+niftidir = os.path.join(basedir,'RawData/niftis')
+dicomdir = os.path.join(basedir,'RawData/dicoms')
+
 
 from clustering.utils import get_vertices, get_subjects_from
 
 #Subjects & Sessions#
-subjects = ['3795193']
-#, '3201815', '0021024', '3893245', '3315657', '1961098', '7055197', '2842950', '2475376', '1427581', '4288245', '3808535', '0021001', '8735778', '9630905', '0021018', '3313349', '0021006', '0021002', '1793622', '2799329', '8574662', '4176156']
+subjects = ['0186697']
 exclude_subjects = ['0021001']
 subjects = list(set(subjects) - set(exclude_subjects))
 
@@ -26,16 +30,16 @@ volume_targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
 
 #Surface Data#
 surface_sourcelabels = [] #all
-surface_targetlabels = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71]
-lhsource = get_vertices('lh',freesurferdir, surface_sourcelabels)
-rhsource = get_vertices('rh',freesurferdir, surface_sourcelabels)
-lhvertices = get_vertices('lh',freesurferdir, surface_targetlabels)
-rhvertices = get_vertices('rh',freesurferdir, surface_targetlabels)
+surface_targetlabels = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71] #preFrontal Cortex
+lhsource = get_vertices('lh', freesurferdir, surface_sourcelabels)
+rhsource = get_vertices('rh', freesurferdir, surface_sourcelabels)
+lhvertices = get_vertices('lh', freesurferdir, surface_targetlabels)
+rhvertices = get_vertices('rh',  freesurferdir, surface_targetlabels)
 
 #Analysis Parameters#
 hemispheres = ['lh', 'rh']
 similarity_types = ['eta2', 'spat', 'temp']
-cluster_types = ['hiercluster']#, 'kmeans', 'spectral', 'dbscan']
-intercluster_input = ['spectral', 'hiercluster', 'kmeans']#remove dbscan for now
-n_clusters = [8]#[02,03,04,05,06,07,10,11,12,13,14,15,16,17,18,19,20,21,22]
-epsilon = [.03]
+cluster_types = ['hiercluster', 'kmeans'] #'spectral', 'dbscan']
+intercluster_input = ['hiercluster', 'kmeans']
+n_clusters = [2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22]
+epsilon = .03

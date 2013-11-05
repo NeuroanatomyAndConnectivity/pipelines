@@ -16,14 +16,18 @@ def get_vertices(hemi,freesurferdir, labellist):
     [vertices,colortable,names] = nb.freesurfer.read_annot(os.path.join(freesurferdir,'fsaverage4/label/'+hemi[-2:]+'.aparc.a2009s.annot'), orig_ids=True)
     chosenvertices = list()
     if labellist == []:
-        chosenvertices = xrange(len(vertices)) #all vertices
-    for j, value in enumerate(vertices) :
-        for i, index in enumerate(labellist) :
-            if colortable[index][4]==value :
-                chosenvertices.append(j)
+        chosenvertices = range(len(vertices)) #all vertices
+    else:
+        for j, value in enumerate(vertices):
+            for i, index in enumerate(labellist):
+                if colortable[index][4]==value:
+                    chosenvertices.append(j)
     return chosenvertices
 
 def get_mask(labels, parcfile):
+    import nibabel as nb
+    import numpy as np
+
     parcdata = nb.load(parcfile).get_data()
     mask = np.zeros_like(parcdata)
 

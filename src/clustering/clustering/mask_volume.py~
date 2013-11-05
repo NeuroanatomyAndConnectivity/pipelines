@@ -15,7 +15,7 @@ class MaskVolumeInputSpec(BaseInterfaceInputSpec):
     regfile = File(exists=True, desc='register .mat file', mandatory=True)
     parcfile = File(exists=True, desc='parcellation/segmentation file', mandatory=True)
     vol_source = traits.ListInt(exists=True, desc= 'source labels', mandatory=True)
-    vol_target = traits.ListInt(exists=True, desc= 'target labels', mandatory-True)
+    vol_target = traits.ListInt(exists=True, desc= 'target labels', mandatory=True)
 
 class MaskVolumeOutputSpec(TraitedSpec):
     volume_input_mask = File(exists=True, desc="input volume for similarity")
@@ -38,7 +38,7 @@ class MaskVolume(BaseInterface):
         invt_result= invt.run()
 
         #define source mask (surface, volume)
-        input_labels = self.input.vol_source+self.input.vol_target
+        input_labels = self.inputs.vol_source+self.input.vol_target
         sourcemask = get_mask(input_labels, self.inputs.parcfile)
         sourcemaskfile = os.path.abspath('sourcemask.nii')
         sourceImg = nb.Nifti1Image(sourcemask, None)

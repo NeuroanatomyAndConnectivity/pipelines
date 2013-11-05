@@ -23,9 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, preprocdir, freesurferdir, dicomdir, hemispheres
-
-subjects = ['9630905']
+from variables import subjects, workingdir, preprocdir, freesurferdir, dicomdir, niftidir, hemispheres
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -119,22 +117,22 @@ def get_wf():
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ('subject_id', subjects)
 
-    session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
-    session_infosource.iterables = ('session', sessions)
+    #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
+    #session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
-    datagrabber.inputs.base_directory = workingdir
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
+    datagrabber.inputs.base_directory = niftidir
     datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat','*']]
+    datagrabber.inputs.template_args['resting_nifti'] = [['niftis','subject_id', 'RfMRI_mx_1400.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['niftis','subject_id', 'anat.nii.gz']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
-    wf.connect(session_infosource, 'session', datagrabber, 'session')
+    #wf.connect(session_infosource, 'session', datagrabber, 'session')
 
 ##DcmStack & MetaData##
     stack = pe.Node(dcm.DcmStack(), name = 'stack')
@@ -232,7 +230,7 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
-    report_wf = create_preproc_report_wf(os.path.join(preprocdir + "/reports"))
+    report_wf = create_preproc_report_wf(os.path.join(preprocdir, "reports"))
     report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):

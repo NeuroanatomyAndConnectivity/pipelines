@@ -17,8 +17,8 @@ def get_wf():
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
 
 ##Infosource##    
-    session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
-    session_infosource.iterables = ('session', analysis_sessions)
+    #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
+    #session_infosource.iterables = ('session', analysis_sessions)
     
     hemi_infosource = pe.Node(util.  IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
@@ -39,7 +39,7 @@ def get_wf():
     dg_subjects.inputs.template_args['all_subjects'] = [['hemi', 'session','*','sim', 'cluster', 'n_clusters']]
     dg_subjects.inputs.sort_filelist = True
 
-    wf.connect(session_infosource, 'session', dg_subjects, 'session')
+    #wf.connect(session_infosource, 'session', dg_subjects, 'session')
     wf.connect(hemi_infosource, 'hemi', dg_subjects, 'hemi')
     wf.connect(cluster_infosource, 'cluster', dg_subjects, 'cluster')
     wf.connect(sim_infosource, 'sim', dg_subjects, 'sim')
@@ -60,7 +60,7 @@ def get_wf():
     ds.inputs.base_directory = interclusterdir
     wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
     wf.connect(intercluster_cluster, 'out_File', ds, 'consensus_intercluster_nodbscan')
-    wf.connect(intersession_cluster, 'out_File', ds, 'consensus_intersession')
+    #wf.connect(intersession_cluster, 'out_File', ds, 'consensus_intersession')
     wf.connect(intersubject_cluster, 'out_File', ds, 'consensus_intersubject')
     wf.write_graph()
     return wf

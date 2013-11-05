@@ -15,7 +15,7 @@ from clustering.similarity import Similarity
 from clustering.mask_surface import MaskSurface
 from clustering.mask_volume import MaskVolume
 from clustering.concat import Concat
-from variables import subjects, sessions, workingdir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
+from variables import subjects, sessions, workingdir, preprocdir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
 
 def get_wf():
@@ -28,8 +28,8 @@ def get_wf():
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ('subject_id', subjects)
 
-    session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
-    session_infosource.iterables = ('session', sessions)
+    #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
+    #session_infosource.iterables = ('session', sessions)
     
     hemi_infosource = pe.Node(util.  IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
@@ -45,27 +45,17 @@ def get_wf():
 
 ##Datagrabber##
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
-    datagrabber.inputs.base_directory = workingdir
+    datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
-    datagrabber.inputs.field_template = dict(sxfm='preprocResults/sxfmout/*%s/*%s/*/*%s/*.nii',
-                                            volumedata='preprocResults/preprocessed_resting/*%s/*%s/*/*/*.nii.gz',
-                                            regfile='preprocResults/func2anat_transform/*%s/*%s/*/FREESURFER.mat',
-                                            parcfile='freesurfer/*%s/FREESURFER/mri/aparc.a2009s+aseg.mgz',)
+    datagrabber.inputs.field_template = dict(sxfm=os.path.join(preprocdir,'volumes/sxfmout/*%s/*%s/*/*%s/*.nii'),
+                                            volumedata=os.path.join(preprocdir,'volumes/preprocessed_resting/*%s/*%s/*/*/*.nii.gz'),
+                                            regfile=os.path.join(preprocdir,'volumes/func2anat_transform/*%s/*%s/*/FREESURFER.mat'),
+                                            parcfile=os.path.join(freesurferdir,'*%s/mri/aparc.a2009s+aseg.mgz'),)
     datagrabber.inputs.template_args = dict(sxfm=[['session','subject_id', 'hemi']],
                                            volumedata=[['session','subject_id']],
                                            regfile=[['session','subject_id']],
                                            parcfile=[['subject_id']])
     datagrabber.inputs.sort_filelist = True
-
-##Datagrabber##
-#    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
-#    datagrabber.inputs.base_directory = workingdir
-#    datagrabber.inputs.template = '%s*%s/*%s*%s%s%s'
-#    datagrabber.inputs.template_args['sxfm'] = [['preprocResults/sxfmout/','session','subject_id','/*/*','hemi','/*.nii']]
-#    datagrabber.inputs.template_args['volumedata'] = [['preprocResults/preprocessed_resting/','session','subject_id','/*/*','/*.nii.gz','']]
-#    datagrabber.inputs.template_args['regfile'] = [['preprocResults/func2anat_transform/','session','subject_id','/*/','FREESURFER.mat','']]
-#    datagrabber.inputs.template_args['parcfile'] = [['freesurfer/','subject_id','FREESURFER','/mri','/aparc.a2009s+aseg.mgz','']]
-#    datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     wf.connect(session_infosource, 'session', datagrabber, 'session')
@@ -83,7 +73,7 @@ def get_wf():
 ##mask volume##
     Vmask = pe.Node(MaskVolume(), name = 'volume_mask')
     Vmask.inputs.vol_source = volume_sourcelabels
-    Vmask.input.vol_target = volume_targetlabels
+    Vmask.inputs.vol_target = volume_targetlabels
     wf.connect(datagrabber, 'volumedata', Vmask, 'preprocessedfile')
     wf.connect(datagrabber, 'regfile', Vmask, 'regfile')
     wf.connect(datagrabber, 'parcfile', Vmask, 'parcfile')
@@ -98,6 +88,7 @@ def get_wf():
 
 ##clustering##
     clustering = pe.Node(Cluster(), name = 'clustering')
+    clustering.inputs.epsilon = epsilon
     wf.connect(hemi_infosource, 'hemi', clustering, 'hemi')
     wf.connect(cluster_infosource, 'cluster', clustering, 'cluster_type')
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
