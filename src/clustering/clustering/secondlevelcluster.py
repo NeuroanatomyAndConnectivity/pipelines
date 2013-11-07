@@ -22,7 +22,7 @@ def get_wf():
     session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     session_infosource.iterables = ('session', analysis_sessions)
     
-    hemi_infosource = pe.Node(util.  IdentityInterface(fields=['hemi']), name="hemi_infosource")
+    hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
 
     sim_infosource = pe.Node(util.IdentityInterface(fields=['sim']), name="sim_infosource")

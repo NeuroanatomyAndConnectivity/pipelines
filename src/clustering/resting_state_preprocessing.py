@@ -121,14 +121,14 @@ def get_wf():
     #session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
-    hemi_infosource.iterables = ('hemi', hemispheres)
+    hemi_infosource.iterables = ('hemi',hemispheres)
 
 ##Datagrabber##
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
     datagrabber.inputs.base_directory = niftidir
-    datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['niftis','subject_id', 'RfMRI_mx_1400.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['niftis','subject_id', 'anat.nii.gz']]
+    datagrabber.inputs.template = '%s/%s'
+    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'RfMRI_mx_1400.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat.nii.gz']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
@@ -144,12 +144,12 @@ def get_wf():
     def construct_filedir(subject_id):
         from variables import dicomdir
         import os
-        filedir = os.path.join(dicomdir, subject_id + '/anat/')
+        filedir = os.path.join(dicomdir, subject_id + '/session_1/RfMRI_mx_1400')
         return filedir
     wf.connect(subject_id_infosource, ('subject_id', construct_filedir), stack, 'dicom_files')        
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
-##Preproc##    
+##Preproc from BIPs##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
     preproc.remove_nodes([zscore])
