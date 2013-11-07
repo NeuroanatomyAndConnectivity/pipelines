@@ -180,7 +180,7 @@ def get_wf():
     preproc.inputs.inputspec.do_slicetime = True
     preproc.inputs.inputspec.compcor_select = [True, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
-    preproc.get_node('bandpass_filter').iterables = [('highass_freq',[0.01]),('lowpass_freq',[0.1])]
+    preproc.get_node('bandpass_filter').iterables = [('highpass_freq',[0.01]),('lowpass_freq',[0.1])]
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
     #preproc.inputs.inputspec.tr = 1400/1000
@@ -230,8 +230,8 @@ def get_wf():
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
-    report_wf = create_preproc_report_wf(os.path.join(preprocdir, "reports"))
-    report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
+    #report_wf = create_preproc_report_wf(os.path.join(preprocdir, "reports"))
+    #report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
         import os
@@ -239,16 +239,16 @@ def get_wf():
             if os.path.split(path)[1] == "ribbon.mgz":
                 return path
             
-    wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
-    wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
-    wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
-    wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
-    wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
-    wf.connect(subject_id_infosource, 'subject_id', report_wf, "inputspec.subject_id")
+    #wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
+    #wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
+    #wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
+    #wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
+    #wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
+    #wf.connect(subject_id_infosource, 'subject_id', report_wf, "inputspec.subject_id")
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = os.path.join(preprocdir, "volumes")
+    ds.inputs.base_directory = os.path.join(preprocdir, "aimivolumes")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')
