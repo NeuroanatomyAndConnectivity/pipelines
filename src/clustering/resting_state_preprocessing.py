@@ -221,12 +221,9 @@ def get_wf():
     sxfm.inputs.target_subject = 'fsaverage4'
     sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
     sxfm.inputs.target_type = 'nii'
-
-    def get_fsid(subject_id):
-        return  subject_id+'/FREESURFER'
 	
     wf.connect(sampler, 'out_file', sxfm, 'source_file')
-    wf.connect(subject_id_infosource, ('subject_id',get_fsid), sxfm, 'source_subject')
+    wf.connect(subject_id_infosource, 'subject_id', sxfm, 'source_subject')
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
