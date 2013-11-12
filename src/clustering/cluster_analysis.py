@@ -44,21 +44,21 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
     datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
-    datagrabber.inputs.field_template = dict(sxfm=os.path.join(preprocdir,'volumes/sxfmout/*%s/*%s/*/*%s/*.nii'),
-                                            volumedata=os.path.join(preprocdir,'volumes/preprocessed_resting/*%s/*%s/*/*/*.nii.gz'),
-                                            regfile=os.path.join(preprocdir,'volumes/func2anat_transform/*%s/*%s/*/FREESURFER.mat'),
+    datagrabber.inputs.field_template = dict(sxfm=os.path.join(preprocdir,'aimivolumes/sxfmout/*%s/*/*%s/*/*.nii'),
+                                            volumedata=os.path.join(preprocdir,'aimivolumes/preprocessed_resting/*%s/*/*/*/*.nii.gz'),
+                                            regfile=os.path.join(preprocdir,'aimivolumes/func2anat_transform/*%s/*/*.mat'),
                                             parcfile=os.path.join(freesurferdir,'*%s/mri/aparc.a2009s+aseg.mgz'),)
-    datagrabber.inputs.template_args = dict(sxfm=[['session','subject_id', 'hemi']],
-                                           volumedata=[['session','subject_id']],
-                                           regfile=[['session','subject_id']],
+    datagrabber.inputs.template_args = dict(sxfm=[['subject_id', 'hemi']],
+                                           volumedata=[['subject_id']],
+                                           regfile=[['subject_id']],
                                            parcfile=[['subject_id']])
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
-    wf.connect(session_infosource, 'session', datagrabber, 'session')
+    #wf.connect(session_infosource, 'session', datagrabber, 'session')
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
 
 ##mask surface##
