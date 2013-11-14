@@ -10,13 +10,19 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.afni as afni
+
 from clustering.cluster import Cluster
 from clustering.similarity import Similarity
 from clustering.mask_surface import MaskSurface
 from clustering.mask_volume import MaskVolume
 from clustering.concat import Concat
+from clustering.cluster_map import ClusterMap
+from clustering.utils import get_subjects_from
+
 from variables import subjects, sessions, workingdir, preprocdir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
+
+subjects= ['0198985','0188854','0186697','0168413','0164900','0162704','0157947','0139212','0136303','0133436']
 
 def get_wf():
     
@@ -47,13 +53,13 @@ def get_wf():
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
     datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
-    datagrabber.inputs.field_template = dict(sxfm=os.path.join(preprocdir,'aimivolumes/sxfmout/*%s/*/*%s/*/*.nii'),
-                                            volumedata=os.path.join(preprocdir,'aimivolumes/preprocessed_resting/*%s/*/*/*/*.nii.gz'),
-                                            regfile=os.path.join(preprocdir,'aimivolumes/func2anat_transform/*%s/*/*.mat'),
+    datagrabber.inputs.field_template = dict(sxfm=os.path.join(preprocdir,'aimivolumes/sxfmout/*%s/_fwhm_0/*%s/*/*.nii'),
+                                            volumedata=os.path.join(preprocdir,'aimivolumes/preprocessed_resting/*%s/_fwhm_0/*/*/*.nii.gz'),
+                                            regfile=os.path.join(preprocdir,'aimivolumes/func2anat_transform/*%s/*/*%s.mat'),
                                             parcfile=os.path.join(freesurferdir,'*%s/mri/aparc.a2009s+aseg.mgz'),)
     datagrabber.inputs.template_args = dict(sxfm=[['subject_id', 'hemi']],
                                            volumedata=[['subject_id']],
-                                           regfile=[['subject_id']],
+                                           regfile=[['subject_id','subject_id']],
                                            parcfile=[['subject_id']])
     datagrabber.inputs.sort_filelist = True
 
@@ -94,17 +100,22 @@ def get_wf():
     wf.connect(n_clusters_infosource, 'n_clusters', clustering, 'n_clusters')
     wf.connect(concat, 'simmatrix', clustering, 'in_File')
 
+##reinflate to surface indices##
+    clustermap = pe.Node(ClusterMap(), name = 'clustermap')
+    wf.connect(clustering, 'out_File', clustermap, 'clusteredfile')
+    wf.connect(concat, 'maskindex', clustermap, 'indicesfile')    
+
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = clusterdir
     wf.connect(concat,'simmatrix', ds, 'similarity')
     wf.connect(concat,'maskindex', ds, 'maskindex')
-    wf.connect(clustering, 'out_File', ds, 'clustered')
+    wf.connect(clustermap, 'clustermapfile', ds, 'clustered')
     wf.write_graph()
     return wf
 
 if __name__ == '__main__':
     wf = get_wf()               
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
     #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
-    wf.run(plugin='Linear')
+    #wf.run(plugin='Linear')

@@ -11,7 +11,6 @@ freesurferdir = os.path.join(basedir,'freesurfer')
 niftidir = os.path.join(basedir,'RawData/niftis')
 dicomdir = os.path.join(basedir,'RawData/dicoms')
 
-
 from clustering.utils import get_vertices, get_subjects_from
 
 #Subjects & Sessions#
@@ -50,8 +49,8 @@ sessions = ['session1','session2']
 #rois = [(26,58,0), (-26,58,0), (14,66,0), (-14,66,0), (6,58,0), (-6,58,0)]
 
 #Volume Data
-volume_sourcelabels = [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
-volume_targetlabels = [11114] #ctx_lh_G_front_inf-Triangul
+volume_sourcelabels = [-1]#-1 means No Volume #[12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
+volume_targetlabels = [-1]#[11114] #ctx_lh_G_front_inf-Triangul
 
 #Surface Data#
 surface_sourcelabels = [] #all

@@ -33,6 +33,8 @@ def get_mask(labels, parcfile):
 
     if labels == []:
         mask = parcdata>0
+    if labels == [-1]:
+        mask = np.zeros_like(parcdata)
     else:
         for label in labels:
             newdata = parcdata == label
