@@ -7,9 +7,10 @@ import nipype.interfaces.io as nio
 
 from clustering.consensus import Consensus
 from clustering.cluster import Cluster
-from variables import subjects, sessions, workingdir, clusterdir, interclusterdir, freesurferdir, hemispheres, similarity_types, intercluster_input, n_clusters
+from variables import subjects, sessions, workingdir, clusterdir, interclusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
-cluster_types = intercluster_input #removing dbscan for now
+subjects= ['0198985','0188854','0186697','0168413','0164900','0162704','0157947','0139212','0136303','0133436']
+sim = ['temp']
 
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
@@ -33,10 +34,10 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber for subjects##
-    dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'session','cluster', 'sim', 'n_clusters'], outfields=['all_subjects']), name="dg_subjects")
-    dg_subjects.inputs.base_directory = clusterdir+'clustered/'
-    dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*%s*/*'
-    dg_subjects.inputs.template_args['all_subjects'] = [['hemi', 'session','*','sim', 'cluster', 'n_clusters']]
+    dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'cluster', 'sim', 'n_clusters'], outfields=['all_subjects']), name="dg_subjects")
+    dg_subjects.inputs.base_directory = os.path.join(clusterdir,'clustered/')
+    dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*'
+    dg_subjects.inputs.template_args['all_subjects'] = [['hemi', '*','sim', 'cluster', 'n_clusters']]
     dg_subjects.inputs.sort_filelist = True
 
     #wf.connect(session_infosource, 'session', dg_subjects, 'session')
@@ -59,7 +60,7 @@ def get_wf():
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = interclusterdir
     wf.connect(intersubject, 'out_File', ds, 'compare_subjects')
-    wf.connect(intercluster_cluster, 'out_File', ds, 'consensus_intercluster_nodbscan')
+    #wf.connect(intercluster_cluster, 'out_File', ds, 'consensus_intercluster_nodbscan')
     #wf.connect(intersession_cluster, 'out_File', ds, 'consensus_intersession')
     wf.connect(intersubject_cluster, 'out_File', ds, 'consensus_intersubject')
     wf.write_graph()

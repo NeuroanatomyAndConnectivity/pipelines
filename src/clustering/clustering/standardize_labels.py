@@ -50,8 +50,8 @@ def cluster_diff(clustermap1,clustermap2): #non-commutative
     stability = np.sum(diff[0]!=0) #how similar are the clusters?
     return clustermap1_stdlabels, diff, stability
 
-#clustermap1 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0192736/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
+clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0192736/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
 clustermap1 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_hiercluster/_n_clusters_6/similarity.1D_6_hiercluster_lh_clustermap.nii').get_data()
-clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
-#intersubject: stability=264 intercluster_method: stability=300
+#clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
+#intersubject: stability=264 intercluster_method: stability=300 both: stability=
 newmap, diffmap, stability = cluster_diff(clustermap1,clustermap2) #apply clustermap2's assignments to clustermap1

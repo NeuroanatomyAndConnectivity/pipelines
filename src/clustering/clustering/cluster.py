@@ -16,7 +16,7 @@ class ClusterInputSpec(BaseInterfaceInputSpec):
     hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
     cluster_type = traits.String(exists=True, desc='spectral, hiercluster, kmeans, or dbscan', mandatory=True)
     n_clusters = traits.Int(exists=True, desc='number of clusters', mandatory=True)
-    epsilon = traits.Float(exists=True, desc='epsilon parameter for dbscan', mandatory=True)
+    epsilon = traits.Float(exists=True, desc='epsilon parameter for dbscan', mandatory=False)
 
 class ClusterOutputSpec(TraitedSpec):
     out_File = File(exists=True, desc="clustered volume")

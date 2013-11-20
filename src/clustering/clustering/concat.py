@@ -52,6 +52,9 @@ class Concat(BaseInterface):
         nImg = nb.Nifti1Image(densetarget, None)
         nb.save(nImg, targetfile)
 
+
+##CHANGE TO 3DTCORRMAP???
+
         #run Connectivity (source x target)
         corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
         corr.inputs.in_file = inputfile
