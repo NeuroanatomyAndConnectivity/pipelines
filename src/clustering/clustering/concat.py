@@ -59,13 +59,13 @@ class Concat(BaseInterface):
         corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
         corr.inputs.in_file = inputfile
         corr.inputs.mask = targetfile
-        corr.inputs.mask_only_targets = self.inputs.sim_type!='temp' #False for temp, True for eta2 and spat
+        corr.inputs.mask_only_targets = self.inputs.sim_type=='temp' #False for temp, True for eta2 and spat
         corr.inputs.out_file = os.path.abspath('corr_out.1D')
         corr_result = corr.run()
 
         if self.inputs.sim_type=='temp':
             sim_file = corr_result.outputs.out_file
-        else:
+        if self.inputs.sim_type!='temp':
             #run Similarity (target x target) for eta2 and spat
             sim = afni.AutoTcorrelate()
             sim.inputs.in_file = corr_result.outputs.out_file

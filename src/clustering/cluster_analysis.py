@@ -85,7 +85,7 @@ def get_wf():
     wf.connect(datagrabber, 'parcfile', Vmask, 'parcfile')
 
 ##concatenate data & run similarity##
-    concat = pe.Node(Concat(), name = 'concat')
+    concat = pe.Node(Concat(), name = 'concat', overwrite=True)
     wf.connect(Vmask, 'volume_input_mask', concat, 'volume_input')
     wf.connect(Vmask, 'volume_target_mask', concat, 'volume_target_mask')
     wf.connect(Smask, 'surface_data', concat, 'surface_input')
@@ -117,5 +117,11 @@ def get_wf():
 if __name__ == '__main__':
     wf = get_wf()               
     #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    try:
+        wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    except OSError as e:
+        print e.errno
+        print e.filename
+        print e.strerror
+        pdb.set_trace()
     #wf.run(plugin='Linear')
