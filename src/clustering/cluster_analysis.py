@@ -117,11 +117,5 @@ def get_wf():
 if __name__ == '__main__':
     wf = get_wf()               
     #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    try:
-        wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
-    except OSError as e:
-        print e.errno
-        print e.filename
-        print e.strerror
-        pdb.set_trace()
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
     #wf.run(plugin='Linear')
