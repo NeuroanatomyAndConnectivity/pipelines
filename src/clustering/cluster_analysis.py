@@ -22,7 +22,7 @@ from clustering.utils import get_subjects_from
 from variables import subjects, sessions, workingdir, preprocdir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
 
-subjects= ['0198985','0188854','0186697','0168413','0164900','0162704','0157947','0139212','0136303','0133436']
+subjects= ['0198985']
 
 def get_wf():
     
@@ -85,7 +85,7 @@ def get_wf():
     wf.connect(datagrabber, 'parcfile', Vmask, 'parcfile')
 
 ##concatenate data & run similarity##
-    concat = pe.Node(Concat(), name = 'concat', overwrite=True)
+    concat = pe.Node(Concat(), name = 'concat')
     wf.connect(Vmask, 'volume_input_mask', concat, 'volume_input')
     wf.connect(Vmask, 'volume_target_mask', concat, 'volume_target_mask')
     wf.connect(Smask, 'surface_data', concat, 'surface_input')
@@ -103,7 +103,8 @@ def get_wf():
 ##reinflate to surface indices##
     clustermap = pe.Node(ClusterMap(), name = 'clustermap')
     wf.connect(clustering, 'out_File', clustermap, 'clusteredfile')
-    wf.connect(concat, 'maskindex', clustermap, 'indicesfile')    
+    wf.connect(concat, 'maskindex', clustermap, 'indicesfile')
+    wf.connect(concat, 'targetmask', clustermap, 'maskfile')    
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")

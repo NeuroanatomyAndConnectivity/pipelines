@@ -15,6 +15,7 @@ class ConcatInputSpec(BaseInterfaceInputSpec):
 class ConcatOutputSpec(TraitedSpec):
     simmatrix = File(exists=True, desc="output similarity")
     maskindex = File(exists=True, desc='index for later returning to anat space')
+    targetmask = File(exists=True, desc='total target mask')
 
 class Concat(BaseInterface):
     input_spec = ConcatInputSpec
@@ -62,27 +63,38 @@ class Concat(BaseInterface):
         corr.inputs.mask_only_targets = True
         corr.inputs.out_file = os.path.abspath('corr_out.1D')
         corr_result = corr.run()
+        #convert from AFNI file to NIFTI
+        convert = afni.AFNItoNIFTI()
+        convert.inputs.in_file = corr_result.outputs.out_file
+        convert.inputs.out_file = os.path.abspath('similarity.1D.nii')
+        convert_result = convert.run()
 
-        if self.inputs.sim_type=='temp':
-            sim_file = corr_result.outputs.out_file
         if self.inputs.sim_type!='temp':
-            #run Similarity (target x target) for eta2 and spat
+            #make Similarity matrix (target x target) for eta2 and spat
+            connectivity = nb.load(convert_result.outputs.out_file).get_data()
+            mask = nb.load(targetfile).get_data()
+            mask_asBool = np.asarray(mask,dtype=np.bool)
+            maskedconnectivity = connectivity[mask_asBool,:,:,:]
+            nImg = nb.Nifti1Image(maskedconnectivity,None)
+            nb.save(nImg, os.path.abspath('connectivityInput.nii'))
+    
+            #run AFNIcorrelate
             sim = afni.AutoTcorrelate()
-            sim.inputs.in_file = corr_result.outputs.out_file
+            sim.inputs.in_file = os.path.abspath('connectivityInput.nii')
             sim.inputs.out_file = os.path.abspath('similarity.1D')
             sim.inputs.eta2 = self.inputs.sim_type=='eta2' #True for eta2
             sim_result = sim.run()
-            sim_file = sim_result.outputs.out_file
-        
-        #convert from AFNI file to NIFTI
-        convert = afni.AFNItoNIFTI()
-        convert.inputs.in_file = sim_file
-        convert.inputs.out_file = os.path.abspath('similarity.1D.nii')
-        convert_result = convert.run()
+            #convert from AFNI file to NIFTI
+            convert = afni.AFNItoNIFTI()
+            convert.inputs.in_file = sim_result.outputs.out_file
+            convert.inputs.out_file = os.path.abspath('similarity.1D.nii')
+            convert_result = convert.run()
+
         return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
         outputs["simmatrix"] = os.path.abspath('similarity.1D.nii')
         outputs["maskindex"] = os.path.abspath('indices.npy')
+        outputs["targetmask"] = os.path.abspath('simTarget.nii')
         return outputs
