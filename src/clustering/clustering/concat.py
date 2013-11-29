@@ -53,9 +53,6 @@ class Concat(BaseInterface):
         nImg = nb.Nifti1Image(densetarget, None)
         nb.save(nImg, targetfile)
 
-
-##CHANGE TO 3DTCORRMAP???
-
         #run Connectivity (source x target)
         corr = afni.AutoTcorrelate()  #3dWarp -deoblique ??
         corr.inputs.in_file = inputfile
@@ -70,16 +67,22 @@ class Concat(BaseInterface):
         convert_result = convert.run()
 
         connectivity = nb.load(convert_result.outputs.out_file).get_data()
-        mask = nb.load(targetfile).get_data()
-        mask_asBool = np.asarray(mask,dtype=np.bool)
-        maskedconnectivity = connectivity[mask_asBool,:,:,:]
-        nImg = nb.Nifti1Image(maskedconnectivity,None)
-        nb.save(nImg, os.path.abspath('similarity.1D.nii'))
+        if self.input.sim_type=='temp':
+            #mask Temporal matrix to target vertices
+            mask = nb.load(targetfile).get_data()
+            mask_asBool = np.asarray(mask,dtype=np.bool)
+            maskedconnectivity = connectivity[mask_asBool,:,:,:]
+            nImg = nb.Nifti1Image(maskedconnectivity,None)
+            nb.save(nImg, os.path.abspath('similarity.1D.nii'))
 
         if self.inputs.sim_type!='temp':
+            #flip connectivity axis from (source x target) -> (target x source)
+            newshape = connectivity.reshape((connectivity.shape[4],1,1,1,connectivity.shape[0]))
+            nImg = nb.Nifti1Image(maskedconnectivity,None)
+            nb.save(nImg, os.path.abspath('connectivity.1D.nii'))
             #make Similarity matrix (target x target) for eta2 and spat
             sim = afni.AutoTcorrelate()
-            sim.inputs.in_file = os.path.abspath('similarity.1D.nii')
+            sim.inputs.in_file = os.path.abspath('connectivity.1D.nii')
             sim.inputs.out_file = os.path.abspath('similarity.1D')
             sim.inputs.eta2 = self.inputs.sim_type=='eta2' #True for eta2
             sim_result = sim.run()
