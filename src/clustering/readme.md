@@ -1,9 +1,9 @@
-HOW TO
+HOW TO make your own personal CLUSTERS!
 ======
 
 Objectives
 ------
-0) [Preprocessing into surface data]#rs_preprocessing_pipeline.py 
+0) [Preprocessing into surface data](#rs_preprocessing_pipeline.py)
 
 1) Building a similarity matrix from timeseries data
 
