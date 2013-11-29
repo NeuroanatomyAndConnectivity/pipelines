@@ -18,14 +18,14 @@ class ClusterMap(BaseInterface):
     output_spec = ClusterMapOutputSpec
 
     def _run_interface(self, runtime):
-        data = nb.load(self.inputs.clusteredfile).get_data()
-        mask = nb.load(self.inputs.maskfile).get_data()
-        indices = np.load(self.inputs.indicesfile)
+        data = nb.load(self.inputs.clusteredfile).get_data() #clustered data
+        mask = nb.load(self.inputs.maskfile).get_data() #target mask
+        indices = np.load(self.inputs.indicesfile) #indices of non-zero values used as input for similarity
 
-        mask_bool = np.asarray(mask,dtype=np.bool)
-        expandedmask = np.zeros((indices.max()+1),dtype=np.bool)
+        mask_bool = np.asarray(mask,dtype=np.bool) #change mask to boolean values
+        expandedmask = np.zeros((indices.max()+1),dtype=np.bool) #inititalize mask to incorporate zero-value indices
         expandedmask[indices] = mask_bool
-        clustermap = np.zeros_like(expandedmask,dtype=np.int)
+        clustermap = np.zeros_like(expandedmask,dtype=np.int) #back to correct indices values for surface data.
         clustermap[expandedmask] = data+1
 
         new_img = nb.Nifti1Image(clustermap, None)
