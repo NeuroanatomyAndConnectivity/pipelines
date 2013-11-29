@@ -26,7 +26,7 @@ class ClusterMap(BaseInterface):
         expandedmask = np.zeros((indices.max()+1),dtype=np.bool)
         expandedmask[indices] = mask_bool
         clustermap = np.zeros_like(expandedmask,dtype=np.int)
-        clustermap[expandedmask] = data
+        clustermap[expandedmask] = data+1
 
         new_img = nb.Nifti1Image(clustermap, None)
         _, base, _ = split_filename(self.inputs.clusteredfile)

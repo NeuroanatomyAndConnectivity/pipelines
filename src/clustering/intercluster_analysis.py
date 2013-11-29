@@ -10,7 +10,6 @@ from clustering.cluster import Cluster
 from variables import subjects, sessions, workingdir, clusterdir, interclusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
 
 subjects= ['0198985','0188854','0186697','0168413','0164900','0162704','0157947','0139212','0136303','0133436']
-sim = ['temp']
 
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
@@ -68,5 +67,5 @@ def get_wf():
 
 if __name__ == '__main__':
     wf = get_wf()               
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})

@@ -22,7 +22,7 @@ from clustering.utils import get_subjects_from
 from variables import subjects, sessions, workingdir, preprocdir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
 
-subjects= ['0198985']
+subjects= ['0198985']#,'0188854','0186697','0168413','0164900','0162704','0157947','0139212','0136303','0133436']
 
 def get_wf():
     
@@ -117,6 +117,6 @@ def get_wf():
 
 if __name__ == '__main__':
     wf = get_wf()               
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
     #wf.run(plugin='Linear')
