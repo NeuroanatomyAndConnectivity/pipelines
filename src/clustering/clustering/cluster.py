@@ -30,6 +30,7 @@ class Cluster(BaseInterface):
         data = nb.load(self.inputs.in_File).get_data()
         corrmatrix = np.squeeze(data)
         if self.inputs.cluster_type == 'spectral':
+            newmatrix = np.where(corrmatrix>0,corrmatrix,0) #threshold at 0 (spectral uses non-negative values)
             labels = spectral(corrmatrix, n_clusters=self.inputs.n_clusters, mode='arpack')
         if self.inputs.cluster_type == 'hiercluster':
             labels = Ward(n_clusters=self.inputs.n_clusters).fit_predict(corrmatrix)
@@ -38,7 +39,7 @@ class Cluster(BaseInterface):
         if self.inputs.cluster_type == 'dbscan':
             labels = DBSCAN(eps=self.inputs.epsilon).fit_predict(corrmatrix)
 
-        new_img = nb.Nifti1Image(labels, None)
+        new_img = nb.Nifti1Image(labels+1, None) #+1 because cluster labels start at 0
         _, base, _ = split_filename(self.inputs.in_File)
         nb.save(new_img, os.path.abspath(base+'_'+str(self.inputs.n_clusters)+'_'+self.inputs.cluster_type+'_'+self.inputs.hemi+'.nii'))
 

@@ -67,7 +67,7 @@ class Concat(BaseInterface):
         convert_result = convert.run()
 
         connectivity = nb.load(convert_result.outputs.out_file).get_data()
-        if self.input.sim_type=='temp':
+        if self.inputs.sim_type=='temp':
             #mask Temporal matrix to target vertices
             mask = nb.load(targetfile).get_data()
             mask_asBool = np.asarray(mask,dtype=np.bool)
@@ -78,7 +78,7 @@ class Concat(BaseInterface):
         if self.inputs.sim_type!='temp':
             #flip connectivity axis from (source x target) -> (target x source)
             newshape = connectivity.reshape((connectivity.shape[4],1,1,1,connectivity.shape[0]))
-            nImg = nb.Nifti1Image(maskedconnectivity,None)
+            nImg = nb.Nifti1Image(newshape,None)
             nb.save(nImg, os.path.abspath('connectivity.1D.nii'))
             #make Similarity matrix (target x target) for eta2 and spat
             sim = afni.AutoTcorrelate()
