@@ -49,17 +49,17 @@ variables.py
 <a name="preprocessing"/>
 rs_preprocessing_pipeline.py
 ------
-[source code](../rs_preprocessing.py "preprocessing pipeline") as modified from [BIPs]
+[source code](../clustering/rs_preprocessing.py "preprocessing pipeline") as modified from [BIPs]
 
 <a name="similarity"/>
 similarity_pipeline.py
 ------
-[source code](../similarity_pipeline.py "similarity pipeline")
+[source code](../clustering/similarity_pipeline.py "similarity pipeline")
 
 <a name="clustering"/>
 clustering_pipeline.py
 ------
-[source code](../clustering_pipeline.py "clustering pipeline")
+[source code](../clustering/clustering_pipeline.py "clustering pipeline")
     * From a command window run: 
         $ freesurfer        
         $ FSL
@@ -76,13 +76,13 @@ clustering_pipeline.py
 <a name="consensus"/>
 consensus_pipeline.py
 ------
-[source code](../consensus_pipeline.py "consensus pipeline")
+[source code](../clustering/consensus_pipeline.py "consensus pipeline")
 
 
 <a name="visualization"/>
 visualization.py
 ------
-[source code](../clustering/visualization.py "visualization code")
+[source code](../clustering/clustering/visualization.py "visualization code")
     * From command window run 
         $ pysurfer fsaverage4 lh inflated
     * type: 
