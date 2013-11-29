@@ -1,17 +1,7 @@
 HOW TO make your own personal CLUSTERS!
 ======
 
-Objectives
-------
-0) [Preprocessing into surface data](#rs_preprocessing_pipeline.py)
-
-1) Building a similarity matrix from timeseries data
-
-2) Clustering the region of interest
-3) 
-2) Visualizing the clusters
-
-Package Dependencies
+Dependencies
 ------
 	* Nipype
     * Nibabel
@@ -20,11 +10,28 @@ Package Dependencies
     * AFNI
     * Pysurfer
 
-Input Directory Structure
+Objectives
+------
+0) [Preprocessing into surface data](#preprocessing)
+
+1) [Building a similarity matrix from timeseries data](#similarity)
+
+2) [Clustering the region of interest](#clustering)
+
+3) [Finding the winner-take-all consensus amongst a set of solutions](#consensus)
+
+2) [Visualizing the clusters](#visualization)
+
+
+Input Files
 ------
 	* Surface data from preprocessing step
         file system organization: [results folder]/volumes/sxfmout/[session]/[subject_id]/[smoothing]/[hemisphere]/[file]
     * fsaverage directory from freesurfer
+
+Output Files
+------
+    * In a new folder called 'clustered', you will find nifti-1 files with a cluster assignment for every vertex on the brain surface.
 
 variables.py
 ------
@@ -39,15 +46,20 @@ variables.py
     * cluster_types is a list of clustering methods you are interested in using
     * n_clusters is a list of the numbers of clusters you like to create. (currently only 7, but could be [7,8,9] for example)
 
+<a name="preprocessing"/>
 rs_preprocessing_pipeline.py
 ------
--[rs_preprocessing_pipeline.py] modified from [BIPs]
+[source code](../rs_preprocessing.py "preprocessing pipeline") as modified from [BIPs]
 
+<a name="similarity"/>
 similarity_pipeline.py
 ------
+[source code](../similarity_pipeline.py "similarity pipeline")
 
+<a name="clustering"/>
 clustering_pipeline.py
 ------
+[source code](../clustering_pipeline.py "clustering pipeline")
     * From a command window run: 
         $ freesurfer        
         $ FSL
@@ -61,13 +73,16 @@ clustering_pipeline.py
       After this, the results are dumped in the results folder.
     * It's not failproof, so if/when there are problems, please report on github or email me.
 
+<a name="consensus"/>
 consensus_pipeline.py
 ------
+[source code](../consensus_pipeline.py "consensus pipeline")
 
-:Output Expectations:
-    * In a new folder called 'clustered', you will find nifti-1 files with a cluster assignment for every vertex on the brain surface.
 
-:Visualization:
+<a name="visualization"/>
+visualization.py
+------
+[source code](../clustering/visualization.py "visualization code")
     * From command window run 
         $ pysurfer fsaverage4 lh inflated
     * type: 
