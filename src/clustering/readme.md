@@ -53,17 +53,18 @@ Create your personal variables.py
  - clusterdir is where clustered maps are found
  - consensusdir is where consensus data are found
 
-- subjects is a list of all subject IDs.
-- sessions is a list of all sessions.
+- Data Specific Info
+ - subjects is a list of all subject IDs.
+ - sessions is a list of all sessions.
+ - hemisphere is a list of hemispheres to run
 
 - Brain Regions of Interest
  - set volume *and/or* surface regions of interest, using freesurfer labels
   -(see [freesurfercolors!.txt](../clustering/clustering/freesurfercolors!.txt) for reference)
-  - if you want the whole brain use an empty set []
+  - if you want the whole brain use an empty set [ ]
   - if you want none of the brain use [-1]
 
 - Parameters for Analysis
- - hemisphere is a list of hemispheres to run
  - similarity_types is a list of similarity matrices you are interested in creating
  - cluster_types is a list of clustering methods you are interested in using
  - n_clusters is a list of the numbers of clusters you like to create.
@@ -83,11 +84,13 @@ similarity_pipeline.py
 clustering_pipeline.py
 ------
 [source code](../clustering/clustering_pipeline.py "clustering pipeline")
-- From a command window run: 
+- From a command window run:
+```mel 
         $ freesurfer        
         $ FSL
         $ AFNI
         $ python cluster_analysis.py
+```
 - What happens is, the file directory becomes organized by the variables you inputed, 
       the data is then grabbed to the working directory, 
       it creates a mask for the prefrontal area (or whatever ROI you supply), 
@@ -106,11 +109,19 @@ consensus_pipeline.py
 visualization.py
 ------
 [source code](../clustering/clustering/visualization.py "visualization code")
-- From command window run 
+- From command window run Pysurfer
+```mel
         $ pysurfer fsaverage4 lh inflated
-- type: 
-        >>> run visualization.py
-- Input one of two things:
-        >>> add_cluster([location of niftifile],[hemisphere])
-        >>> find_cluster([subject_id],[hemisphere],[similarity matrix type],[cluster type],[# of clusters],[session #])
+```
+- In the ipython interface:
+``` python
+        run visualization.py
+```
+- Load the data:
+```python
+        import nibabel as nb
+        clustermap = nb.load('location/of/niftifile').get_data()
+        add_cluster(clustermap,'lh') #or 'rh' for hemisphere
+```
+
 
