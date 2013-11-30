@@ -25,8 +25,8 @@ class ClusterMap(BaseInterface):
         mask_bool = np.asarray(mask,dtype=np.bool) #change mask to boolean values
         expandedmask = np.zeros((indices.max()+1),dtype=np.bool) #inititalize mask to incorporate zero-value indices
         expandedmask[indices] = mask_bool
-        clustermap = np.zeros_like(expandedmask,dtype=np.int) #back to correct indices values for surface data.
-        clustermap[expandedmask] = data+1
+        clustermap = np.zeros_like(expandedmask,dtype=np.float) #back to correct indices values for surface data.
+        clustermap[expandedmask] = data
 
         new_img = nb.Nifti1Image(clustermap, None)
         _, base, _ = split_filename(self.inputs.clusteredfile)

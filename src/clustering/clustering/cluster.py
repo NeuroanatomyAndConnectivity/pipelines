@@ -30,8 +30,9 @@ class Cluster(BaseInterface):
         data = nb.load(self.inputs.in_File).get_data()
         corrmatrix = np.squeeze(data)
         if self.inputs.cluster_type == 'spectral':
-            newmatrix = np.where(corrmatrix>0,corrmatrix,0) #threshold at 0 (spectral uses non-negative values)
-            labels = spectral(corrmatrix, n_clusters=self.inputs.n_clusters, mode='arpack')
+            positivecorrs = np.where(corrmatrix>0,corrmatrix,0) #threshold at 0 (spectral uses non-negative values)
+            newmatrix = np.asarray(positivecorrs,dtype=np.double) #spectral expects dtype=double values
+            labels = spectral(newmatrix, n_clusters=self.inputs.n_clusters, eigen_solver='arpack', assign_labels='discretize')
         if self.inputs.cluster_type == 'hiercluster':
             labels = Ward(n_clusters=self.inputs.n_clusters).fit_predict(corrmatrix)
         if self.inputs.cluster_type == 'kmeans':
