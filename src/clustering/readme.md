@@ -86,10 +86,10 @@ clustering_pipeline.py
 [source code](../clustering/clustering_pipeline.py "clustering pipeline")
 - From a command window run:
 ```mel 
-        $ freesurfer        
-        $ FSL
-        $ AFNI
-        $ python cluster_analysis.py
+user:$ freesurfer        
+user:$ FSL
+user:$ AFNI
+user:$ python cluster_analysis.py
 ```
 - What happens is, the file directory becomes organized by the variables you inputed, 
       the data is then grabbed to the working directory, 
@@ -97,7 +97,6 @@ clustering_pipeline.py
       then the similarity matrices are made using similarity.py, 
       and then they are clustered using clustered.py. 
       After this, the results are dumped in the results folder.
-- It's not failproof, so if/when there are problems, please report on github or email me.
 
 <a name="consensus"/>
 consensus_pipeline.py
@@ -111,17 +110,15 @@ visualization.py
 [source code](../clustering/clustering/visualization.py "visualization code")
 - From command window run Pysurfer
 ```mel
-        $ pysurfer fsaverage4 lh inflated
+$ pysurfer fsaverage4 lh inflated
 ```
 - In the ipython interface:
 ``` python
-        run visualization.py
+run visualization.py
 ```
 - Load the data:
 ```python
-        import nibabel as nb
-        clustermap = nb.load('location/of/niftifile').get_data()
-        add_cluster(clustermap,'lh') #or 'rh' for hemisphere
+import nibabel as nb
+clustermap = nb.load('location/of/niftifile').get_data()
+add_cluster(clustermap,'lh') #or 'rh' for hemisphere
 ```
-
-
