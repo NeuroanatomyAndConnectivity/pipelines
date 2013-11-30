@@ -86,11 +86,11 @@ clustering_pipeline.py
 [source code](../clustering/clustering_pipeline.py "clustering pipeline")
 - From a command window run:
 
-```Shell
-user:$ freesurfer        
-user:$ FSL
-user:$ AFNI
-user:$ python cluster_analysis.py
+```Bash
+user:~$ freesurfer        
+user:~$ FSL
+user:~$ AFNI
+user:~$ python cluster_analysis.py
 ```
 - What happens is, the file directory becomes organized by the variables you inputed, 
       the data is then grabbed to the working directory, 
@@ -111,8 +111,8 @@ visualization.py
 [source code](../clustering/clustering/visualization.py "visualization code")
 - From command window run Pysurfer
 
-```Shell
-$ pysurfer fsaverage4 lh inflated
+```Bash
+user:~$ pysurfer fsaverage4 lh inflated
 ```
 - In the ipython interface:
 
