@@ -85,6 +85,7 @@ clustering_pipeline.py
 ------
 [source code](../clustering/clustering_pipeline.py "clustering pipeline")
 - From a command window run:
+
 ```Shell
 user:$ freesurfer        
 user:$ FSL
@@ -109,14 +110,17 @@ visualization.py
 ------
 [source code](../clustering/clustering/visualization.py "visualization code")
 - From command window run Pysurfer
+
 ```Shell
 $ pysurfer fsaverage4 lh inflated
 ```
 - In the ipython interface:
+
 ```Python
 run visualization.py
 ```
 - Load the data:
+
 ```Python
 import nibabel as nb
 clustermap = nb.load('location/of/niftifile').get_data()
