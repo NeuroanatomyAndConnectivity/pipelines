@@ -1,4 +1,5 @@
 import os
+from clustering.utils import get_vertices, get_subjects_from
 
 basedir = os.path.abspath('/scr/ilz1/nki_enhanced/')
 workingdir = os.path.join(basedir,'workingdir')
@@ -12,7 +13,39 @@ freesurferdir = os.path.join(basedir,'freesurfer')
 niftidir = os.path.join(basedir,'RawData/niftis') #only for preprocessing
 dicomdir = os.path.join(basedir,'RawData/dicoms') #only for preprocessing
 
-from clustering.utils import get_vertices, get_subjects_from
+#INPUT DIRECTORIES#
+#rs_preprocessing#
+rs_preprocessing_dg_template = dict(resting_nifti=os.path.join(niftidir,'*%s*/*%s*'),
+                                         t1_nifti=os.path.join(niftidir,'*%s*/anat.nii.gz')
+                                        )
+rs_preprocessing_dg_args = dict(resting_nifti=[['subject_id', 'session']],
+                                        t1_nifti=[['subject_id']]
+                                       )
+def construct_dicomfiledir(subject_id,session):
+    filedir = os.path.join(dicomdir, subject_id + '/session_1/RfMRI_' + session)
+    return filedir
+
+#similarity#
+similarity_dg_template = dict(sxfm=os.path.join(preprocdir,'aimivolumes/sxfmout/*%s/_fwhm_0/*%s/*/*.nii'),
+                                        volumedata=os.path.join(preprocdir,'aimivolumes/preprocessed_resting/*%s/_fwhm_0/*/*/*.nii.gz'),
+                                        regfile=os.path.join(preprocdir,'aimivolumes/func2anat_transform/*%s/*/*%s.mat'),
+                                        parcfile=os.path.join(freesurferdir,'*%s/mri/aparc.a2009s+aseg.mgz'),)
+similarity_dg_args = dict(sxfm=[['subject_id', 'hemi']],
+                                       volumedata=[['subject_id']],
+                                       regfile=[['subject_id','subject_id']],
+                                       parcfile=[['subject_id']])
+#clustering#
+clustering_dg_template = dict(simmatrix=os.path.join(similaritydir,'similarity/*%s/*%s/*%s/*.nii'),
+                                        maskindex=os.path.join(similaritydir,'maskindex/*%s/*%s/*%s/*.npy'),
+                                        targetmask=os.path.join(similaritydir,'targetmask/*%s/*%s/*%s/*.nii'),
+                                        )
+clustering_dg_args = dict(simmatrix=[['hemi','subject_id', 'sim']],
+                                       maskindex=[['hemi','subject_id', 'sim']],
+                                       targetmask=[['hemi','subject_id', 'sim']])
+#consensus
+consensus_dg_template = dict(all_subjects = os.path.join(clusterdir,'clustered/*%s*/*%s*/*%s*/*%s*/*%s*/*')
+                                      )
+consensus_dg_args= dict(all_subjects=[['hemi', 'sim', '*', 'cluster', 'n_clusters']])
 
 #SUBJECTS & SESSIONS#
 
@@ -47,7 +80,7 @@ subjects = ['0198985'
 exclude_subjects = ['0021001', '0172228']#0021001- strange morphometry, 0172228- no 1400
 subjects = list(set(subjects) - set(exclude_subjects))
 
-sessions = ['session1','session2']
+sessions = ['mx_645','mx_1400','std_2500']
 
 ##ROI LABELS##
 

@@ -17,7 +17,7 @@ from clustering.mask_volume import MaskVolume
 from clustering.concat import Concat
 from clustering.utils import get_subjects_from
 
-from variables import subjects, sessions, workingdir, preprocdir, similaritydir, freesurferdir, hemispheres, similarity_types
+from variables import subjects, sessions, workingdir, preprocdir, similaritydir, freesurferdir, similarity_dg_template, similarity_dg_args, hemispheres, similarity_types
 from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
 
 def get_wf():
@@ -43,14 +43,8 @@ def get_wf():
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
     datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
-    datagrabber.inputs.field_template = dict(sxfm=os.path.join(preprocdir,'aimivolumes/sxfmout/*%s/_fwhm_0/*%s/*/*.nii'),
-                                            volumedata=os.path.join(preprocdir,'aimivolumes/preprocessed_resting/*%s/_fwhm_0/*/*/*.nii.gz'),
-                                            regfile=os.path.join(preprocdir,'aimivolumes/func2anat_transform/*%s/*/*%s.mat'),
-                                            parcfile=os.path.join(freesurferdir,'*%s/mri/aparc.a2009s+aseg.mgz'),)
-    datagrabber.inputs.template_args = dict(sxfm=[['subject_id', 'hemi']],
-                                           volumedata=[['subject_id']],
-                                           regfile=[['subject_id','subject_id']],
-                                           parcfile=[['subject_id']])
+    datagrabber.inputs.field_template = similarity_dg_template
+    datagrabber.inputs.template_args = similarity_dg_args
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
