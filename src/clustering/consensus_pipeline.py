@@ -7,7 +7,7 @@ import nipype.interfaces.io as nio
 
 from clustering.consensus import Consensus
 from clustering.cluster import Cluster
-from variables import subjects, sessions, workingdir, clusterdir, consensusdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters
+from variables import subjects, sessions, workingdir, clusterdir, consensusdir, freesurferdir, consensus_dg_template, consensus_dg_args, hemispheres, similarity_types, cluster_types, n_clusters
 
 def get_wf():
     wf = pe.Workflow(name="main_workflow")
@@ -32,9 +32,10 @@ def get_wf():
 
 ##Datagrabber for subjects##
     dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'cluster', 'sim', 'n_clusters'], outfields=['all_subjects']), name="dg_subjects")
-    dg_subjects.inputs.base_directory = os.path.join(clusterdir,'clustered/')
-    dg_subjects.inputs.template = '*%s*/*%s*/*%s*/*%s*/*%s*/*'
-    dg_subjects.inputs.template_args['all_subjects'] = [['hemi', 'sim', '*', 'cluster', 'n_clusters']]
+    datagrabber.inputs.base_directory = '/'
+    datagrabber.inputs.template = '*'
+    dg_subjects.inputs.template = consensus_dg_template
+    dg_subjects.inputs.template_args = consensus_dg_args
     dg_subjects.inputs.sort_filelist = True
 
     #wf.connect(session_infosource, 'session', dg_subjects, 'session')

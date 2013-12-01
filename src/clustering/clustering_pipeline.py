@@ -19,7 +19,7 @@ from clustering.concat import Concat
 from clustering.cluster_map import ClusterMap
 from clustering.utils import get_subjects_from
 
-from variables import subjects, sessions, workingdir, similaritydir, clusterdir, freesurferdir, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
+from variables import subjects, sessions, workingdir, similaritydir, clusterdir, freesurferdir, clustering_dg_template, clustering_dg_args, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 
 def get_wf():
     
@@ -50,13 +50,8 @@ def get_wf():
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi','sim'], outfields=['simmatrix','maskindex','targetmask']), name="datagrabber")
     datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
-    datagrabber.inputs.field_template = dict(simmatrix=os.path.join(similaritydir,'similarity/*%s/*%s/*%s/*.nii'),
-                                            maskindex=os.path.join(similaritydir,'maskindex/*%s/*%s/*%s/*.npy'),
-                                            targetmask=os.path.join(similaritydir,'targetmask/*%s/*%s/*%s/*.nii'),
-                                            )
-    datagrabber.inputs.template_args = dict(simmatrix=[['hemi','subject_id', 'sim']],
-                                           maskindex=[['hemi','subject_id', 'sim']],
-                                           targetmask=[['hemi','subject_id', 'sim']])
+    datagrabber.inputs.field_template = clustering_dg_template
+    datagrabber.inputs.template_args = clustering_dg_args
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')

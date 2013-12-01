@@ -23,7 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, workingdir, preprocdir, freesurferdir, dicomdir, niftidir, hemispheres
+from variables import subjects, workingdir, preprocdir, freesurferdir, dicomdir, niftidir, construct_dicomfiledir, rs_preprocessing_dg_template, rs_preprocessing_dg_args, hemispheres
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -117,36 +117,36 @@ def get_wf():
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ('subject_id', subjects)
 
-    #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
-    #session_infosource.iterables = ('session', sessions)
+    session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
+    session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi',hemispheres)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
-    datagrabber.inputs.base_directory = niftidir
-    datagrabber.inputs.template = '%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'RfMRI_mx_1400.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat.nii.gz']]
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti','t1_nifti','dicoms']), name="datagrabber", overwrite=True)
+    datagrabber.inputs.base_directory = '/'
+    datagrabber.inputs.template = '*'
+    datagrabber.inputs.field_template = rs_preprocessing_dg_template
+    datagrabber.inputs.template_args = rs_preprocessing_dg_args
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
-    #wf.connect(session_infosource, 'session', datagrabber, 'session')
+    wf.connect(session_infosource, 'session', datagrabber, 'session')
 
 ##DcmStack & MetaData##
+    dicom_filedir = pe.Node(name='dicom_filedir', interface=util.Function(input_names=['subject_id','session'], output_names=['filedir'], function=construct_dicomfiledir))
+
     stack = pe.Node(dcm.DcmStack(), name = 'stack')
     stack.inputs.embed_meta = True
 
     tr_lookup = pe.Node(dcm.LookupMeta(), name = 'tr_lookup')
     tr_lookup.inputs.meta_keys = {'RepetitionTime':'TR'}
 
-    def construct_filedir(subject_id):
-        from variables import dicomdir
-        import os
-        filedir = os.path.join(dicomdir, subject_id + '/session_1/RfMRI_mx_1400')
-        return filedir
-    wf.connect(subject_id_infosource, ('subject_id', construct_filedir), stack, 'dicom_files')        
+    wf.connect(subject_id_infosource, 'subject_id', dicom_filedir, 'subject_id')
+    wf.connect(session_infosource, 'session', dicom_filedir, 'session')
+
+    wf.connect(dicom_filedir, 'filedir', stack, 'dicom_files')        
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
 ##Preproc from BIPs##    
