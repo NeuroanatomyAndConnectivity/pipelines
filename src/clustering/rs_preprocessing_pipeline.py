@@ -23,9 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, sessions, workingdir, preprocdir, freesurferdir, dicomdir, hemispheres
-
-subjects = ['9630905']
+from variables import subjects, workingdir, preprocdir, freesurferdir, dicomdir, niftidir, hemispheres
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -119,22 +117,22 @@ def get_wf():
     subject_id_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subject_id_infosource")
     subject_id_infosource.iterables = ('subject_id', subjects)
 
-    session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
-    session_infosource.iterables = ('session', sessions)
+    #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
+    #session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
-    hemi_infosource.iterables = ('hemi', hemispheres)
+    hemi_infosource.iterables = ('hemi',hemispheres)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','session'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
-    datagrabber.inputs.base_directory = workingdir
-    datagrabber.inputs.template = '%s/%s/%s/%s'
-    datagrabber.inputs.template_args['resting_nifti'] = [['NIFTI','subject_id', 'session', 'RfMRI_mx_645/rest.nii.gz']]
-    datagrabber.inputs.template_args['t1_nifti'] = [['NIFTI','subject_id', 'anat','*']]
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti','t1_nifti']), name="datagrabber", overwrite=True)
+    datagrabber.inputs.base_directory = niftidir
+    datagrabber.inputs.template = '%s/%s'
+    datagrabber.inputs.template_args['resting_nifti'] = [['subject_id', 'RfMRI_mx_1400.nii.gz']]
+    datagrabber.inputs.template_args['t1_nifti'] = [['subject_id', 'anat.nii.gz']]
     datagrabber.inputs.sort_filelist = True
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
-    wf.connect(session_infosource, 'session', datagrabber, 'session')
+    #wf.connect(session_infosource, 'session', datagrabber, 'session')
 
 ##DcmStack & MetaData##
     stack = pe.Node(dcm.DcmStack(), name = 'stack')
@@ -146,12 +144,12 @@ def get_wf():
     def construct_filedir(subject_id):
         from variables import dicomdir
         import os
-        filedir = os.path.join(dicomdir, subject_id + '/anat/')
+        filedir = os.path.join(dicomdir, subject_id + '/session_1/RfMRI_mx_1400')
         return filedir
     wf.connect(subject_id_infosource, ('subject_id', construct_filedir), stack, 'dicom_files')        
     wf.connect(stack, 'out_file', tr_lookup, 'in_file')
 
-##Preproc##    
+##Preproc from BIPs##    
     preproc = create_rest_prep(name="bips_resting_preproc", fieldmap=False)
     zscore = preproc.get_node('z_score')
     preproc.remove_nodes([zscore])
@@ -182,7 +180,7 @@ def get_wf():
     preproc.inputs.inputspec.do_slicetime = True
     preproc.inputs.inputspec.compcor_select = [True, True]
     preproc.inputs.inputspec.filter_type = 'fsl'
-    preproc.get_node('bandpass_filter').iterables = [('highass_freq',[0.01]),('lowpass_freq',[0.1])]
+    preproc.get_node('bandpass_filter').iterables = [('highpass_freq',[0.01]),('lowpass_freq',[0.1])]
     preproc.inputs.inputspec.reg_params = [True, True, True, False, True, False]
     preproc.inputs.inputspec.fssubject_dir = freesurferdir
     #preproc.inputs.inputspec.tr = 1400/1000
@@ -223,17 +221,14 @@ def get_wf():
     sxfm.inputs.target_subject = 'fsaverage4'
     sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
     sxfm.inputs.target_type = 'nii'
-
-    def get_fsid(subject_id):
-        return  subject_id+'/FREESURFER'
 	
     wf.connect(sampler, 'out_file', sxfm, 'source_file')
-    wf.connect(subject_id_infosource, ('subject_id',get_fsid), sxfm, 'source_subject')
+    wf.connect(subject_id_infosource, 'subject_id', sxfm, 'source_subject')
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
 ###########
 
-    report_wf = create_preproc_report_wf(os.path.join(resultsdir + "/reports"))
-    report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
+    #report_wf = create_preproc_report_wf(os.path.join(preprocdir, "reports"))
+    #report_wf.inputs.inputspec.fssubjects_dir = preproc.inputs.inputspec.fssubject_dir
     
     def pick_full_brain_ribbon(l):
         import os
@@ -241,16 +236,16 @@ def get_wf():
             if os.path.split(path)[1] == "ribbon.mgz":
                 return path
             
-    wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
-    wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
-    wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
-    wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
-    wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
-    wf.connect(subject_id_infosource, 'subject_id', report_wf, "inputspec.subject_id")
+    #wf.connect(preproc,"artifactdetect.plot_files", report_wf, "inputspec.art_detect_plot")
+    #wf.connect(preproc,"take_mean_art.weighted_mean.mean_image", report_wf, "inputspec.mean_epi")
+    #wf.connect(preproc,("getmask.register.out_reg_file", list_to_filename), report_wf, "inputspec.reg_file")
+    #wf.connect(preproc,("getmask.fssource.ribbon",pick_full_brain_ribbon), report_wf, "inputspec.ribbon")
+    #wf.connect(preproc,("CompCor.tsnr.tsnr_file", list_to_filename), report_wf, "inputspec.tsnr_file")
+    #wf.connect(subject_id_infosource, 'subject_id', report_wf, "inputspec.subject_id")
 
 ##Datasink##
     ds = pe.Node(nio.DataSink(), name="datasink")
-    ds.inputs.base_directory = os.path.join(resultsdir, "volumes")
+    ds.inputs.base_directory = os.path.join(preprocdir, "aimivolumes")
     wf.connect(preproc, 'bandpass_filter.out_file', ds, "preprocessed_resting")
     wf.connect(preproc, 'getmask.register.out_fsl_file', ds, "func2anat_transform")
     wf.connect(sampler, 'out_file', ds, 'sampledtosurf')
@@ -260,6 +255,6 @@ def get_wf():
 
 if __name__=='__main__':
     wf = get_wf()
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
     #wf.run(plugin="MultiProc", plugin_args={"n_procs":16})
-    wf.run(plugin="Linear", updatehash=True)
+    #wf.run(plugin="Linear", updatehash=True)

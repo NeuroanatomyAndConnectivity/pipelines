@@ -39,9 +39,10 @@ def click_thru(filedir, hemi, n):
     add_cluster(clustermap, hemi)
 
 def add_cluster(clustermap, hemi):
-    hemisphere = hemi[-2:]
-    brain = Brain(subject_id, hemisphere, surface,config_opts=dict(background="lightslategray", cortex="high_contrast"))
-    brain.add_data(clustermap, clustermap.min(), clustermap.max(), colormap='spectral', alpha=.8)
+    brain = Brain(subject_id, hemi, surface,config_opts=dict(background="lightslategray", cortex="high_contrast"))
+    brain.add_data(clustermap, colormap='spectral', alpha=.8)
+    brain.data['colorbar'].number_of_colors = int(clustermap.max())+1
+    brain.data['colorbar'].number_of_labels = int(clustermap.max())+1 ##because -1 denotes masked regions, cluster labels start at 1
 
 if __name__ == '__main__' :
 	#fs.FSCommand.set_default_subjects_dir('SCR/data/Final_High')#(freesurferdir)

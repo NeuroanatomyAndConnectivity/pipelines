@@ -38,7 +38,7 @@ class MaskVolume(BaseInterface):
         invt_result= invt.run()
 
         #define source mask (surface, volume)
-        input_labels = self.input.vol_source+self.input.vol_target
+        input_labels = self.inputs.vol_source+self.inputs.vol_target
         sourcemask = get_mask(input_labels, self.inputs.parcfile)
         sourcemaskfile = os.path.abspath('sourcemask.nii')
         sourceImg = nb.Nifti1Image(sourcemask, None)

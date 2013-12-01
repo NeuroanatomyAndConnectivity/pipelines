@@ -8,14 +8,14 @@ import nibabel as nb
 class MaskSurfaceInputSpec(BaseInterfaceInputSpec):
     sxfmout = File(exists=True, desc='original surface', mandatory=True)
     hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
-
-class MaskSurfaceOutputSpec(TraitedSpec):
-    surface_mask = File(exists=True, desc="surface target as mask")
-    surface_data = File(exists=True, desc="surface masked by sourcemask")
     lhvertices = traits.ListInt(exists=True, desc= 'lh target labels', mandatory=True)
     rhvertices = traits.ListInt(exists=True, desc= 'rh target labels', mandatory=True)
     lhsource = traits.ListInt(exists=True, desc= 'lh source labels', mandatory=True)
     rhsource = traits.ListInt(exists=True, desc= 'rh source labels', mandatory=True)
+
+class MaskSurfaceOutputSpec(TraitedSpec):
+    surface_mask = File(exists=True, desc="surface target as mask")
+    surface_data = File(exists=True, desc="surface masked by sourcemask")
 
 class MaskSurface(BaseInterface):
     input_spec = MaskSurfaceInputSpec
