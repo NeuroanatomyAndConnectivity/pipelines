@@ -77,7 +77,7 @@ class Concat(BaseInterface):
 
         if self.inputs.sim_type!='temp':
             #flip connectivity axis from (source x target) -> (target x source)
-            newshape = connectivity.reshape((connectivity.shape[4],1,1,1,connectivity.shape[0]))
+            newshape = connectivity.T
             nImg = nb.Nifti1Image(newshape,None)
             nb.save(nImg, os.path.abspath('connectivity.1D.nii'))
             #make Similarity matrix (target x target) for eta2 and spat
