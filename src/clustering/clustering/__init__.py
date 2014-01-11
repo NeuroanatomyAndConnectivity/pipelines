@@ -1,10 +1,8 @@
 import concat
 import utils
 import consensus
-import variables
 import cluster
 import similarity
-import variables
 import visualization
 import mask_volume
 import mask_surface

@@ -3,17 +3,11 @@ import nibabel as nb
 import numpy as np
 
 def get_subjects_from(Directory):
-    subjects = []
-    for root, dirnames, fnames in os.walk(Directory):
-	for dirname in dirnames:
-		if 'subject_id' in dirname:
-			for s in dirname.split('_'):
-				if s.isdigit():
-					subjects.append(s)
+    subjects = os.listdir(Directory)
     return subjects
 
-def get_vertices(hemi,freesurferdir, labellist):
-    [vertices,colortable,names] = nb.freesurfer.read_annot(os.path.join(freesurferdir,'fsaverage4/label/'+hemi[-2:]+'.aparc.a2009s.annot'), orig_ids=True)
+def get_vertices(hemi,freesurferdir, fsaverage, labellist):
+    [vertices,colortable,names] = nb.freesurfer.read_annot(os.path.join(freesurferdir,fsaverage+'/label/'+hemi[-2:]+'.aparc.a2009s.annot'), orig_ids=True)
     chosenvertices = list()
     if labellist == []:
         chosenvertices = range(len(vertices)) #all vertices
