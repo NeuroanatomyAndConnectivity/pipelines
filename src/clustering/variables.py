@@ -2,12 +2,15 @@ import os
 from clustering.utils import get_vertices, get_subjects_from
 
 basedir = os.path.abspath('/scr/murg1')
-workingdir = os.path.join(basedir,'clustering/workingdir')
+workingdir = os.path.join(basedir,'clustering/workingdir_' + thisfs)
+
+thisfsav = 'fsaverage4'
+thisfs = 'fs4'
 
 preprocdir = os.path.join(basedir,'alex/results2500')
-similaritydir = os.path.join(basedir,'clustering/similarityResults')
-clusterdir = os.path.join(basedir,'clustering/clusterResults')
-consensusdir = os.path.join(basedir,'clustering/consensusResults')
+similaritydir = os.path.join(basedir,'clustering/similarityResults_' + thisfs)
+clusterdir = os.path.join(basedir,'clustering/clusterResults_' + thisfs)
+consensusdir = os.path.join(basedir,'clustering/consensusResults_' + thisfs)
 
 datadir = os.path.abspath('/scr/kalifornien1/data/nki_enhanced')
 freesurferdir = os.path.join(datadir,'freesurfer')
@@ -27,8 +30,7 @@ def construct_dicomfiledir(subject_id,session):
     return filedir
 
 #similarity#
-similarity_dg_template = dict(sxfm=os.path.join(preprocdir,'%s/preproc/sxfmout/bandpassed/fwhm*/*fsaverage5_%s.nii'),
-                                        volumedata=os.path.join(preprocdir,'%s/preproc/output/bandpassed/fwhm*/*.nii.gz'),
+similarity_dg_template = dict(sxfm=os.path.join(preprocdir,'%s/preproc/sxfmout/bandpassed/fwhm*/*' + thisfsav + '_%s.nii'),                                        volumedata=os.path.join(preprocdir,'%s/preproc/output/bandpassed/fwhm*/*.nii.gz'),
                                         regfile=os.path.join(preprocdir,'%s/preproc/bbreg/*%s_register.mat'),
                                         parcfile=os.path.join(freesurferdir,'%s/mri/aparc.a2009s+aseg.mgz'),)
 similarity_dg_args = dict(sxfm=[['subject_id', 'hemi']],
@@ -68,10 +70,10 @@ volume_targetlabels = [-1]
 #Surface Data#
 surface_sourcelabels = [] #empty set [] means all surface vertices
 surface_targetlabels = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71] #preFrontal Cortex
-lhsource = get_vertices('lh', freesurferdir, 'fsaverage5', surface_sourcelabels)
-rhsource = get_vertices('rh', freesurferdir, 'fsaverage5', surface_sourcelabels)
-lhvertices = get_vertices('lh', freesurferdir, 'fsaverage5', surface_targetlabels)
-rhvertices = get_vertices('rh', freesurferdir, 'fsaverage5', surface_targetlabels)
+lhsource = get_vertices('lh', freesurferdir, thisfsav, surface_sourcelabels)
+rhsource = get_vertices('rh', freesurferdir, thisfsav, surface_sourcelabels)
+lhvertices = get_vertices('lh', freesurferdir, thisfsav, surface_targetlabels)
+rhvertices = get_vertices('rh', freesurferdir, thisfsav, surface_targetlabels)
 
 #Analysis Parameters#
 hemispheres = ['lh', 'rh']
