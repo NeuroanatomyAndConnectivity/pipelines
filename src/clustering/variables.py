@@ -2,15 +2,12 @@ import os
 from clustering.utils import get_vertices, get_subjects_from
 
 basedir = os.path.abspath('/scr/murg1')
-workingdir = os.path.join(basedir,'clustering/workingdir_' + thisfs)
-
-thisfsav = 'fsaverage4'
-thisfs = 'fs4'
+workingdir = os.path.join(basedir,'clustering/workingdir')
 
 preprocdir = os.path.join(basedir,'alex/results2500')
-similaritydir = os.path.join(basedir,'clustering/similarityResults_' + thisfs)
-clusterdir = os.path.join(basedir,'clustering/clusterResults_' + thisfs)
-consensusdir = os.path.join(basedir,'clustering/consensusResults_' + thisfs)
+similaritydir = os.path.join(basedir,'clustering/similarityResults')
+clusterdir = os.path.join(basedir,'clustering/clusterResults')
+consensusdir = os.path.join(basedir,'clustering/consensusResults')
 
 datadir = os.path.abspath('/scr/kalifornien1/data/nki_enhanced')
 freesurferdir = os.path.join(datadir,'freesurfer')
@@ -30,21 +27,21 @@ def construct_dicomfiledir(subject_id,session):
     return filedir
 
 #similarity#
-similarity_dg_template = dict(sxfm=os.path.join(preprocdir,'%s/preproc/sxfmout/bandpassed/fwhm*/*' + thisfsav + '_%s.nii'),                                        volumedata=os.path.join(preprocdir,'%s/preproc/output/bandpassed/fwhm*/*.nii.gz'),
+similarity_dg_template = dict(sxfm=os.path.join(preprocdir,'%s/preproc/sxfmout/bandpassed/fwhm*/*%s_%s.nii'),
+                                        volumedata=os.path.join(preprocdir,'%s/preproc/output/bandpassed/fwhm*/*.nii.gz'),
                                         regfile=os.path.join(preprocdir,'%s/preproc/bbreg/*%s_register.mat'),
-                                        parcfile=os.path.join(freesurferdir,'%s/mri/aparc.a2009s+aseg.mgz'),)
-similarity_dg_args = dict(sxfm=[['subject_id', 'hemi']],
+                                        parcfile=os.path.join(freesurferdir,'%s/mri/aparc.a2009s+aseg.mgz'))
+similarity_dg_args = dict(sxfm=[['subject_id', 'fs', 'hemi']],
                                        volumedata=[['subject_id']],
                                        regfile=[['subject_id','subject_id']],
                                        parcfile=[['subject_id']])
 #clustering#
-clustering_dg_template = dict(simmatrix=os.path.join(similaritydir,'similarity/*%s/*%s/*%s/*.nii'),
-                                        maskindex=os.path.join(similaritydir,'maskindex/*%s/*%s/*%s/*.npy'),
-                                        targetmask=os.path.join(similaritydir,'targetmask/*%s/*%s/*%s/*.nii'),
-                                        )
-clustering_dg_args = dict(simmatrix=[['hemi','subject_id', 'sim']],
-                                       maskindex=[['hemi','subject_id', 'sim']],
-                                       targetmask=[['hemi','subject_id', 'sim']])
+clustering_dg_template = dict(simmatrix=os.path.join(similaritydir,'similarity/*%s/*%s/*%s/*%s/*.nii'),
+                                        maskindex=os.path.join(similaritydir,'maskindex/*%s/*%s/*%s/*%s/*.npy'),
+                                        targetmask=os.path.join(similaritydir,'targetmask/*%s/*%s/*%s/*%s/*.nii'))
+clustering_dg_args = dict(simmatrix=[['fs','hemi','subject_id', 'sim']],
+                                       maskindex=[['fs','hemi','subject_id', 'sim']],
+                                       targetmask=[['fs','hemi','subject_id', 'sim']])
 #consensus
 consensus_dg_template = dict(all_subjects = os.path.join(clusterdir,'clustered/*%s*/*%s*/*%s*/*%s*/*%s*/*')
                                       )
@@ -54,7 +51,7 @@ consensus_dg_args= dict(all_subjects=[['hemi', 'sim', '*', 'cluster', 'n_cluster
 
 allsubjects = get_subjects_from(preprocdir) # extact a list of subjects from a directory's folder names.
 
-subjects = [allsubjects[0]]
+subjects = allsubjects #when testing one subject, use [allsubjects[0]]
 
 exclude_subjects = ['0021001', '0172228']#0021001- strange morphometry, 0172228- no 1400
 subjects = list(set(subjects) - set(exclude_subjects))
@@ -64,20 +61,17 @@ sessions = ['tr_2500']#'mx_645','mx_1400',
 ##ROI LABELS##
 
 #Volume Data#
-volume_sourcelabels = [-1]#-1 means No Volume #Example: [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital
+volume_sourcelabels = [-1]#-1 means No Volume #Example: [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital, #from clustering/freesurfercolors!.txt
 volume_targetlabels = [-1]
 
 #Surface Data#
 surface_sourcelabels = [] #empty set [] means all surface vertices
 surface_targetlabels = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71] #preFrontal Cortex
-lhsource = get_vertices('lh', freesurferdir, thisfsav, surface_sourcelabels)
-rhsource = get_vertices('rh', freesurferdir, thisfsav, surface_sourcelabels)
-lhvertices = get_vertices('lh', freesurferdir, thisfsav, surface_targetlabels)
-rhvertices = get_vertices('rh', freesurferdir, thisfsav, surface_targetlabels)
 
 #Analysis Parameters#
+fsaverage = ['fsaverage4', 'fsaverage5']
 hemispheres = ['lh', 'rh']
 similarity_types = ['temp', 'spat'] #'eta2'
 cluster_types = ['hiercluster', 'kmeans', 'spectral']#, 'dbscan']
-n_clusters = [6]#[2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22]
-epsilon = .03
+n_clusters = [2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22]
+epsilon = .03 #parameter for dbscan

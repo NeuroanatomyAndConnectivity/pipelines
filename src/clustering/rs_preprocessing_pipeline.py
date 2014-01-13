@@ -23,7 +23,7 @@ if display:
 from bips.utils.reportsink.io import ReportSink
 from nipype.utils.filemanip import list_to_filename
 
-from variables import subjects, workingdir, preprocdir, freesurferdir, dicomdir, niftidir, construct_dicomfiledir, rs_preprocessing_dg_template, rs_preprocessing_dg_args, hemispheres
+from variables import subjects, workingdir, preprocdir, freesurferdir, dicomdir, niftidir, construct_dicomfiledir, rs_preprocessing_dg_template, rs_preprocessing_dg_args, hemispheres, fsaverage
 
 def create_preproc_report_wf(report_dir, name="preproc_report"):
     wf = pe.Workflow(name=name)
@@ -121,7 +121,10 @@ def get_wf():
     session_infosource.iterables = ('session', sessions)
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
-    hemi_infosource.iterables = ('hemi',hemispheres)
+    hemi_infosource.iterables = ('hemi', hemispheres)
+
+    fs_infosource = pe.Node(util.IdentityInterface(fields=['fs']), name="fs_infosource")
+    fs_infosource.iterables = ('fs', fsaverage)
 
 ##Datagrabber##
     datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id'], outfields=['resting_nifti','t1_nifti','dicoms']), name="datagrabber", overwrite=True)
@@ -218,13 +221,14 @@ def get_wf():
 
 ##SXFM##
     sxfm = pe.Node(fs.SurfaceTransform(), name = 'sxfm')
-    sxfm.inputs.target_subject = 'fsaverage4'
     sxfm.inputs.args = '--cortex --fwhm-src 5 --noreshape'
     sxfm.inputs.target_type = 'nii'
 	
     wf.connect(sampler, 'out_file', sxfm, 'source_file')
     wf.connect(subject_id_infosource, 'subject_id', sxfm, 'source_subject')
     wf.connect(hemi_infosource, 'hemi', sxfm, 'hemi')
+    wf.connect(fs_infosource, 'fs', sxfm, 'target_subject')
+
 ###########
 
     #report_wf = create_preproc_report_wf(os.path.join(preprocdir, "reports"))
