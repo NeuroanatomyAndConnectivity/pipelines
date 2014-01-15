@@ -49,12 +49,12 @@ class Consensus(BaseInterface):
         totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
         cImg = nb.Nifti1Image(totalConsensus, None)
         nb.save(cImg, os.path.abspath(base+'_ConsensusMat.nii'))
-        ##make consensus into stability measure##
-        likeness = abs(totalConsensus-0.5)
-        stability = np.mean(likeness,axis=0)
+        ##make consensus into stability measure## remove stability measure for now...
+        #likeness = abs(totalConsensus-0.5)
+        #stability = np.mean(likeness,axis=0)
         ##make into NiftiImage##
-        nImg = nb.Nifti1Image(stability, None)
-        nb.save(nImg, os.path.abspath(base+'_Stability.nii'))
+        #nImg = nb.Nifti1Image(stability, None)
+        #nb.save(nImg, os.path.abspath(base+'_Stability.nii'))
         return runtime
 
     def _list_outputs(self):

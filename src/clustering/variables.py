@@ -51,7 +51,8 @@ consensus_dg_args= dict(all_subjects=[['hemi', 'sim', '*', 'cluster', 'n_cluster
 
 allsubjects = get_subjects_from(preprocdir) # extact a list of subjects from a directory's folder names.
 
-subjects = allsubjects #when testing one subject, use [allsubjects[0]]
+#subjects = allsubjects #when testing one subject, use 
+subjects = 0103645
 
 exclude_subjects = ['0021001', '0172228']#0021001- strange morphometry, 0172228- no 1400
 subjects = list(set(subjects) - set(exclude_subjects))
@@ -66,12 +67,12 @@ volume_targetlabels = [-1]
 
 #Surface Data#
 surface_sourcelabels = [] #empty set [] means all surface vertices
-surface_targetlabels = [1, 5, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71] #preFrontal Cortex
+surface_targetlabels = [1, 5, 12, 13, 14, 15, 16, 24, 31, 32, 39, 40, 53, 54, 55, 63, 64, 65, 71] #preFrontal Cortex
 
 #Analysis Parameters#
-fsaverage = ['fsaverage4', 'fsaverage5']
+fsaverage = ['fsaverage4']#, 'fsaverage5']
 hemispheres = ['lh', 'rh']
-similarity_types = ['temp', 'spat'] #'eta2'
-cluster_types = ['hiercluster', 'kmeans', 'spectral']#, 'dbscan']
-n_clusters = [2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22]
+similarity_types = ['spat']#['temp', 'spat'] #'eta2'
+cluster_types = ['spectral']#['hiercluster', 'kmeans', 'spectral']#, 'dbscan']
+n_clusters = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
 epsilon = .03 #parameter for dbscan
