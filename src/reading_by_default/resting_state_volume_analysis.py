@@ -172,15 +172,9 @@ if __name__ == '__main__':
     wf.connect(datagrabber, "epi_mask", restrict_to_brain, "mask_file")
     
     extract_timeseries = pe.Node(afni.Maskave(), name="extract_timeseries")
-    extract_timeseries.inputs.quiet = True
-    wf.connect(restrict_to_brain, "out_file", extract_timeseries, "mask")
-    wf.connect(timeseries_datagrabber, "preprocessed_epi", extract_timeseries, "in_file")
-    
     correlation_map = pe.Node(afni.Fim(), name="correlation_map")
-    correlation_map.inputs.out = "Correlation"
-    correlation_map.inputs.outputtype = "NIFTI"
-    correlation_map.inputs.out_file = "corr_map.nii"
     wf.connect(extract_timeseries, "out_file", correlation_map, "ideal_file")
+    
     wf.connect(timeseries_datagrabber, "preprocessed_epi", correlation_map, "in_file")
     
     z_trans = pe.Node(interface=afni.Calc(), name='z_trans')
