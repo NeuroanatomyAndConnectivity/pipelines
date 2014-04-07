@@ -17,9 +17,8 @@ from clustering.mask_surface import MaskSurface
 from clustering.mask_volume import MaskVolume
 from clustering.concat import Concat
 from clustering.cluster_map import ClusterMap
-from clustering.utils import get_subjects_from
 
-from variables import subjects, sessions, workingdir, similaritydir, clusterdir, freesurferdir, clustering_dg_template, clustering_dg_args, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
+from variables import subjects, sessions, fsaverage, workingdir, similaritydir, clusterdir, freesurferdir, clustering_dg_template, clustering_dg_args, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 
 def get_wf():
     
@@ -33,8 +32,11 @@ def get_wf():
 
     #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     #session_infosource.iterables = ('session', sessions)
+
+    fs_infosource = pe.Node(util.IdentityInterface(fields=['fs']), name="fs_infosource")
+    fs_infosource.iterables = ('fs', fsaverage)
     
-    hemi_infosource = pe.Node(util.  IdentityInterface(fields=['hemi']), name="hemi_infosource")
+    hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
 
     sim_infosource = pe.Node(util.IdentityInterface(fields=['sim']), name="sim_infosource")
@@ -47,7 +49,7 @@ def get_wf():
     n_clusters_infosource.iterables = ('n_clusters', n_clusters)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi','sim'], outfields=['simmatrix','maskindex','targetmask']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','fs','hemi','sim'], outfields=['simmatrix','maskindex','targetmask']), name="datagrabber")
     datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
     datagrabber.inputs.field_template = clustering_dg_template
@@ -56,6 +58,7 @@ def get_wf():
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     #wf.connect(session_infosource, 'session', datagrabber, 'session')
+    wf.connect(fs_infosource, 'fs', datagrabber, 'fs')
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
     wf.connect(sim_infosource, 'sim', datagrabber, 'sim')
 
@@ -82,6 +85,6 @@ def get_wf():
 
 if __name__ == '__main__':
     wf = get_wf()               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
     #wf.run(plugin='Linear')

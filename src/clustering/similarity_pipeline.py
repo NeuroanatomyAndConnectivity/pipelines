@@ -15,10 +15,9 @@ from clustering.similarity import Similarity
 from clustering.mask_surface import MaskSurface
 from clustering.mask_volume import MaskVolume
 from clustering.concat import Concat
-from clustering.utils import get_subjects_from
 
-from variables import subjects, sessions, workingdir, preprocdir, similaritydir, freesurferdir, similarity_dg_template, similarity_dg_args, hemispheres, similarity_types
-from variables import volume_sourcelabels, volume_targetlabels, lhsource, rhsource, lhvertices, rhvertices
+from variables import subjects, sessions, workingdir, preprocdir, similaritydir, freesurferdir, similarity_dg_template, similarity_dg_args, fsaverage, hemispheres, similarity_types
+from variables import volume_sourcelabels, volume_targetlabels, surface_sourcelabels, surface_targetlabels
 
 def get_wf():
     
@@ -33,6 +32,9 @@ def get_wf():
     #session_infosource = pe.Node(util.IdentityInterface(fields=['session']), name="session_infosource")
     #session_infosource.iterables = ('session', sessions)
     
+    fs_infosource = pe.Node(util.IdentityInterface(fields=['fs']), name="fs_infosource")
+    fs_infosource.iterables = ('fs', fsaverage)
+
     hemi_infosource = pe.Node(util.  IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', hemispheres)
 
@@ -40,7 +42,7 @@ def get_wf():
     sim_infosource.iterables = ('sim', similarity_types)
 
 ##Datagrabber##
-    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
+    datagrabber = pe.Node(nio.DataGrabber(infields=['subject_id','hemi','fs'], outfields=['sxfm','volumedata','regfile','parcfile']), name="datagrabber")
     datagrabber.inputs.base_directory = '/'
     datagrabber.inputs.template = '*'
     datagrabber.inputs.field_template = similarity_dg_template
@@ -49,15 +51,16 @@ def get_wf():
 
     wf.connect(subject_id_infosource, 'subject_id', datagrabber, 'subject_id')
     #wf.connect(session_infosource, 'session', datagrabber, 'session')
+    wf.connect(fs_infosource, 'fs', datagrabber, 'fs')
     wf.connect(hemi_infosource, 'hemi', datagrabber, 'hemi')
 
 ##mask surface##
     Smask = pe.Node(MaskSurface(), name = 'surface_mask')
-    Smask.inputs.lhvertices = lhvertices
-    Smask.inputs.rhvertices = rhvertices
-    Smask.inputs.lhsource = lhsource
-    Smask.inputs.rhsource = rhsource
+    Smask.inputs.sourcelabels = surface_sourcelabels
+    Smask.inputs.targetlabels = surface_targetlabels
+    Smask.inputs.freesurferdir = freesurferdir
     wf.connect(hemi_infosource, 'hemi', Smask, 'hemi')
+    wf.connect(fs_infosource, 'fs', Smask, 'fs')
     wf.connect(datagrabber, 'sxfm', Smask, 'sxfmout')
 
 ##mask volume##
@@ -87,6 +90,6 @@ def get_wf():
 
 if __name__ == '__main__':
     wf = get_wf()               
-    wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
     #wf.run(plugin='Linear')

@@ -79,10 +79,10 @@ class Concat(BaseInterface):
             #flip connectivity axis from (source x target) -> (target x source)
             newshape = connectivity.T
             nImg = nb.Nifti1Image(newshape,None)
-            nb.save(nImg, os.path.abspath('connectivity.1D.nii'))
+            nb.save(nImg, os.path.abspath('connectivity.T.1D.nii'))
             #make Similarity matrix (target x target) for eta2 and spat
             sim = afni.AutoTcorrelate()
-            sim.inputs.in_file = os.path.abspath('connectivity.1D.nii')
+            sim.inputs.in_file = os.path.abspath('connectivity.T.1D.nii')
             sim.inputs.out_file = os.path.abspath('similarity.1D')
             sim.inputs.eta2 = self.inputs.sim_type=='eta2' #True for eta2
             sim_result = sim.run()
@@ -91,7 +91,6 @@ class Concat(BaseInterface):
             convert.inputs.in_file = sim_result.outputs.out_file
             convert.inputs.out_file = os.path.abspath('similarity.1D.nii')
             convert_result = convert.run()
-
         return runtime
 
     def _list_outputs(self):

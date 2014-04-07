@@ -32,9 +32,9 @@ def get_wf():
 
 ##Datagrabber for subjects##
     dg_subjects = pe.Node(nio.DataGrabber(infields=['hemi', 'cluster', 'sim', 'n_clusters'], outfields=['all_subjects']), name="dg_subjects")
-    datagrabber.inputs.base_directory = '/'
-    datagrabber.inputs.template = '*'
-    dg_subjects.inputs.template = consensus_dg_template
+    dg_subjects.inputs.base_directory = '/'
+    dg_subjects.inputs.template = '*'
+    dg_subjects.inputs.field_template = consensus_dg_template
     dg_subjects.inputs.template_args = consensus_dg_args
     dg_subjects.inputs.sort_filelist = True
 
