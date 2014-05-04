@@ -72,7 +72,7 @@ def get_wf():
     wf.connect(datagrabber, 'parcfile', Vmask, 'parcfile')
 
 ##concatenate data & run similarity##
-    concat = pe.Node(Concat(), name = 'concat')
+    concat = pe.JoinNode(Concat(), joinsource="hemi", joinfield=["surface_input"], unique=True, name = 'concat')
     wf.connect(Vmask, 'volume_input_mask', concat, 'volume_input')
     wf.connect(Vmask, 'volume_target_mask', concat, 'volume_target_mask')
     wf.connect(Smask, 'surface_data', concat, 'surface_input')
