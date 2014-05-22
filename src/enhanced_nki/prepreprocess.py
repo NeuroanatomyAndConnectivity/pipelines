@@ -253,7 +253,8 @@ if __name__ == '__main__':
     ds2.inputs.regexp_substitutions = [('_subject_id_[0-9]*/', '')]
     wf.connect(join, "out", ds2, "freesurfer")
     
-    wf.run(plugin="CondorDAGMan")
+    #wf.run(plugin="CondorDAGMan")
+    wf.write_graph()
                           
                           
     

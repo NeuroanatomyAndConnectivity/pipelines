@@ -54,17 +54,29 @@
     ], 
     "regress_before_PCA": true, 
     "run_datagrabber_without_submitting": false, 
-    "run_using_plugin": false, 
+    "run_using_plugin": true, 
     "save_script_only": false, 
     "sigma": 2, 
-    "sink_dir": "/scr/kansas1/results2500", 
+    "sink_dir": "/scr/kalifornien1/data/nki_enhanced/preprocessed_fmri/results2500", 
     "smooth_type": "isotropic", 
     "speedup": [
         5
     ], 
     "subjects": [
-        "0108781", 
-        "0106459"
+        "0181960", 
+        "0187884", 
+        "0118439", 
+        "0113044", 
+        "0164093", 
+        "0120652", 
+        "0103714", 
+        "0120538", 
+        "0181535", 
+        "0144495", 
+        "0141473", 
+        "0136018", 
+        "0161530", 
+        "0155568"
     ], 
     "surf_dir": "/scr/kalifornien1/data/nki_enhanced/freesurfer", 
     "surface_fwhm": 0.0, 
