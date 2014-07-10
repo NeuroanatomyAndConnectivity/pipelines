@@ -11,7 +11,9 @@ class ClusterMapInputSpec(BaseInterfaceInputSpec):
     maskfile = File(exists=True, desc='total target mask', mandatory=True)
 
 class ClusterMapOutputSpec(TraitedSpec):
-    clustermapfile = File(exists=True, desc="clustered data with proper indices")
+    clustermapfile = File(exists=True, desc="clustered data with proper indices in nifti")
+    clustermaptext = File(exists=True, desc="clustered data with proper indices as text")
+
 
 class ClusterMap(BaseInterface):
     input_spec = ClusterMapInputSpec
@@ -27,9 +29,9 @@ class ClusterMap(BaseInterface):
         expandedmask[indices] = mask_bool
         clustermap = np.zeros_like(expandedmask,dtype=np.float) #back to correct indices values for surface data.
         clustermap[expandedmask] = data
-
         new_img = nb.Nifti1Image(clustermap, None)
         _, base, _ = split_filename(self.inputs.clusteredfile)
+        np.savetxt(os.path.abspath(base+'_clustermap.txt'), np.reshape(clustermap, (1, clustermap.size)), fmt='%d',delimiter=' ')
         nb.save(new_img, os.path.abspath(base+'_clustermap.nii'))
         return runtime
 
@@ -38,4 +40,5 @@ class ClusterMap(BaseInterface):
         fname = self.inputs.clusteredfile
         _, base, _ = split_filename(fname)
         outputs["clustermapfile"] = os.path.abspath(base+'_clustermap.nii')
+        outputs["clustermaptext"] = os.path.abspath(base+'_clustermap.txt')
         return outputs

@@ -5,9 +5,9 @@ workingdir = os.path.abspath('/scr/kongo2/moreno_nipype/fmri_clust_workingdir')
 
 basedir = os.path.abspath('/scr/kongo2/NKI_fMRI_output')
 preprocdir = os.path.abspath('/scr/kalifornien1/data/nki_enhanced/preprocessed_fmri/results2500')
-similaritydir = os.path.join(basedir,'similarity_results_all_labels')
-clusterdir = os.path.join(basedir, 'clustering_results_all_labels')
-consensusdir = os.path.join(basedir, 'consensus_results_all_labels')
+similaritydir = os.path.join(basedir,'similarity_results')
+clusterdir = os.path.join(basedir, 'clustering_results')
+consensusdir = os.path.join(basedir, 'consensus_results')
 
 datadir = os.path.abspath('/scr/kalifornien1/data/nki_enhanced')
 freesurferdir = os.path.join(datadir,'freesurfer')
@@ -51,15 +51,19 @@ consensus_dg_args= dict(all_subjects=[['hemi', 'sim', '*', 'cluster', 'n_cluster
 #allsubjects = get_subjects_from(preprocdir) # extact a list of subjects from a directory's folder names.
 allsubjects = []
 
-#subjects = ["0103872","0105290","0105488","0105521","0106057","0106780","0108184","0108355","0108781","0109459","0109727","0109819","0111282","0112249","0112347","0112536","0112828","0113013","0113030","0114008","0114232","0115321","0115454","0115564","0115684","0115824","0116039","0116065","0116415","0116834","0116842","0117168","0117902","0117964","0118051","0119351","0119866"]
-#subjects = ["0103872","0105290","0105488","0105521","0106057","0106780","0108184","0108355","0108781","0109459","0109727","0109819"]
-#subjects = ["0111282","0112249","0112347","0112536","0112828","0113013","0113030","0114008","0114232","0115321","0115454","0115564","0115684","0115824","0116039","0116065","0116415","0116834","0116842","0117168","0117902","0117964","0118051","0119351","0119866"]
-subjects=["0108781"]#,"0117168"]
 
-exclude_subjects = [] # no fmri data for these subjects
+subjects=["0102157","0103645","0103872","0105290","0105488","0105521","0106057","0106780","0108184","0108355","0108781","0109459","0109727","0109819",
+              "0111282","0112249","0112347","0112536","0112828","0113013","0113030","0114008","0114232","0115321","0115454","0115564","0115684",
+              "0115824","0116039","0116065","0116415","0116834","0116842","0117168","0117902","0117964","0118051","0119351","0119866",
+              "0120557","0120818","0120859","0121400","0122169","0122512","0122816","0122844","0123048","0123116","0123173","0123429","0123657"
+              ]
+
+#subjects = ["subject_average"]
+
+#subjects = ["average"]
+
+exclude_subjects = []#0021001- strange morphometry, 0172228- no 1400
 subjects = list(set(subjects) - set(exclude_subjects))
-
-sessions = ['tr_2500']#'mx_645','mx_1400',
 
 ##ROI LABELS##
 
@@ -67,23 +71,26 @@ sessions = ['tr_2500']#'mx_645','mx_1400',
 volume_sourcelabels = [-1]#-1 means No Volume #Example: [12114, 12113] #ctx_rh_G_front_inf-Triangul, ctx_rh_G_front_inf-Orbital, #from clustering/freesurfercolors!.txt
 volume_targetlabels = [-1]
 
+sessions = ['tr_2500']#'mx_645','mx_1400',
+
 #Surface Data#
 surface_sourcelabels = [] #empty set [] means all surface vertices
-#surface_targetlabels = [] #preFrontal Cortex
-#surface_targetlabels = [1,5,6,7,8,12,13,14,15,16,24,29,31,32,53,54,55,63,64,65,69,70,71] #preFrontal Cortex
-surface_targetlabels = []
+surface_targetlabels = [1,5,6,7,8,12,13,14,15,16,24,29,31,32,53,54,55,63,64,65,69,70,71] #preFrontal Cortex
 
 #Analysis Parameters#
-fsaverage = ['fsaverage4', 'fsaverage5']
+fsaverage = ['fs5']# ,'fs4']
 hemispheres = ['lh', 'rh']
-similarity_types = ['spat','temp','eta2']
-#similarity_types = ['eta2']
-cluster_types = ['kmeans','spectral','hiercluster','dbscan']
-#cluster_types = ['kmeans','spectral']
+#hemispheres = ['lh']
+similarity_types = ['temp']#,'nat']
+cluster_types = ['kmeans']#,'spectral','hiercluster','dbscan']
 #cluster_types = ['hiercluster','dbscan']
-n_clusters = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+#n_clusters = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+#n_clusters = [3,5,7,9,12,15,18,20]
+
 epsilon = .03 #parameter for dbscan
 
+
+n_clusters = [9]
 
 """
 spat simmats for 010 011 (except 3 excluded)

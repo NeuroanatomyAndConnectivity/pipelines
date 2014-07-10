@@ -46,14 +46,13 @@ class Consensus(BaseInterface):
         mask = nb.load(self.inputs.maskfile).get_data()
         src_paths = self._get_filelist(self.inputs.in_Files)
         _, base, _ = split_filename(self.inputs.in_Files[0])
-        sumConsensus = []
+        
+        cons_dim = len(nb.load(src_paths[0]).get_data())
+        totalConsensus = np.zeros((cons_dim,cons_dim), dtype=np.float64)
         for src_path in src_paths:
-            sumConsensus.append(self.makeConsensus(src_path,mask))
+            totalConsensus += self.makeConsensus(src_path)
         ##average across all consensus instances and output##
-        vImg = nb.Nifti1Image(np.asarray(sumConsensus), None)
-        nb.save(vImg, os.path.abspath(base+'_VariationMat.nii'))
-
-        totalConsensus = reduce(lambda x,y: x+y, sumConsensus)/len(sumConsensus)
+        totalConsensus = totalConsensus/len(src_paths)
         cImg = nb.Nifti1Image(totalConsensus, None)
         nb.save(cImg, os.path.abspath(base+'_ConsensusMat.nii'))
         ##make consensus into stability measure## remove stability measure for now...

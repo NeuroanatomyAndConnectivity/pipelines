@@ -35,7 +35,7 @@ def add_cluster(clustermap, hemi, fsaverage):
 if __name__ == '__main__' :
 	#fs.FSCommand.set_default_subjects_dir('SCR/data/Final_High')#(freesurferdir)
 	#pysurfer visualization
-    fsaverage = 'fsaverage4'
+    fsaverage = 'fsaverage5'
     hemi = 'lh'
     surface = 'pial'
     brain = Brain(fsaverage, hemi, surface, config_opts=dict(background="lightslategray", cortex="high_contrast"))
