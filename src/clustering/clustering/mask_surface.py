@@ -4,14 +4,15 @@ from nipype.interfaces.base import BaseInterface, \
 
 import numpy as np
 import nibabel as nb
+from clustering.utils import get_vertices
 
 class MaskSurfaceInputSpec(BaseInterfaceInputSpec):
     sxfmout = File(exists=True, desc='original surface', mandatory=True)
     hemi = traits.String(exists=True, desc='hemisphere', mandatory=True)
-    lhvertices = traits.ListInt(exists=True, desc= 'lh target labels', mandatory=True)
-    rhvertices = traits.ListInt(exists=True, desc= 'rh target labels', mandatory=True)
-    lhsource = traits.ListInt(exists=True, desc= 'lh source labels', mandatory=True)
-    rhsource = traits.ListInt(exists=True, desc= 'rh source labels', mandatory=True)
+    fs = traits.String(exists=True, desc='fsaverage', mandatory=True)
+    freesurferdir = traits.String(exists=True, desc='freesurfer directory', mandatory=True)
+    sourcelabels = traits.ListInt(exists=True, desc= 'source labels', mandatory=True)
+    targetlabels = traits.ListInt(exists=True, desc= 'target labels', mandatory=True)
 
 class MaskSurfaceOutputSpec(TraitedSpec):
     surface_mask = File(exists=True, desc="surface target as mask")
@@ -32,12 +33,14 @@ class MaskSurface(BaseInterface):
 
         sourcemask = np.zeros(origdata, dtype=np.int)
         targetmask = np.zeros(origdata, dtype=np.int)
-        if hemi == 'lh': 
-            sourcemask[self.inputs.lhsource] = 1
-            targetmask[self.inputs.lhvertices] = 1
-        if hemi == 'rh': 
-            sourcemask[self.inputs.rhsource] = 1
-            targetmask[self.inputs.rhvertices] = 1
+
+        #define which vertices are in the ROI
+        source_vertices = get_vertices(self.inputs.hemi, self.inputs.freesurferdir, self.inputs.fs, self.inputs.sourcelabels)
+        target_vertices = get_vertices(self.inputs.hemi, self.inputs.freesurferdir, self.inputs.fs, self.inputs.targetlabels)
+
+        #create masks for source and target vertices
+        sourcemask[source_vertices] = 1
+        targetmask[target_vertices] = 1
 
         targetmask.resize(origdata)
         targetmaskImg = nb.Nifti1Image(targetmask, affine)
