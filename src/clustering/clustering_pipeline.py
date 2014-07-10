@@ -80,11 +80,15 @@ def get_wf():
     ds = pe.Node(nio.DataSink(), name="datasink")
     ds.inputs.base_directory = clusterdir
     wf.connect(clustermap, 'clustermapfile', ds, 'clustered')
+    wf.connect(clustermap, 'clustermaptext', ds, 'clustered.@1')
     wf.write_graph()
     return wf
 
 if __name__ == '__main__':
+    cfg = dict(logging=dict(workflow_level = 'INFO'), execution={'remove_unnecessary_outputs': False, 'job_finished_timeout': 120, 'stop_on_first_rerun': False, 'stop_on_first_crash': True, 'display_variable':":1"} )
+    config.update_config(cfg)
     wf = get_wf()               
-    #wf.run(plugin="CondorDAGMan", plugin_args={"template":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
-    wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
+    wf.run(plugin="CondorDAGMan", plugin_args={"initial_specs":"universe = vanilla\nnotification = Error\ngetenv = true\nrequest_memory=4000"})
+    #wf.run(plugin="MultiProc", plugin_args={"n_procs":8})
     #wf.run(plugin='Linear')
+    #wf.run(plugin='Condor')
