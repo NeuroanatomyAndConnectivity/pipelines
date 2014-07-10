@@ -18,7 +18,7 @@ from clustering.mask_volume import MaskVolume
 from clustering.concat import Concat
 from clustering.cluster_map import ClusterMap
 
-from variables import subjects, sessions, fsaverage, workingdir, similaritydir, clusterdir, freesurferdir, clustering_dg_template, clustering_dg_args, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
+from variables import subjects, sessions, workingdir, similaritydir, clusterdir, freesurferdir, clustering_dg_template, clustering_dg_args, hemispheres, similarity_types, cluster_types, n_clusters, epsilon
 
 def get_wf():
     

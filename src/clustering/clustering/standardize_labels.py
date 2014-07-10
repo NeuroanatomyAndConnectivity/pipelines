@@ -1,5 +1,6 @@
 import nibabel as nb
 import numpy as np
+import sys
 
 def separate_clusters(clustermap):
     assignments = np.zeros((clustermap.max()+1,len(clustermap)))
@@ -51,8 +52,12 @@ def cluster_diff(clustermap1,clustermap2): #non-commutative
     return clustermap1_stdlabels, diff, stability
 
 if __name__ == '__main__':
-clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0192736/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
-clustermap1 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_hiercluster/_n_clusters_6/similarity.1D_6_hiercluster_lh_clustermap.nii').get_data()
-#clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
-#intersubject: stability=264 intercluster_method: stability=300 both: stability=
-newmap, diffmap, stability = cluster_diff(clustermap1,clustermap2) #apply clustermap2's assignments to clustermap1
+    clustermap1 = nb.load(sys.argv[1]).get_data()
+    clustermap2 = nb.load(sys.argv[2]).get_data()
+    #clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0192736/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
+    #clustermap1 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_hiercluster/_n_clusters_6/similarity.1D_6_hiercluster_lh_clustermap.nii').get_data()
+    #clustermap2 = nb.load('/scr/ilz1/nki_enhanced/Results/clusterResults/clustered/_hemi_lh/_subject_id_0188854/_sim_temp/_cluster_kmeans/_n_clusters_6/similarity.1D_6_kmeans_lh_clustermap.nii').get_data()
+    #intersubject: stability=264 intercluster_method: stability=300 both: stability=
+    newmap, diffmap, stability = cluster_diff(clustermap1,clustermap2) #apply clustermap2's assignments to clustermap1
+    new_img = nb.Nifti1Image(newmap, None)
+    nb.save(new_img, 'newimg.nii')

@@ -12,14 +12,14 @@ regressors_file = dropbox_root + "/papers/neural_correlates_of_mind_wandering/re
 from variables import workingdir, resultsdir, subjects
 
 derivatives = {
-                "reho": "reho_z/_subject_id_%s/*.nii.gz",
-#                "alff": "alff_z/_subject_id_%s/*.nii.gz",
-                "falff": "falff_z/_subject_id_%s/*.nii.gz",
-#                 "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
-#                 "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
-#                 "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
-#                 "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
-                "centrality": "degree_centrality/_subject_id_%s/_z_score0/*.nii.gz",
+                 "reho": "reho_z/_subject_id_%s/*.nii.gz",
+# #                "alff": "alff_z/_subject_id_%s/*.nii.gz",
+                 "falff": "falff_z/_subject_id_%s/*.nii.gz",
+# #                 "left_pcc": "seed_based_z/_roi_-8.-56.26/_subject_id_%s/*.nii.gz",
+# #                 "right_pcc": "seed_based_z/_roi_8.-56.26/_subject_id_%s/*.nii.gz",
+# #                 "left_mpfc": "seed_based_z/_roi_-6.52.-2/_subject_id_%s/*.nii.gz",
+# #                 "right_mpfc": "seed_based_z/_roi_6.52.-2/_subject_id_%s/*.nii.gz",
+                 "centrality": "degree_centrality/_subject_id_%s/_z_score0/*.nii.gz",
 #                  "falff_neg_past_c96": "post_hoc_seed_based_z/_seed_name_falff_neg_past_c96/_subject_id_%s/corr_map_calc.nii.gz", 
 #                  "falff_neg_words_c70": "post_hoc_seed_based_z/_seed_name_falff_neg_words_c70/_subject_id_%s/corr_map_calc.nii.gz", 
 #                  "falff_pos_negative_c81": "post_hoc_seed_based_z/_seed_name_falff_pos_negative_c81/_subject_id_%s/corr_map_calc.nii.gz", 
@@ -32,7 +32,24 @@ derivatives = {
 #                  "falff_pos_friends_c83": "post_hoc_seed_based_z/_seed_name_falff_pos_friends_c83/_subject_id_%s/corr_map_calc.nii.gz",
 #                  "reho_neg_future_c73": "post_hoc_seed_based_z/_seed_name_reho_neg_future_c73/_subject_id_%s/corr_map_calc.nii.gz",
 #                  "falff_neg_words_c70_and_c71": "post_hoc_seed_based_z/_seed_name_falff_neg_words_c70/_subject_id_%s/corr_map_calc.nii.gz", 
-               }
+#                 "all_with_MeanFD_falff_neg_past_c97": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_neg_past_c97/_subject_id_%s/corr_map_calc.nii.gz",
+#                 "all_with_MeanFD_falff_neg_words_c75": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_neg_words_c75/_subject_id_%s/corr_map_calc.nii.gz",
+#                 "all_with_MeanFD_falff_pos_negative_c81": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_pos_negative_c81/_subject_id_%s/corr_map_calc.nii.gz",
+#                 "all_with_MeanFD_reho_pos_friends_c92": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_reho_pos_friends_c92/_subject_id_%s/corr_map_calc.nii.gz",
+#                 'all_with_MeanFD_falff_neg_positive_c88': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_neg_positive_c88/_subject_id_%s/corr_map_calc.nii.gz",
+#                 "all_with_MeanFD_falff_pos_friends_c84": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_pos_friends_c84/_subject_id_%s/corr_map_calc.nii.gz",
+#                 "all_with_MeanFD_falff_pos_positive_c98": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_pos_positive_c98/_subject_id_%s/corr_map_calc.nii.gz",
+#                 "all_with_MeanFD_reho_pos_specific_vague_c78": "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_reho_pos_specific_vague_c78/_subject_id_%s/corr_map_calc.nii.gz",
+#                 'all_with_MeanFD_falff_neg_words_c74_and_c75': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_neg_words_c74_and_c75/_subject_id_%s/corr_map_calc.nii.gz",
+#                 'all_with_MeanFD_falff_pos_images_c88': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_pos_images_c88/_subject_id_%s/corr_map_calc.nii.gz",
+#                 'all_with_MeanFD_reho_neg_future_c75': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_reho_neg_future_c75/_subject_id_%s/corr_map_calc.nii.gz",
+                    'all_with_MeanFD_falff_past_higher_than_future_c76': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_past_higher_than_future_c76/_subject_id_%s/corr_map_calc.nii.gz",
+                    'all_with_MeanFD_falff_neg_friends_c82': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_neg_friends_c82/_subject_id_%s/corr_map_calc.nii.gz",
+                    'all_with_MeanFD_falff_neg_specific_vague_c77': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_falff_neg_specific_vague_c77/_subject_id_%s/corr_map_calc.nii.gz",
+                    'all_with_MeanFD_centrality_neg_past_c26': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_centrality_neg_past_c26_2mm/_subject_id_%s/corr_map_calc.nii.gz",
+                    'all_with_MeanFD_reho_neg_negative_c87': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_reho_neg_negative_c87/_subject_id_%s/corr_map_calc.nii.gz",
+                    'all_with_MeanFD_reho_positive_higher_than_negative_c75': "post_hoc_seed_based_z/_seed_name_all_with_MeanFD_reho_positive_higher_than_negative_c75/_subject_id_%s/corr_map_calc.nii.gz",
+                }
 
 # for i, RSNid in enumerate([5, 15, 9, 6, 8, 1, 2, 7, 12, 11]):
 #     derivatives["RSN%d"%(i+1)] = "dual_regression_z/_subject_id_%s" + "/temp_reg_map_z_%04d.nii.gz"%RSNid
@@ -109,9 +126,11 @@ if __name__ == '__main__':
     model_nodes = {}       
     confounds = ["age","sex"]
     
-    regressors_df = pd.read_csv(regressors_file).sort(columns="queried_ursi")
+#     regressors_df = pd.read_csv(regressors_file).sort(columns="queried_ursi")
+    regressors_df = pd.read_csv("/scr/adenauer1/PowerFolder/Dropbox/papers/neural_correlates_of_mind_wandering/regressors_new_MeanFD.csv").sort(columns="queried_ursi")
     subjects_int = [int(s) for s in subjects]
     regressors_df = regressors_df[regressors_df.queried_ursi.isin(subjects_int)]
+    
     regressors_df["male"] = (regressors_df["sex"] == "male")*1
     regressors_df["female"] = (regressors_df["sex"] == "female")*1
     for reg in ["past", "future", "positive", "negative", "friends", "specific_vague", "words", "images", "firstSum", "secondSum", "age"]:
@@ -147,16 +166,73 @@ if __name__ == '__main__':
 #                                          ("male_higher_than_female", 'T', ["male", "female"], [1, -1]),
 #                                          ("female_higher_than_male", 'T', ["male", "female"], [-1, 1]),
                                         ]},
+              "all_with_MeanFD": {"variables": ["past", "future", "positive", "negative", "friends", "specific_vague", "words", "images","age", "male", "female", "newMeanFD"],
+                           "contrasts": [
+                                         ("pos_past", 'T', ["past"], [1]),
+                                         ("neg_past", 'T', ["past"], [-1]),
+                                         ("pos_future", 'T', ["future"], [1]),
+                                         ("neg_future", 'T', ["future"], [-1]),
+                                         ("past_higher_than_future", 'T', ["past", "future"], [1, -1]),
+                                         ("future_higher_than_past", 'T', ["future", "past"], [1, -1]),
+                                         ("pos_positive", 'T', ["positive"], [1]),
+                                         ("neg_positive", 'T', ["positive"], [-1]),
+                                         ("pos_negative", 'T', ["negative"], [1]),
+                                         ("neg_negative", 'T', ["negative"], [-1]),
+                                         ("positive_higher_than_negative", 'T', ["positive", "negative"], [1, -1]),
+                                         ("negative_higher_than_positive", 'T', ["negative", "positive"], [1, -1]),
+                                         ("pos_friends", 'T', ["friends"], [1]),
+                                         ("neg_friends", 'T', ["friends"], [-1]),
+                                         ("pos_specific_vague", 'T', ["specific_vague"], [1]),
+                                         ("neg_specific_vague", 'T', ["specific_vague"], [-1]),
+                                         ("pos_words", 'T', ["words"], [1]),
+                                         ("neg_words", 'T', ["words"], [-1]),
+                                         ("pos_images", 'T', ["images"], [1]),
+                                         ("neg_images", 'T', ["images"], [-1]),
+#                                          ("pos_age", 'T', ["age"], [1]),
+#                                          ("neg_age", 'T', ["age"], [-1]),
+#                                          ("male_higher_than_female", 'T', ["male", "female"], [1, -1]),
+#                                          ("female_higher_than_male", 'T', ["male", "female"], [-1, 1]),
+                                        ]},
+              "first_with_MeanFD": {"variables": ["past", "future", "positive", "negative", "friends", "age", "male", "female", "newMeanFD"],
+                           "contrasts": [
+                                         ("pos_past", 'T', ["past"], [1]),
+                                         ("neg_past", 'T', ["past"], [-1]),
+                                         ("pos_future", 'T', ["future"], [1]),
+                                         ("neg_future", 'T', ["future"], [-1]),
+                                         ("past_higher_than_future", 'T', ["past", "future"], [1, -1]),
+                                         ("future_higher_than_past", 'T', ["future", "past"], [1, -1]),
+                                         ("pos_positive", 'T', ["positive"], [1]),
+                                         ("neg_positive", 'T', ["positive"], [-1]),
+                                         ("pos_negative", 'T', ["negative"], [1]),
+                                         ("neg_negative", 'T', ["negative"], [-1]),
+                                         ("positive_higher_than_negative", 'T', ["positive", "negative"], [1, -1]),
+                                         ("negative_higher_than_positive", 'T', ["negative", "positive"], [1, -1]),
+                                         ("pos_friends", 'T', ["friends"], [1]),
+                                         ("neg_friends", 'T', ["friends"], [-1]),
+                                        ]},
+              "second_with_MeanFD": {"variables": ["specific_vague", "words", "images","age", "male", "female", "newMeanFD"],
+                           "contrasts": [
+                                         ("pos_specific_vague", 'T', ["specific_vague"], [1]),
+                                         ("neg_specific_vague", 'T', ["specific_vague"], [-1]),
+                                         ("pos_words", 'T', ["words"], [1]),
+                                         ("neg_words", 'T', ["words"], [-1]),
+                                         ("pos_images", 'T', ["images"], [1]),
+                                         ("neg_images", 'T', ["images"], [-1]),
+#                                          ("pos_age", 'T', ["age"], [1]),
+#                                          ("neg_age", 'T', ["age"], [-1]),
+#                                          ("male_higher_than_female", 'T', ["male", "female"], [1, -1]),
+#                                          ("female_higher_than_male", 'T', ["male", "female"], [-1, 1]),
+                                        ]},
 #               "age_sex": {"variables": ["age", "male", "female"],
 #                            "contrasts": [("pos_age", 'T', ["age"], [1]),
 #                                          ("neg_age", 'T', ["age"], [-1]),
 #                                          ("male_higher_than_female", 'T', ["male", "female"], [1, -1]),
 #                                          ("female_higher_than_male", 'T', ["male", "female"], [-1, 1]),
 #                                         ]},
-            "first_sum": {"variables": ["firstSum", "age", "male", "female"],
-                         "contrasts": [("pos_firstSum", 'T', ["firstSum"], [1]),
-                                       ("neg_firstSum", 'T', ["firstSum"], [-1]),
-                                      ]}
+#             "first_sum": {"variables": ["firstSum", "age", "male", "female"],
+#                          "contrasts": [("pos_firstSum", 'T', ["firstSum"], [1]),
+#                                        ("neg_firstSum", 'T', ["firstSum"], [-1]),
+#                                       ]}
                 }
     for name, model in models.iteritems():
         model_node = pe.Node(fsl.MultipleRegressDesign(), name="%s_model"%name)
@@ -263,51 +339,51 @@ if __name__ == '__main__':
         wf.connect(avg, "out_file", one_sample_t_test, "avg_file")
         wf.connect(stddev, "out_file", one_sample_t_test, "stddev_file")
         
-        for model in model_nodes.keys():
-#             estimate = pe.Node(fsl.Randomise(), name="%s_%s_estimate"%(model,derivative))
-#             estimate.inputs.tfce = True
-#             estimate.inputs.raw_stats_imgs = True
-#             estimate.inputs.vox_p_values = True
-#             estimate.inputs.demean = True
-#             estimate.inputs.base_name = "%s_%s"%(model,derivative)
-#             wf.connect(merge, "merged_file", estimate, "in_file")
+#         for model in model_nodes.keys():
+# #             estimate = pe.Node(fsl.Randomise(), name="%s_%s_estimate"%(model,derivative))
+# #             estimate.inputs.tfce = True
+# #             estimate.inputs.raw_stats_imgs = True
+# #             estimate.inputs.vox_p_values = True
+# #             estimate.inputs.demean = True
+# #             estimate.inputs.base_name = "%s_%s"%(model,derivative)
+# #             wf.connect(merge, "merged_file", estimate, "in_file")
+# #             if derivative != "centrality":
+# #                 wf.connect(restrict_to_grey, "out_file", estimate, "mask")
+# #             wf.connect(model_nodes[model], "design_mat", estimate, "design_mat")
+# #             wf.connect(model_nodes[model], "design_con", estimate, "tcon")
+# #             wf.connect(model_nodes[model], "design_fts", estimate, "fcon")
+#              
+#             estimate_parametric = create_group_analysis(wf_name="%s_%s_estimate_parametric"%(model,derivative))
+#             estimate_parametric.inputs.inputspec.z_threshold = 2.3
+#             estimate_parametric.inputs.inputspec.p_threshold = 1 #0.05/2.0/4.0
+#             estimate_parametric.inputs.inputspec.parameters = ("/scr/adenauer1/templates/", "MNI152")
+#             merge_mask = estimate_parametric.get_node("merge_mask")
+#             cluster = estimate_parametric.get_node("easy_thresh_z").get_node("cluster")
+#             cluster.inputs.use_mm = True
+#             estimate_parametric.remove_nodes([merge_mask])
+#             estimate_parametric.remove_nodes([estimate_parametric.get_node("easy_thresh_z").get_node("overlay"),
+#                                               estimate_parametric.get_node("easy_thresh_z").get_node("slicer"),
+#                                               estimate_parametric.get_node("easy_thresh_z").get_node("create_tuple"),
+#                                               estimate_parametric.get_node("easy_thresh_z").get_node("image_stats"),
+#                                               estimate_parametric.get_node("easy_thresh_z").get_node("get_backgroundimage2")])
 #             if derivative != "centrality":
-#                 wf.connect(restrict_to_grey, "out_file", estimate, "mask")
-#             wf.connect(model_nodes[model], "design_mat", estimate, "design_mat")
-#             wf.connect(model_nodes[model], "design_con", estimate, "tcon")
-#             wf.connect(model_nodes[model], "design_fts", estimate, "fcon")
-            
-            estimate_parametric = create_group_analysis(wf_name="%s_%s_estimate_parametric"%(model,derivative))
-            estimate_parametric.inputs.inputspec.z_threshold = 2.3
-            estimate_parametric.inputs.inputspec.p_threshold = 1 #0.05/2.0/4.0
-            estimate_parametric.inputs.inputspec.parameters = ("/scr/adenauer1/templates/", "MNI152")
-            merge_mask = estimate_parametric.get_node("merge_mask")
-            cluster = estimate_parametric.get_node("easy_thresh_z").get_node("cluster")
-            cluster.inputs.use_mm = True
-            estimate_parametric.remove_nodes([merge_mask])
-            estimate_parametric.remove_nodes([estimate_parametric.get_node("easy_thresh_z").get_node("overlay"),
-                                              estimate_parametric.get_node("easy_thresh_z").get_node("slicer"),
-                                              estimate_parametric.get_node("easy_thresh_z").get_node("create_tuple"),
-                                              estimate_parametric.get_node("easy_thresh_z").get_node("image_stats"),
-                                              estimate_parametric.get_node("easy_thresh_z").get_node("get_backgroundimage2")])
-            if derivative != "centrality":
-                wf.connect(restrict_to_grey, "out_file", estimate_parametric, "fsl_flameo.mask_file")
-                wf.connect(restrict_to_grey, "out_file", estimate_parametric, "easy_thresh_z.inputspec.merge_mask")
-            else:
-                estimate_parametric.inputs.fsl_flameo.mask_file = "/scr/kalifornien1/mindwandering/workingdir/calculating_measures/downsample_mask/group_mask_masked_flirt.nii.gz"
-                estimate_parametric.inputs.easy_thresh_z.inputspec.merge_mask = "/scr/kalifornien1/mindwandering/workingdir/calculating_measures/downsample_mask/group_mask_masked_flirt.nii.gz"
-
-
-            estimate_parametric.inputs.easy_thresh_z.cluster.out_threshold_file = [ "derivative_" + derivative + "_model_" + model + "_contrast_" + c[0] + ".nii.gz" for c in models[model]["contrasts"]]
-            wf.connect(derivative_datasource, "derivative_files", estimate_parametric, "inputspec.zmap_files")
-            wf.connect(model_nodes[model], "design_mat", estimate_parametric, "inputspec.mat_file")
-            wf.connect(model_nodes[model], "design_con", estimate_parametric, "inputspec.con_file")
-            wf.connect(model_nodes[model], "design_fts", estimate_parametric, "inputspec.fts_file")
-            wf.connect(model_nodes[model], "design_grp", estimate_parametric, "inputspec.grp_file")
-            
+#                 wf.connect(restrict_to_grey, "out_file", estimate_parametric, "fsl_flameo.mask_file")
+#                 wf.connect(restrict_to_grey, "out_file", estimate_parametric, "easy_thresh_z.inputspec.merge_mask")
+#             else:
+#                 estimate_parametric.inputs.fsl_flameo.mask_file = "/scr/kalifornien1/mindwandering/workingdir/calculating_measures/downsample_mask/group_mask_masked_flirt.nii.gz"
+#                 estimate_parametric.inputs.easy_thresh_z.inputspec.merge_mask = "/scr/kalifornien1/mindwandering/workingdir/calculating_measures/downsample_mask/group_mask_masked_flirt.nii.gz"
+#  
+#  
+#             estimate_parametric.inputs.easy_thresh_z.cluster.out_threshold_file = [ "derivative_" + derivative + "_model_" + model + "_contrast_" + c[0] + ".nii.gz" for c in models[model]["contrasts"]]
+#             wf.connect(derivative_datasource, "derivative_files", estimate_parametric, "inputspec.zmap_files")
+#             wf.connect(model_nodes[model], "design_mat", estimate_parametric, "inputspec.mat_file")
+#             wf.connect(model_nodes[model], "design_con", estimate_parametric, "inputspec.con_file")
+#             wf.connect(model_nodes[model], "design_fts", estimate_parametric, "inputspec.fts_file")
+#             wf.connect(model_nodes[model], "design_grp", estimate_parametric, "inputspec.grp_file")
+             
     
     #wf.write_graph(graph2use='exec')
-    wf.run(plugin="MultiProc")
+    wf.run(plugin="Linear")
     
     
 # for file in glob("/scr/kalifornien1/mindwandering/workingdir/group_analysis/*estimate/*tfce_corrp_tstat*.nii.gz"):
