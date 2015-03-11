@@ -3,8 +3,11 @@ import nipype.interfaces.utility as util
 from nipype.interfaces.mipav.developer import JistIntensityMp2rageMasking, MedicAlgorithmSPECTRE2010
 
 '''
-Workflow to remove noisy background from MP2RAGE images unsing cbstools
-(can also includ skullstrip)
+Workflow to remove noisy background from MP2RAGE images 
+AND SKULLSTRIP unsing cbstools
+==============================
+adapt import in run_structural.py to "structural_cbstools" to use this.
+
 '''
 
 
