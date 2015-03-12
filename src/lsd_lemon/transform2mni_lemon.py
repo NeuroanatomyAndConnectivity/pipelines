@@ -8,8 +8,7 @@ import sys
 
 '''
 Project preprocessed lemon resting state from 
-individual structural to MNI152 space
-without upsampling
+individual structural to MNI152 2mm space
 '''
 
 subject_list= sys.argv[1]
