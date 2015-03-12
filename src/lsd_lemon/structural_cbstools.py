@@ -78,6 +78,6 @@ def create_structural(subject, working_dir, data_dir, freesurfer_dir, out_dir,
                                                ('outputnode.std2anat_transforms', 'preprocessed.anat.transforms2mni.@std2anat_transforms')])
                             ])
     #struct_preproc.write_graph(dotfilename='struct_preproc.dot', graph2use='colored', format='pdf', simple_form=True)
-    #struct_preproc.run()
-    struct_preproc.run(plugin='CondorDAGMan')
+    struct_preproc.run()
+    #struct_preproc.run(plugin='CondorDAGMan')
     #struct_preproc.run(plugin='MultiProc')
