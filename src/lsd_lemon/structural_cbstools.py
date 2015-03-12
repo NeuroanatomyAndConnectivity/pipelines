@@ -1,13 +1,13 @@
 from nipype.pipeline.engine import Node, Workflow
 import nipype.interfaces.io as nio
 from struct_preproc.mp2rage_cbstools import create_mp2rage_pipeline
-from struct_preproc.reconall import create_reconall_pipeline
+from struct_preproc.reconall_noskullstrip import create_reconall_pipeline
 from struct_preproc.mgzconvert import create_mgzconvert_pipeline
 from struct_preproc.ants import create_normalize_pipeline
 
 '''
 Main workflow for preprocessing of mp2rage data
-INCL INITIAL SKULLSTRIP WITH CBSTOOLS
+INITIAL SKULLSTRIP WITH CBSTOOLS
 (adapt import in run_structural.py to use this)
 ===============================================
 Uses file structure set up by conversion
@@ -79,5 +79,5 @@ def create_structural(subject, working_dir, data_dir, freesurfer_dir, out_dir,
                             ])
     #struct_preproc.write_graph(dotfilename='struct_preproc.dot', graph2use='colored', format='pdf', simple_form=True)
     #struct_preproc.run()
-    struct_preproc.run()
+    struct_preproc.run(plugin='CondorDAGMan')
     #struct_preproc.run(plugin='MultiProc')
