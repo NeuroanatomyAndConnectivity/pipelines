@@ -1,3 +1,4 @@
+#from structural_cbstools import create_structural
 from structural import create_structural
 import sys
 
