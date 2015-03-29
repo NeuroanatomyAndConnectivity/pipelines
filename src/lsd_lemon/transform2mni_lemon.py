@@ -60,6 +60,7 @@ applytransform = Node(ants.ApplyTransforms(input_image_type = 3,
                       name='applytransform')
    
 applytransform.inputs.reference_image=template
+applytransform.plugin_args={'submit_specs': 'request_memory = 30000'}
 mni.connect([(selectfiles, applytransform, [('rest', 'input_image')]),
              (translist, applytransform, [('out', 'transforms')])
              ])
@@ -68,6 +69,7 @@ mni.connect([(selectfiles, applytransform, [('rest', 'input_image')]),
 changedt = Node(fsl.ChangeDataType(output_datatype='float',
                                    out_file='rest_preprocessed2mni.nii.gz'),
                 name='changedt')
+changedt.plugin_args={'submit_specs': 'request_memory = 30000'}
 mni.connect([(applytransform, changedt, [('output_image', 'in_file')])])
 
 
