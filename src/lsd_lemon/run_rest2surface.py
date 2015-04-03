@@ -36,12 +36,14 @@ if __name__ == '__main__':
     wf.base_dir = workingDir
     wf.config['execution']['crashdump_dir'] = wf.base_dir + "/crash_files"
 
-    subjects_infosource = pe.Node(util.IdentityInterface(fields=['subject_id', 'run', 'hemi']),
-                                  name="subjects_infosource")
+    subjects_infosource = pe.Node(util.IdentityInterface(fields=['subject_id']), name="subjects_infosource")
     subjects_infosource.iterables = ('subject_id', subjects)
 
     scan_infosource = pe.Node(util.IdentityInterface(fields=['scan']), name="scan_infosource")
     scan_infosource.iterables = ('scan', ['rest1a', 'rest1b', 'rest2a', 'rest2b'])
+
+    template_infosource = pe.Node(util.IdentityInterface(fields=['fsaverage']), name="template_infosource")
+    template_infosource.iterables = ('fsaverage', ['fsaverage4', 'fsaverage5'])
 
     hemi_infosource = pe.Node(util.IdentityInterface(fields=['hemi']), name="hemi_infosource")
     hemi_infosource.iterables = ('hemi', ['lh', 'rh'])
@@ -56,7 +58,6 @@ if __name__ == '__main__':
     datagrabber.inputs.raise_on_empty = False
 
     vol2surf = pe.Node(SampleToSurface(subjects_dir=freesurferDir,
-                                       target_subject='fsaverage5',
                                        args='--surfreg sphere.reg',
                                        reg_header=True,
                                        cortex_mask=True,
@@ -67,9 +68,9 @@ if __name__ == '__main__':
                        name='vol2surf_lsd')
 
 
-    def gen_out_file(scan, subject_id, hemi):
-        return "lsd_%s_%s_preprocessed_fsaverage5_%s.mgz" % (scan, subject_id, hemi)
-    output_name = pe.Node(util.Function(input_names=['scan', 'subject_id', 'hemi'],
+    def gen_out_file(scan, subject_id, hemi, fsaverage):
+        return "lsd_%s_%s_preprocessed_%s_%s.mgz" % (scan, subject_id, fsaverage, hemi)
+    output_name = pe.Node(util.Function(input_names=['scan', 'subject_id', 'hemi', 'fsaverage'],
                                         output_names=['name'],
                                         function=gen_out_file),
                           name="output_name")
@@ -80,9 +81,11 @@ if __name__ == '__main__':
                 (scan_infosource, datagrabber, [('scan', 'scan')]),
                 (subjects_infosource, output_name, [('subject_id', 'subject_id')]),
                 (scan_infosource, output_name, [('scan', 'scan')]),
+                (template_infosource, output_name, [('fsaverage', 'fsaverage')]),
                 (hemi_infosource, output_name, [('hemi', 'hemi')]),
                 (subjects_infosource, vol2surf, [('subject_id', 'subject_id')]),
                 (hemi_infosource, vol2surf, [('hemi', 'hemi')]),
+                (template_infosource, vol2surf, [('fsaverage', 'target_subject')]),
                 (datagrabber, vol2surf, [('resting_lsd', 'source_file')]),
                 (output_name, vol2surf, [('name', 'out_file')]),
                 (vol2surf, datasink, [('out_file', 'LSD_rest_surf')])
