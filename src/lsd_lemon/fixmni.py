@@ -60,7 +60,8 @@ scan_infosource=Node(util.IdentityInterface(fields=['scan']),
 scan_infosource.iterables=('scan', scans)
 
 # select files
-templates={'brain': '{subject_id}/freesurfer/mri/brain.finalsurfs.mgz',
+templates={'anat' : '{subject_id}/preprocessed/T1.nii.gz',
+           'brainmask': '{subject_id}/freesurfer/mri/brainmask.mgz',
            'func' : '{subject_id}/preprocessed/lsd_resting/{scan}/rest_preprocessed.nii.gz'
            }
 selectfiles = Node(nio.SelectFiles(templates,
@@ -71,24 +72,24 @@ mni.connect([(subject_infosource, selectfiles, [('subject_id', 'subject_id')]),
              (scan_infosource, selectfiles, [('scan', 'scan')])
              ])
 
-# convert brain to niigz
+# convert brainmask to niigz
 convert=Node(fs.MRIConvert(out_type='niigz',
-                           out_file='brain.nii.gz'),
+                           out_file='brainmask.nii.gz'),
                    name='convert')
 
-mni.connect([(selectfiles, convert, [('brain', 'in_file')])])
+mni.connect([(selectfiles, convert, [('brainmask', 'in_file')])])
 
 # mask T1 with brainmask
-#brain = Node(fsl.ApplyMask(out_file='T1_brain_tight.nii.gz'),
-#             name='brain')
-#mni.connect([(convert, brain, [('out_file', 'mask_file')]),
-#             (selectfiles, brain, [('anat', 'in_file')])])
+brain = Node(fsl.ApplyMask(out_file='T1_brain.nii.gz'),
+             name='brain')
+mni.connect([(convert, brain, [('out_file', 'mask_file')]),
+             (selectfiles, brain, [('anat', 'in_file')])])
 
 # workflow to normalize anatomy to standard space
 normalize=create_normalize_pipeline()
 normalize.inputs.inputnode.standard = template_1mm
 
-mni.connect([(convert, normalize, [('out_file', 'inputnode.anat')])])
+mni.connect([(brain, normalize, [('out_file', 'inputnode.anat')])])
 
 # project preprocessed time series to mni
 
@@ -119,7 +120,7 @@ anatsink = Node(nio.DataSink(parameterization=False),
 
 mni.connect([(subject_infosource, anatsink, [(('subject_id', makebase_anat, anat_dir), 'base_directory')]),
              (convert, anatsink, [('out_file', '@brainmask')]),
-             #(brain, anatsink, [('out_file', '@brain')]),
+             (brain, anatsink, [('out_file', '@brain')]),
              (normalize, anatsink, [('outputnode.anat2std', '@anat2std'),
                                 ('outputnode.anat2std_transforms', 'transforms2mni.@anat2std_transforms'),
                                 ('outputnode.std2anat_transforms', 'transforms2mni.@std2anat_transforms')])
