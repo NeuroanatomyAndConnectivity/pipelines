@@ -33,7 +33,7 @@ def create_lemon_resting(subject, working_dir, data_dir, freesurfer_dir, out_dir
                'fmap_mag' : 'nifti/lemon_resting/fmap_mag.nii.gz',
                'anat_head' : 'preprocessed/anat/T1.nii.gz',
                'anat_brain' : 'preprocessed/anat/T1_brain.nii.gz',
-               'brain_mask' : 'preprocessed/anat/T1_brain_mask.nii.gz'
+               'func_mask' : 'preprocessed/anat/func_mask.nii.gz'
                }
     selectfiles = Node(nio.SelectFiles(templates,
                                        base_directory=data_dir),
@@ -101,7 +101,7 @@ def create_lemon_resting(subject, working_dir, data_dir, freesurfer_dir, out_dir
                           (selectfiles, transform_ts, [('anat_head', 'inputnode.anat_head')]),
                           (moco, transform_ts, [('outputnode.mat_moco', 'inputnode.mat_moco')]),
                           (fmap_coreg, transform_ts, [('outputnode.fmap_fullwarp', 'inputnode.fullwarp')]),
-                          (selectfiles, denoise, [('brain_mask', 'inputnode.brain_mask'),
+                          (selectfiles, denoise, [('func_mask', 'inputnode.brain_mask'),
                                                   ('anat_brain', 'inputnode.anat_brain')]),
                           (moco, denoise, [('outputnode.par_moco', 'inputnode.moco_par')]),
                           (fmap_coreg, denoise, [('outputnode.epi2anat_dat', 'inputnode.epi2anat_dat'),
