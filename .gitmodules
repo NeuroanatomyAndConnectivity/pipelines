@@ -1,0 +1,3 @@
+[submodule "src/lsd_lemon/mriqc"]
+	path = src/lsd_lemon/mriqc
+	url = https://github.com/juhuntenburg/mriqc.git
