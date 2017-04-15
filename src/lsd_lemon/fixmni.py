@@ -7,6 +7,7 @@ import sys
 import pandas as pd
 from struct_preproc.ants import create_normalize_pipeline
 import nipype.interfaces.freesurfer as fs
+import os
 
 
 '''
@@ -15,14 +16,21 @@ Calculate transform to MNI with new smaller brainmask
 
 subjects = list(pd.read_csv('/home/raid3/huntenburg/workspace/lsd_data_paper/lsd_preproc.csv', dtype='str')['ID'])
 subjects.sort()
-subjects = ['03820']
-
+ 
 #subjects.remove('24945')
 #subjects.remove('25188')
 #subjects.remove('26500')
 #subjects.remove('25019')
 #subjects.remove('23700')
-scans = ['rest1a']#, 'rest1b', 'rest2a', 'rest2b']
+
+scan = 'rest1a'
+
+for sub in subjects: 
+    if os.path.isfile('/nobackup/ilz2/fix_mni/%s/preprocessed/lsd_resting/%s/rest_preprocessed2mni.nii.gz'%(scan,sub)):
+        print sub
+        subjects.remove(sub)
+
+
 
 # for some subjects exclude scans
 #subjects = ['24945']
@@ -55,41 +63,40 @@ subject_infosource=Node(util.IdentityInterface(fields=['subject_id']),
 subject_infosource.iterables=('subject_id', subjects)
 
 # infosource to iterate over scans
-scan_infosource=Node(util.IdentityInterface(fields=['scan']),
-                        name='scan_infosource')
-scan_infosource.iterables=('scan', scans)
+# scan_infosource=Node(util.IdentityInterface(fields=['scan']),
+#                         name='scan_infosource')
+# scan_infosource.iterables=('scan', scans)
 
 # select files
-templates={'anat' : '{subject_id}/preprocessed/T1.nii.gz',
-           'brainmask': '{subject_id}/freesurfer/mri/brainmask.mgz',
-           'func' : '{subject_id}/preprocessed/lsd_resting/{scan}/rest_preprocessed.nii.gz'
+templates={'brain': '{subject_id}/freesurfer/mri/brain.finalsurfs.mgz',
+           'func' : '{subject_id}/preprocessed/lsd_resting/%s/rest_preprocessed.nii.gz'%scan
            }
 selectfiles = Node(nio.SelectFiles(templates,
                                    base_directory=data_dir),
                    name="selectfiles")
 
 mni.connect([(subject_infosource, selectfiles, [('subject_id', 'subject_id')]),
-             (scan_infosource, selectfiles, [('scan', 'scan')])
+             #(scan_infosource, selectfiles, [('scan', 'scan')])
              ])
 
-# convert brainmask to niigz
+# convert brain to niigz
 convert=Node(fs.MRIConvert(out_type='niigz',
-                           out_file='brainmask.nii.gz'),
+                           out_file='T1_brain.nii.gz'),
                    name='convert')
 
-mni.connect([(selectfiles, convert, [('brainmask', 'in_file')])])
+mni.connect([(selectfiles, convert, [('brain', 'in_file')])])
 
 # mask T1 with brainmask
-brain = Node(fsl.ApplyMask(out_file='T1_brain.nii.gz'),
-             name='brain')
-mni.connect([(convert, brain, [('out_file', 'mask_file')]),
-             (selectfiles, brain, [('anat', 'in_file')])])
+#brain = Node(fsl.ApplyMask(out_file='T1_brain.nii.gz'),
+#             name='brain')
+#mni.connect([(convert, brain, [('out_file', 'mask_file')]),
+#             (selectfiles, brain, [('anat', 'in_file')])])
 
 # workflow to normalize anatomy to standard space
 normalize=create_normalize_pipeline()
 normalize.inputs.inputnode.standard = template_1mm
 
-mni.connect([(brain, normalize, [('out_file', 'inputnode.anat')])])
+mni.connect([(convert, normalize, [('out_file', 'inputnode.anat')])])
 
 # project preprocessed time series to mni
 
@@ -98,12 +105,12 @@ applytransform = Node(ants.ApplyTransforms(input_image_type = 3,
                                             interpolation = 'BSpline',
                                             invert_transform_flags=[False, False]),
                        name='applytransform')
-    
+      
 applytransform.inputs.reference_image=template_2mm
 mni.connect([(selectfiles, applytransform, [('func', 'input_image')]),
              (normalize, applytransform, [('outputnode.anat2std_transforms', 'transforms')])
             ])
-
+  
 # tune down image to float
 changedt = Node(fsl.ChangeDataType(output_datatype='float',
                                    out_file='rest_preprocessed2mni.nii.gz'),
@@ -119,8 +126,8 @@ anatsink = Node(nio.DataSink(parameterization=False),
                 name='anatsink')
 
 mni.connect([(subject_infosource, anatsink, [(('subject_id', makebase_anat, anat_dir), 'base_directory')]),
-             (convert, anatsink, [('out_file', '@brainmask')]),
-             (brain, anatsink, [('out_file', '@brain')]),
+             (convert, anatsink, [('out_file', '@brain')]),
+             #(brain, anatsink, [('out_file', '@brain')]),
              (normalize, anatsink, [('outputnode.anat2std', '@anat2std'),
                                 ('outputnode.anat2std_transforms', 'transforms2mni.@anat2std_transforms'),
                                 ('outputnode.std2anat_transforms', 'transforms2mni.@std2anat_transforms')])
@@ -130,23 +137,25 @@ mni.connect([(subject_infosource, anatsink, [(('subject_id', makebase_anat, anat
 # make base directory functional
 def makebase_func(subject_id, scan, out_dir):
     return out_dir%(subject_id, scan)
-
+  
 makebasefunc = Node(util.Function(input_names=['subject_id', 'scan', 'out_dir'],
                                   output_names=['basedir'],
                                   function=makebase_func),
                     name='makebase_func')
-
+  
 makebasefunc.inputs.out_dir=func_dir
+makebasefunc.inputs.scan=scan
 mni.connect([(subject_infosource, makebasefunc, [('subject_id', 'subject_id')]),
-             (scan_infosource, makebasefunc, [('scan', 'scan')])])
-
-
+             #(scan_infosource, makebasefunc, [('scan', 'scan')])
+             ])
+  
+  
 #sink functional
 funcsink = Node(nio.DataSink(parameterization=False),
                 name='funcsink')
-
+  
 mni.connect([(makebasefunc, funcsink, [('basedir', 'base_directory')]),
              (changedt, funcsink, [('out_file', '@rest2mni')])
              ])
 
-mni.run()#plugin='MultiProc', plugin_args={'n_procs' : 20})
+mni.run(plugin='MultiProc', plugin_args={'n_procs' : 40})
