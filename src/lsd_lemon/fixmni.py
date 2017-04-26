@@ -16,36 +16,29 @@ Calculate transform to MNI with new smaller brainmask
 
 subjects = list(pd.read_csv('/home/raid3/huntenburg/workspace/lsd_data_paper/lsd_preproc.csv', dtype='str')['ID'])
 subjects.sort()
- 
-#subjects.remove('24945')
-#subjects.remove('25188')
-#subjects.remove('26500')
-#subjects.remove('25019')
-#subjects.remove('23700')
 
 scan = 'rest1a'
 
-for sub in subjects: 
-    if os.path.isfile('/nobackup/ilz2/fix_mni/%s/preprocessed/lsd_resting/%s/rest_preprocessed2mni.nii.gz'%(scan,sub)):
-        print sub
-        subjects.remove(sub)
-
-
+subjects = [sub for sub in subjects if not os.path.isfile('/nobackup/ilz2/fix_mni/%s/preprocessed/lsd_resting/%s/rest_preprocessed2mni.nii.gz'%(sub,scan))]
+print len(subjects)
 
 # for some subjects exclude scans
-#subjects = ['24945']
-#scans = ['rest1a']
-
-#subjects = ['25188']
-#scans = ['rest1a', 'rest1b']
-
-#subjects = ['26500', '25019', '23700']
-#scans = ['rest1a', 'rest1b', 'rest2a']
-
+if scan == 'rest1b':
+    subjects.remove('24945')
+if scan == 'rest2a':
+    subjects.remove('24945')
+    subjects.remove('25188')
+if scan == 'rest2b':
+    subjects.remove('24945')
+    subjects.remove('25188')
+    subjects.remove('26500')
+    subjects.remove('25019')
+    subjects.remove('23700')
 
 # local base and output directory
 data_dir = '/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/probands/'
-base_dir = '/nobackup/ilz2/fix_mni/working_dir/'
+base_dir = '/nobackup/kansas1/fix_mni/working_dir_julia_rest2a/'
+ilz_dir = '/nobackup/ilz2/fix_mni/'
 anat_dir = '/nobackup/ilz2/fix_mni/%s/preprocessed/anat/'
 func_dir = '/nobackup/ilz2/fix_mni/%s/preprocessed/lsd_resting/%s/'
 
@@ -79,24 +72,32 @@ mni.connect([(subject_infosource, selectfiles, [('subject_id', 'subject_id')]),
              #(scan_infosource, selectfiles, [('scan', 'scan')])
              ])
 
+templates_2={'affine': '{subject_id}/preprocessed/anat/transforms2mni/transform0GenericAffine.mat',
+             'warp': '{subject_id}/preprocessed/anat/transforms2mni/transform1Warp.nii.gz',
+           }
+selectfiles_2 = Node(nio.SelectFiles(templates_2,
+                                   base_directory=ilz_dir),
+                   name="selectfiles_2")
+
+mni.connect([(subject_infosource, selectfiles_2, [('subject_id', 'subject_id')])])
+ 
 # convert brain to niigz
 convert=Node(fs.MRIConvert(out_type='niigz',
                            out_file='T1_brain.nii.gz'),
                    name='convert')
-
+ 
 mni.connect([(selectfiles, convert, [('brain', 'in_file')])])
-
-# mask T1 with brainmask
-#brain = Node(fsl.ApplyMask(out_file='T1_brain.nii.gz'),
-#             name='brain')
-#mni.connect([(convert, brain, [('out_file', 'mask_file')]),
-#             (selectfiles, brain, [('anat', 'in_file')])])
 
 # workflow to normalize anatomy to standard space
 normalize=create_normalize_pipeline()
 normalize.inputs.inputnode.standard = template_1mm
-
 mni.connect([(convert, normalize, [('out_file', 'inputnode.anat')])])
+
+#make filelist
+translist = Node(util.Merge(2),
+                     name='translist')
+mni.connect([(selectfiles_2, translist, [('affine', 'in2'),
+                                       ('warp', 'in1')])])
 
 # project preprocessed time series to mni
 
@@ -108,7 +109,8 @@ applytransform = Node(ants.ApplyTransforms(input_image_type = 3,
       
 applytransform.inputs.reference_image=template_2mm
 mni.connect([(selectfiles, applytransform, [('func', 'input_image')]),
-             (normalize, applytransform, [('outputnode.anat2std_transforms', 'transforms')])
+             (translist, applytransform, [('out', 'transforms')])
+             #(normalize, applytransform, [('outputnode.anat2std_transforms', 'transforms')])
             ])
   
 # tune down image to float
@@ -124,10 +126,9 @@ def makebase_anat(subject_id, out_dir):
 # sink anatomy
 anatsink = Node(nio.DataSink(parameterization=False),
                 name='anatsink')
-
+ 
 mni.connect([(subject_infosource, anatsink, [(('subject_id', makebase_anat, anat_dir), 'base_directory')]),
              (convert, anatsink, [('out_file', '@brain')]),
-             #(brain, anatsink, [('out_file', '@brain')]),
              (normalize, anatsink, [('outputnode.anat2std', '@anat2std'),
                                 ('outputnode.anat2std_transforms', 'transforms2mni.@anat2std_transforms'),
                                 ('outputnode.std2anat_transforms', 'transforms2mni.@std2anat_transforms')])
@@ -158,4 +159,4 @@ mni.connect([(makebasefunc, funcsink, [('basedir', 'base_directory')]),
              (changedt, funcsink, [('out_file', '@rest2mni')])
              ])
 
-mni.run(plugin='MultiProc', plugin_args={'n_procs' : 40})
+mni.run(plugin='MultiProc', plugin_args={'n_procs' : 30})
