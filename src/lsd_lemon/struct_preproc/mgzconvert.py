@@ -3,6 +3,7 @@ import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
 import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.fsl as fsl
+import os
 
 
 '''
@@ -24,7 +25,6 @@ def create_mgzconvert_pipeline(name='mgzconvert'):
     outputnode=Node(util.IdentityInterface(fields=['anat_head',
                                                    'anat_brain',
                                                    'func_mask',
-                                                   'anat_mask',
                                                    'wmseg',
                                                    'wmedge']),
                     name='outputnode')
@@ -44,6 +44,7 @@ def create_mgzconvert_pipeline(name='mgzconvert'):
     # convert Freesurfer brain.finalsurf file to nifti
     # grab finalsurf file
     def grab_brain(fs_subjects_dir, fs_subject_id):
+        import os
         brainfile = os.path.join(fs_subjects_dir, fs_subject_id, 
                                  'mri', 'brain.finalsurfs.mgz')
         return os.path.abspath(brainfile)
@@ -57,12 +58,6 @@ def create_mgzconvert_pipeline(name='mgzconvert'):
     brain_convert=Node(fs.MRIConvert(out_type='niigz',
                                      out_file='T1_brain.nii.gz'),
                        name='brain_convert')
-    
-    # binarize brain to get mask for structural data
-    brainmask=Node(fs.Binarize(min=0.01,
-                               out_type='nii.gz',
-                               out_file='T1_brain_mask.nii.gz'),
-                   name='brainmask')
 
    # create brainmask from aparc+aseg with single dilation for functional data
    # DIFFERENT APPROACHES TO MASK THE FUNCTIONAL AND STRUCTURAL DATA 
@@ -101,7 +96,7 @@ def create_mgzconvert_pipeline(name='mgzconvert'):
                                                 ('fs_subject_id', 'subject_id')]),
                         (fs_import, head_convert, [('T1', 'in_file')]),
                         (inputnode, brain_grab, [('fs_subjects_dir', 'fs_subjects_dir'),
-                                                 ('fs_subject_id', 'fs_subjects_dir')]),
+                                                 ('fs_subject_id', 'fs_subject_id')]),
                         (brain_grab, brain_convert, [('brain_file', 'in_file')]),
                         (fs_import, wmseg, [(('aparc_aseg', get_aparc_aseg), 'in_file')]),
                         (fs_import, funcmask, [(('aparc_aseg', get_aparc_aseg), 'in_file')]),
@@ -111,7 +106,6 @@ def create_mgzconvert_pipeline(name='mgzconvert'):
                         (head_convert, outputnode, [('out_file', 'anat_head')]),
                         (fillholes, outputnode, [('out_file', 'func_mask')]),
                         (brain_convert, outputnode, [('out_file', 'anat_brain')]),
-                        (brainmask, outputnode, [('out_file', 'anat_mask')]),
                         (wmseg, outputnode, [('binary_file', 'wmseg')]),
                         (edge, outputnode, [('out_file', 'wmedge')])
                         ])

@@ -25,7 +25,7 @@ for subject in subjects:
     working_dir = '/scr/ilz2/LEMON_LSD/working_dir_struct/' +subject+'/' 
     data_dir = '/scr/ilz2/LEMON_LSD/'+subject+'/'
     out_dir = '/scr/ilz2/LEMON_LSD/'+subject+'/'
-    freesurfer_dir = '/scr/ilz2/LEMON_LSD/freesurfer/' 
+    freesurfer_dir = '/scr/ilz2/LEMON_LSD/freesurfer/'
     standard_brain = '/usr/share/fsl/5.0/data/standard/MNI152_T1_1mm_brain.nii.gz'
     
     create_structural(subject=subject, working_dir=working_dir, data_dir=data_dir, 
