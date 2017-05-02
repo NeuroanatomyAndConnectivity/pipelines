@@ -68,6 +68,7 @@ def create_structural(subject, working_dir, data_dir, freesurfer_dir, out_dir,
                             (mgzconvert, sink, [('outputnode.anat_head', 'preprocessed.anat.@head'),
                                                 ('outputnode.anat_brain', 'preprocessed.anat.@brain'),
                                                 ('outputnode.func_mask', 'preprocessed.anat.@func_mask'),
+                                                ('outputnode.anat_mask', 'preprocessed.anat.@anat_mask'),
                                                 ('outputnode.wmedge', 'preprocessed.anat.@wmedge'),
                                                 #('outputnode.wmseg', 'preprocessed.mp2rage.brain_extraction.@wmseg')
                                                 ]),
