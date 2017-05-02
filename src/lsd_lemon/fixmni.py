@@ -22,11 +22,6 @@ scan = 'rest1a'
 subjects = [sub for sub in subjects if not os.path.isfile('/nobackup/ilz2/fix_mni/%s/preprocessed/lsd_resting/%s/rest_preprocessed2mni.nii.gz'%(sub,scan))]
 print len(subjects)
 
-<<<<<<< HEAD
-=======
-subjects=['03820']
-
->>>>>>> 09dc01ad21a8791011bcab4c117759875f61420f
 # for some subjects exclude scans
 if scan == 'rest1b':
     subjects.remove('24945')
