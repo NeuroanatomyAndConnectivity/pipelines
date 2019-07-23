@@ -221,7 +221,7 @@ def create_denoise_pipeline(name='denoise'):
     denoise.connect([(inputnode, bandpass_filter,[( 'highpass_sigma','highpass_sigma'),
                                                   ('lowpass_sigma', 'lowpass_sigma')]),
                      (filter2, bandpass_filter, [('out_res', 'in_file')]),
-                     (bandpass_filter, outputnode, ['out_file', 'unnormalized_file'])
+                     (bandpass_filter, outputnode, [('out_file', 'unnormalized_file')])
                      ])
 
 
